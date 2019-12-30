@@ -118,6 +118,15 @@ export function normalize (v) {
 }
 
 /**
+ * 计算向量间距离的平方
+ * @param {Vector2} v1
+ * @param {Vector2} v2
+ * @return {number}
+ */
+export function distanceSquare (v1, v2) {
+  return (v1[0] - v2[0]) ** 2 + (v1[1] - v2[1]) ** 2
+}
+/**
  * 计算向量间距离，即求两向量组成的三角形的第三边的长度，可以用于测量 / 计算两个物体运动后两者之间的距离
  * @param {Vector2} v1
  * @param {Vector2} v2
@@ -125,8 +134,7 @@ export function normalize (v) {
  */
 export function distance (v1, v2) {
   return Math.sqrt(
-    (v1[0] - v2[0]) ** 2
-    + (v1[1] - v2[1]) ** 2
+    distanceSquare(v1, v2)
   )
 }
 
