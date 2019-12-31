@@ -139,7 +139,7 @@ class BoundingRect {
     this.width = other.width
     this.height = other.height
   }
-  
+
   plain () {
     return {
       x: this.x,
@@ -160,4 +160,5 @@ class BoundingRect {
 BoundingRect.create = function (rect) {
   return new BoundingRect(rect.x, rect.y, rect.width, rect.height)
 }
+
 export default BoundingRect
