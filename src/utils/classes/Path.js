@@ -11,3 +11,22 @@
  * A = elliptical Arc(A RX,RY,XROTATION,FLAG1,FLAG2,X,Y)：弧线
  * Z = closepath()：关闭路径
  */
+
+const mathMin = Math.min
+const mathMax = Math.max
+const mathCos = Math.cos
+const mathSin = Math.sin
+const mathSqrt = Math.sqrt
+const mathAbs = Math.abs
+
+const hasFloat32Array = typeof Float32Array !== 'undefined'
+
+class Path {
+  constructor(cached) {
+    if (cached) {
+      this._cachedData = []
+    }
+    this.ctx = null
+  }
+}
+export default Path
