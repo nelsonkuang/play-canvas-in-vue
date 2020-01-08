@@ -1,5 +1,5 @@
 // LRU (Least Recently Used) 表示最近最少使用
-// LRU 内部维护的是一个 LInkedHashMap, LinkedHashMap 保持了元素的插入顺序, 使得遍历顺序可按插入顺序输出
+// LRU 内部维护的是一个 LinkedHashMap, LinkedHashMap 保持了元素的插入顺序, 使得遍历顺序可按插入顺序输出
 /**
  * LRU Cache
  * @constructor
