@@ -106,15 +106,15 @@ export function scale (v, s) {
  */
 export function normalize (v) {
   const len = length(v) // 直角三角形的第三边最长，下面要作为分母
-  let v = []
+  let arr = []
   if (len === 0) {
-    v[0] = 0
-    v[1] = 0
+    arr[0] = 0
+    arr[1] = 0
   } else {
-    v[0] = v[0] / len
-    v[1] = v[1] / len
+    arr[0] = v[0] / len
+    arr[1] = v[1] / len
   }
-  return v
+  return arr
 }
 
 /**
