@@ -19,6 +19,14 @@ const routes = [
     meta: {
       title: 'canvas 上画点 / 线'
     }
+  },
+  {
+    path: '/demo-2',
+    name: 'Demo2',
+    component: () => import('@/views/demo-2/index'),
+    meta: {
+      title: 'canvas 上画 x 轴'
+    }
   }
 ]
 

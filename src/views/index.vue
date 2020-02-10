@@ -3,18 +3,34 @@
     <h1>{{ msg }}</h1>
     <h3>Demos</h3>
     <ul>
-      <li><a href="javascript:void(0);" @click="$router.push('/demo-1')" rel="noopener">Demo 1</a></li>
+      <li
+        v-for="route in routes"
+        :key="route.path"
+      ><a
+          href="javascript:void(0);"
+          @click="$router.push(route.path)"
+          rel="noopener"
+        >{{ route.meta.title }}</a></li>
     </ul>
   </div>
 </template>
 
 <script>
+/* eslint-disable no-alert, no-console */
 export default {
   name: 'HelloWorld',
   data () {
     return {
       msg: 'Play Canvas in Vue.js'
     }
+  },
+  computed: {
+    routes () {
+      return this.$router.options.routes
+    },
+  },
+  created () {
+    // console.log(this.routes)
   }
 }
 </script>
