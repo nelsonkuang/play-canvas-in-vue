@@ -1,6 +1,6 @@
 <template>
   <div class="hello">
-    <h1>{{ msg }}</h1>
+    <h1>{{ $route.meta.title }}</h1>
     <div class="container">
       <canvas
         id="canvas"
@@ -14,12 +14,11 @@
 </template>
 
 <script>
+/* eslint-disable no-alert, no-console */
 import Path from '../../utils/classes/Path'
 export default {
-  name: 'HelloWorld',
   data () {
     return {
-      msg: 'Demo 1',
       path: new Path()
     }
   },
@@ -29,13 +28,14 @@ export default {
     ctx.strokeStyle = '#0000ff'
     const p = this.path
     p.beginPath(ctx)
+    // 画线
     p.moveTo(150, 50)
     p.bezierCurveTo(160, 100, 200, 120, 250, 90)
     p.moveTo(150, 50)
     p.lineTo(160, 100)
     p.moveTo(250, 90)
     p.lineTo(200, 120)
-
+    // 画点
     p.moveTo(155, 50)
     p.arc(150, 50, 5, 0, Math.PI * 2, false)
     p.moveTo(255, 90)

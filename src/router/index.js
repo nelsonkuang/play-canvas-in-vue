@@ -17,7 +17,7 @@ const routes = [
     name: 'Demo1',
     component: () => import('@/views/demo-1/index'),
     meta: {
-      title: 'Demo 1'
+      title: 'canvas 上画点 / 线'
     }
   }
 ]
