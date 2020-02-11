@@ -44,7 +44,7 @@ export default {
       ctx.stroke()
     }
 
-    // 绘制y轴
+    // 绘制 y 轴
     ctx.beginPath()
     ctx.moveTo(x0, y0)
     ctx.lineTo(x0, 0 + padding)

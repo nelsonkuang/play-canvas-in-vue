@@ -25,7 +25,15 @@ const routes = [
     name: 'Demo2',
     component: () => import('@/views/demo-2/index'),
     meta: {
-      title: 'canvas 上画 x 轴'
+      title: 'canvas 上画 坐标轴'
+    }
+  },
+  {
+    path: '/demo-3',
+    name: 'Demo3',
+    component: () => import('@/views/demo-3/index'),
+    meta: {
+      title: 'canvas 坐标轴上画网格'
     }
   }
 ]
