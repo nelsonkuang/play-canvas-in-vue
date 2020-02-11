@@ -52,17 +52,17 @@ class Axis {
     // 设置虚线
     ctx.setLineDash([5, 10])
     // 绘制水平方向的网格线
-    for (let y = y0; y < canvas.height - padding; y += gap) {
+    for (let y = y0 - padding; y >= padding; y -= gap) {
       ctx.beginPath()
       ctx.moveTo(x0, y)
       ctx.lineTo(canvas.width - padding, y)
       ctx.stroke()
     }
     // 绘制垂直方向的网格线
-    for (let x = x0; x < canvas.width - padding; x += gap) {
+    for (let x = x0 + padding; x <= canvas.width - padding; x += gap) {
       ctx.beginPath()
       ctx.moveTo(x, y0)
-      ctx.lineTo(x, canvas.height - padding)
+      ctx.lineTo(x, padding)
       ctx.stroke()
     }
     ctx.restore()

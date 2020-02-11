@@ -28,7 +28,7 @@ export default {
     // reference from: https://www.cnblogs.com/OrochiZ-/p/11647705.html
     const x0 = 0 + padding // 原点 x
     const y0 = canvas.height - padding // 原点 y
-    const space = 50 // 定义刻度间隔
+    const gap = 50 // 定义刻度间隔
     const markWidth = 5 // 定义刻度长度
     // 绘制 x 轴
     ctx.beginPath()
@@ -37,7 +37,7 @@ export default {
     ctx.stroke()
 
     // 绘制 x 轴的刻度
-    for (let x = x0 + space; x < canvas.width - padding; x += space) {
+    for (let x = x0 + gap; x < canvas.width - padding; x += gap) {
       ctx.beginPath()
       ctx.moveTo(x, y0)
       ctx.lineTo(x, y0 - markWidth)
@@ -51,7 +51,7 @@ export default {
     ctx.stroke()
 
     // 绘制 y 轴的刻度
-    for (let y = y0 - space; y > padding; y -= space) {
+    for (let y = y0 - gap; y > padding; y -= gap) {
       ctx.beginPath()
       ctx.moveTo(x0, y)
       ctx.lineTo(x0 + markWidth, y)
