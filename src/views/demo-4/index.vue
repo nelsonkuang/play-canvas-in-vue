@@ -19,6 +19,42 @@ import Axis from '../../utils/classes/Axis'
 export default {
   data () {
     return {
+      data: [
+        [5, 66],
+        [7, 55],
+        [4, 99],
+        [11, 78],
+        [28, 65],
+        [7, 88],
+        [5, 56],
+        [2, 60],
+        [4, 57],
+        [6, 98],
+        [27, 33],
+        [26, 77],
+        [23, 95],
+        [34, 87],
+        [7, 68],
+        [1, 68],
+        [2, 60],
+        [22, 84],
+        [6, 96],
+        [13, 87]
+      ]
+    }
+  },
+  computed: {
+    maxValue () {
+      let r = [0, 0]
+      this.data.forEach((p) => {
+        if (p[0] > r[0]) {
+          r[0] = p[0]
+        }
+        if (p[1] > r[1]) {
+          r[1] = p[1]
+        }
+      })
+      return r
     }
   },
   mounted () {
@@ -26,8 +62,8 @@ export default {
     let ctx = canvas.getContext('2d')
     const padding = 50 // canvas 四周 padding
     const strokeStyle = '#0000ff'
-    const xGap = (canvas.width - 2 * padding) / 10 // 定义 x 轴刻度间隔
-    const yGap = (canvas.height - 2 * padding) / 10 // 定义 y 轴刻度间隔
+    const xGap = (canvas.width - 2 * padding) / 10 // 定义 x 轴刻度间隔 // to do 如何确定倍数？暂时写死 10
+    const yGap = (canvas.height - 2 * padding) / 10 // 定义 y 轴刻度间隔 // to do 如何确定倍数？暂时写死 10
     const markWidth = 5 // 定义刻度长度
     const axis = new Axis(canvas, ctx, padding, xGap, yGap, markWidth, strokeStyle) // 坐标轴
     axis.init()

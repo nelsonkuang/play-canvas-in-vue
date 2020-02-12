@@ -35,6 +35,14 @@ const routes = [
     meta: {
       title: 'canvas 坐标轴上画网格'
     }
+  },
+  {
+    path: '/demo-4',
+    name: 'Demo4',
+    component: () => import('@/views/demo-4/index'),
+    meta: {
+      title: 'canvas 坐标轴上画散点'
+    }
   }
 ]
 

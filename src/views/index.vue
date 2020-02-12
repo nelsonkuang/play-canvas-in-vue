@@ -26,7 +26,9 @@ export default {
   },
   computed: {
     routes () {
-      return this.$router.options.routes
+      const arr = [...this.$router.options.routes]
+      arr.shift()
+      return arr
     },
   },
   created () {
