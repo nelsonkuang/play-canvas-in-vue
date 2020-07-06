@@ -60,6 +60,7 @@ export default {
   mounted () {
     let canvas = this.$refs.canvas
     let ctx = canvas.getContext('2d')
+    console.log(ctx)
     const padding = 50 // canvas 四周 padding
     const strokeStyle = '#0000ff'
     const xGap = (canvas.width - 2 * padding) / 10 // 定义 x 轴刻度间隔 // to do 如何确定倍数？暂时写死 10

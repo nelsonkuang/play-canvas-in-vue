@@ -21,6 +21,14 @@ const routes = [
     }
   },
   {
+    path: '/demo-1-dash',
+    name: 'Demo1Dash',
+    component: () => import('@/views/demo-1/dash'),
+    meta: {
+      title: 'canvas 上画点 / 虚线'
+    }
+  },
+  {
     path: '/demo-2',
     name: 'Demo2',
     component: () => import('@/views/demo-2/index'),
