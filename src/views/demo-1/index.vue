@@ -2,7 +2,7 @@
   <div class="hello">
     <h1>{{ $route.meta.title }}</h1>
     <div class="container">
-      <canvas id="canvas" ref="canvas" class="canvas" :class="{'hover' : isHover}" width="500" height="500"></canvas>
+      <canvas id="canvas" ref="canvas" class="canvas" :class="{'hover' : hoverDisplayObject}" width="500" height="500"></canvas>
     </div>
   </div>
 </template>
@@ -24,7 +24,8 @@ export default {
       currentPos: {
         x: 0,
         y: 0
-      }
+      },
+      animationID: null
     }
   },
   computed: {
@@ -32,6 +33,7 @@ export default {
       const { p0, p1, p2, p3, r } = this
       return {
         p0: {
+          name: 'p0',
           x: p0[0] - r,
           y: p0[1] - r,
           width: 2 * r,
@@ -39,6 +41,7 @@ export default {
           zIndex: 0
         },
         p1: {
+          name: 'p1',
           x: p1[0] - r,
           y: p1[1] - r,
           width: 2 * r,
@@ -46,6 +49,7 @@ export default {
           zIndex: 1
         },
         p2: {
+          name: 'p2',
           x: p2[0] - r,
           y: p2[1] - r,
           width: 2 * r,
@@ -53,6 +57,7 @@ export default {
           zIndex: 2
         },
         p3: {
+          name: 'p3',
           x: p3[0] - r,
           y: p3[1] - r,
           width: 2 * r,
@@ -61,13 +66,20 @@ export default {
         }
       }
     },
-    isHover () {
+    hoverDisplayObject () {
       const { currentPos, displayObjects } = this
       const { p0, p1, p2, p3 } = displayObjects
-      return (currentPos.x > p0.x && currentPos.x < p0.x + p0.width && currentPos.y > p0.y && currentPos.y < p0.y + p0.height) ||
-        (currentPos.x > p1.x && currentPos.x < p1.x + p1.width && currentPos.y > p1.y && currentPos.y < p1.y + p1.height) ||
-        (currentPos.x > p2.x && currentPos.x < p2.x + p2.width && currentPos.y > p2.y && currentPos.y < p2.y + p2.height) ||
-        (currentPos.x > p3.x && currentPos.x < p3.x + p3.width && currentPos.y > p3.y && currentPos.y < p3.y + p3.height)
+      if (currentPos.x > p0.x && currentPos.x < p0.x + p0.width && currentPos.y > p0.y && currentPos.y < p0.y + p0.height) {
+        return p0
+      } else if (currentPos.x > p1.x && currentPos.x < p1.x + p1.width && currentPos.y > p1.y && currentPos.y < p1.y + p1.height) {
+        return p1
+      } else if (currentPos.x > p2.x && currentPos.x < p2.x + p2.width && currentPos.y > p2.y && currentPos.y < p2.y + p2.height) {
+        return p2
+      } else if (currentPos.x > p3.x && currentPos.x < p3.x + p3.width && currentPos.y > p3.y && currentPos.y < p3.y + p3.height) {
+        return p3
+      } else {
+        return null
+      }
     }
   },
   mounted () {
@@ -78,6 +90,9 @@ export default {
   methods: {
     draw () {
       const ctx = this.canvas.getContext('2d')
+      const cWidth = Number(this.canvas.getAttribute('width'))
+      const cHeight = Number(this.canvas.getAttribute('height'))
+      ctx.clearRect(0, 0, cWidth, cHeight)
       ctx.strokeStyle = '#0000ff'
       const { p0, p1, p2, p3, r } = this
       const p = this.path
@@ -101,13 +116,49 @@ export default {
 
       p.stroke(ctx)
       p.closePath()
+      // console.log(new Date())
+      this.animationID = requestAnimationFrame(this.draw)
     },
     bindEvents () {
-      var This = this;
-      var offset = getDomOffset(This.canvas)
+      const This = this
+      const offset = getDomOffset(This.canvas)
+      let isDraging = false
+      let startPagePos = {
+        pageX: 0,
+        pageY: 0
+      }
       This.canvas.onmousemove = function (event) {
         This.currentPos = { x: event.pageX - offset.left, y: event.pageY - offset.top }
-        // console.log(This.currentPos)
+        if (This.hoverDisplayObject && isDraging) {
+          let p = [...This[This.hoverDisplayObject.name]]
+          p[0] = p[0] + event.pageX - startPagePos.pageX
+          p[1] = p[1] + event.pageY - startPagePos.pageY
+          This[This.hoverDisplayObject.name] = p
+        }
+      }
+      This.canvas.onmousedown = function (event) {
+        This.currentPos = { x: event.pageX - offset.left, y: event.pageY - offset.top }
+        if (This.hoverDisplayObject) {
+          isDraging = true
+          startPagePos = {
+            pageX: event.pageX,
+            pageY: event.pageY
+          }
+        }
+      }
+      This.canvas.onmouseup = function () {
+        isDraging = false
+        startPagePos = {
+          pageX: 0,
+          pageY: 0
+        }
+      }
+      This.canvas.onmouseleave = function () {
+        isDraging = false
+        startPagePos = {
+          pageX: 0,
+          pageY: 0
+        }
       }
     }
   }
