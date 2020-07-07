@@ -127,53 +127,32 @@ export default {
 
       p.stroke(ctx)
       p.closePath()
-      // console.log(new Date())
       this.animationID = requestAnimationFrame(this.draw)
     },
     bindEvents () {
       const This = this
       const offset = getDomOffset(This.canvas)
       let isDraging = false
-      let startPagePos = {
-        pageX: 0,
-        pageY: 0
-      }
       This.canvas.onmousemove = function (event) {
         This.currentPos = { x: event.pageX - offset.left, y: event.pageY - offset.top }
-        This.$nextTick(() => {
-          if (This.hoverDisplayObject && isDraging) {
-            let p = [...This[This.hoverDisplayObject.name]]
-            p[0] = p[0] + event.pageX - startPagePos.pageX
-            p[1] = p[1] + event.pageY - startPagePos.pageY
-            This[This.hoverDisplayObject.name] = p
-          }
-        })
+        if (This.hoverDisplayObject && isDraging) {
+          let p = []
+          p[0] = This.currentPos.x
+          p[1] = This.currentPos.y
+          This[This.hoverDisplayObject.name] = p
+        }
       }
       This.canvas.onmousedown = function (event) {
         This.currentPos = { x: event.pageX - offset.left, y: event.pageY - offset.top }
-        This.$nextTick(() => {
-          if (This.hoverDisplayObject) {
-            isDraging = true
-            startPagePos = {
-              pageX: event.pageX,
-              pageY: event.pageY
-            }
-          }
-        })
+        if (This.hoverDisplayObject) {
+          isDraging = true
+        }
       }
       This.canvas.onmouseup = function () {
         isDraging = false
-        startPagePos = {
-          pageX: 0,
-          pageY: 0
-        }
       }
       This.canvas.onmouseleave = function () {
         isDraging = false
-        startPagePos = {
-          pageX: 0,
-          pageY: 0
-        }
       }
     }
   }
