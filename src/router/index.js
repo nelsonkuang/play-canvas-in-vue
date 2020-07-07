@@ -17,7 +17,7 @@ const routes = [
     name: 'Demo1',
     component: () => import('@/views/demo-1/index'),
     meta: {
-      title: 'canvas 上画点 / 线'
+      title: 'canvas 上画点 / 可控贝塞尔曲线（Cubic Bézier curves）'
     }
   },
   {

@@ -93,18 +93,26 @@ export default {
       const cWidth = Number(this.canvas.getAttribute('width'))
       const cHeight = Number(this.canvas.getAttribute('height'))
       ctx.clearRect(0, 0, cWidth, cHeight)
-      ctx.strokeStyle = '#0000ff'
+      ctx.strokeStyle = '#000000'
       const { p0, p1, p2, p3, r } = this
       const p = this.path
       p.beginPath(ctx)
       // 画线
       p.moveTo(p0[0], p0[1])
       p.bezierCurveTo(p1[0], p1[1], p2[0], p2[1], p3[0], p3[1])
+      p.stroke(ctx)
+      p.closePath()
+      p.beginPath(ctx)
+      ctx.strokeStyle = '#cccccc'
       p.moveTo(p0[0], p0[1])
       p.lineTo(p1[0], p1[1])
       p.moveTo(p3[0], p3[1])
       p.lineTo(p2[0], p2[1])
       // 画点
+      p.stroke(ctx)
+      p.closePath()
+      p.beginPath(ctx)
+      ctx.strokeStyle = '#000000'
       p.moveTo(p0[0] + r, p0[1])
       p.arc(p0[0], p0[1], r, 0, Math.PI * 2, false)
       p.moveTo(p3[0] + r, p3[1])
@@ -129,22 +137,26 @@ export default {
       }
       This.canvas.onmousemove = function (event) {
         This.currentPos = { x: event.pageX - offset.left, y: event.pageY - offset.top }
-        if (This.hoverDisplayObject && isDraging) {
-          let p = [...This[This.hoverDisplayObject.name]]
-          p[0] = p[0] + event.pageX - startPagePos.pageX
-          p[1] = p[1] + event.pageY - startPagePos.pageY
-          This[This.hoverDisplayObject.name] = p
-        }
+        This.$nextTick(() => {
+          if (This.hoverDisplayObject && isDraging) {
+            let p = [...This[This.hoverDisplayObject.name]]
+            p[0] = p[0] + event.pageX - startPagePos.pageX
+            p[1] = p[1] + event.pageY - startPagePos.pageY
+            This[This.hoverDisplayObject.name] = p
+          }
+        })
       }
       This.canvas.onmousedown = function (event) {
         This.currentPos = { x: event.pageX - offset.left, y: event.pageY - offset.top }
-        if (This.hoverDisplayObject) {
-          isDraging = true
-          startPagePos = {
-            pageX: event.pageX,
-            pageY: event.pageY
+        This.$nextTick(() => {
+          if (This.hoverDisplayObject) {
+            isDraging = true
+            startPagePos = {
+              pageX: event.pageX,
+              pageY: event.pageY
+            }
           }
-        }
+        })
       }
       This.canvas.onmouseup = function () {
         isDraging = false
@@ -182,6 +194,6 @@ a {
   color: #42b983;
 }
 .canvas.hover {
-  cursor: pointer;
+  cursor: move;
 }
 </style>
