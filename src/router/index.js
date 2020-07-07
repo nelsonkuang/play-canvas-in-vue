@@ -17,7 +17,7 @@ const routes = [
     name: 'Demo1',
     component: () => import('@/views/demo-1/index'),
     meta: {
-      title: 'canvas 上画点 / 可控贝塞尔曲线（Cubic Bézier curves）'
+      title: 'canvas 可控贝塞尔曲线（Cubic Bézier curves）'
     }
   },
   {
@@ -25,7 +25,7 @@ const routes = [
     name: 'Demo1Dash',
     component: () => import('@/views/demo-1/dash'),
     meta: {
-      title: 'canvas 上画点 / 虚线'
+      title: 'canvas 可控贝塞尔曲线（Cubic Bézier curves） - 虚线'
     }
   },
   {

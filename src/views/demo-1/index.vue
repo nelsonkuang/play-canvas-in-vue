@@ -87,6 +87,9 @@ export default {
     this.draw()
     this.bindEvents()
   },
+  beforeDestroy () {
+    cancelAnimationFrame(this.animationID)
+  },
   methods: {
     draw () {
       const ctx = this.canvas.getContext('2d')
