@@ -36,7 +36,7 @@ const routes = [
       title: 'Canvas 坐标轴上画网格'
     }
   },
-  {
+/*   {
     path: '/demo-3',
     name: 'Demo3',
     component: () => import('@/views/demo-3/index'),
@@ -51,7 +51,7 @@ const routes = [
     meta: {
       title: 'canvas 坐标轴上画散点'
     }
-  }
+  } */
 ]
 
 const router = new VueRouter({

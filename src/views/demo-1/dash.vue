@@ -2,7 +2,7 @@
   <div>
     <h1>{{ $route.meta.title }}</h1>
     <div class="container">
-      <canvas id="canvas" ref="canvas" class="canvas" width="500" height="500"></canvas>
+      <canvas id="canvas" ref="canvas" class="canvas" width="340" height="500"></canvas>
     </div>
   </div>
 </template>
@@ -18,7 +18,7 @@ const curve = {
   p1: [100, 130],
   p2: [200, 150],
   p3: [250, 90],
-  r: 5,
+  r: 20,
   currentPos: {
     x: 0,
     y: 0
@@ -84,44 +84,74 @@ export default {
         ctx.font = '400 12px "Hiragino Sans GB W3","Microsoft YaHei",sans-serif'
         ctx.textBaseline = 'middle'
         ctx.fillStyle = '#333333'
-        ctx.fillText(`(${~~p0[0]}, ${~~p0[1]})`, p0[0] + 20, p0[1])
-        ctx.fillText(`(${~~p1[0]}, ${~~p1[1]})`, p1[0] + 20, p1[1])
-        ctx.fillText(`(${~~p2[0]}, ${~~p2[1]})`, p2[0] + 20, p2[1])
-        ctx.fillText(`(${~~p3[0]}, ${~~p3[1]})`, p3[0] + 20, p3[1])
+        ctx.fillText(`(${~~p0[0]}, ${~~p0[1]})`, p0[0] + 30, p0[1])
+        ctx.fillText(`(${~~p1[0]}, ${~~p1[1]})`, p1[0] + 30, p1[1])
+        ctx.fillText(`(${~~p2[0]}, ${~~p2[1]})`, p2[0] + 30, p2[1])
+        ctx.fillText(`(${~~p3[0]}, ${~~p3[1]})`, p3[0] + 30, p3[1])
       }
       const bindEvents = () => {
         const This = curve
         const offset = getDomOffset(This.canvas)
+        const supportedTouch = window.hasOwnProperty('ontouchstart')
         let isDraging = false
         let dragingName = ''
-        This.canvas.onmousemove = function (event) {
-          This.currentPos = { x: event.pageX - offset.left, y: event.pageY - offset.top }
-          if (isDraging && dragingName) {
-            let p = []
-            p[0] = This.currentPos.x
-            p[1] = This.currentPos.y
-            This[dragingName] = p
+        if (supportedTouch) {
+          This.canvas.ontouchstart = function (event) {
+            This.currentPos = { x: event.changedTouches[0].pageX - offset.left, y: event.changedTouches[0].pageY - offset.top }
+            const hoverDisplayObject = getHoverDisplayObject()
+            if (hoverDisplayObject) {
+              let p = []
+              p[0] = This.currentPos.x
+              p[1] = This.currentPos.y
+              dragingName = hoverDisplayObject.name
+              This[dragingName] = p
+              isDraging = true
+            }
           }
-        }
-        This.canvas.onmousedown = function (event) {
-          This.currentPos = { x: event.pageX - offset.left, y: event.pageY - offset.top }
-          const hoverDisplayObject = getHoverDisplayObject()
-          if (hoverDisplayObject) {
-            let p = []
-            p[0] = This.currentPos.x
-            p[1] = This.currentPos.y
-            dragingName = hoverDisplayObject.name
-            This[dragingName] = p
-            isDraging = true
+          This.canvas.ontouchmove = function (event) {
+            event.preventDefault()
+            This.currentPos = { x: event.changedTouches[0].pageX - offset.left, y: event.changedTouches[0].pageY - offset.top }
+            if (isDraging && dragingName) {
+              let p = []
+              p[0] = This.currentPos.x
+              p[1] = This.currentPos.y
+              This[dragingName] = p
+            }
           }
-        }
-        This.canvas.onmouseup = function () {
-          isDraging = false
-          dragingName = ''
-        }
-        This.canvas.onmouseleave = function () {
-          isDraging = false
-          dragingName = ''
+          This.canvas.ontouchend = function () {
+            isDraging = false
+            dragingName = ''
+          }
+        } else {
+          This.canvas.onmousemove = function (event) {
+            This.currentPos = { x: event.pageX - offset.left, y: event.pageY - offset.top }
+            if (isDraging && dragingName) {
+              let p = []
+              p[0] = This.currentPos.x
+              p[1] = This.currentPos.y
+              This[dragingName] = p
+            }
+          }
+          This.canvas.onmousedown = function (event) {
+            This.currentPos = { x: event.pageX - offset.left, y: event.pageY - offset.top }
+            const hoverDisplayObject = getHoverDisplayObject()
+            if (hoverDisplayObject) {
+              let p = []
+              p[0] = This.currentPos.x
+              p[1] = This.currentPos.y
+              dragingName = hoverDisplayObject.name
+              This[dragingName] = p
+              isDraging = true
+            }
+          }
+          This.canvas.onmouseup = function () {
+            isDraging = false
+            dragingName = ''
+          }
+          This.canvas.onmouseleave = function () {
+            isDraging = false
+            dragingName = ''
+          }
         }
       }
       const getDisplayObjects = () => {
