@@ -15,6 +15,7 @@
 
 <script>
 /* eslint-disable no-alert, no-console */
+import Axis from '../../utils/classes/Axis'
 export default {
   data () {
     return {
@@ -24,39 +25,12 @@ export default {
     let canvas = this.$refs.canvas
     let ctx = canvas.getContext('2d')
     const padding = 50 // canvas 四周 padding
-    ctx.strokeStyle = '#0000ff'
-    // reference from: https://www.cnblogs.com/OrochiZ-/p/11647705.html
-    const x0 = 0 + padding // 原点 x
-    const y0 = canvas.height - padding // 原点 y
-    const gap = 50 // 定义刻度间隔
+    const strokeStyle = '#0000ff'
+    const xGap = (canvas.width - 2 * padding) / 10 // 定义 x 轴刻度间隔
+    const yGap = (canvas.height - 2 * padding) / 10 // 定义 y 轴刻度间隔
     const markWidth = 5 // 定义刻度长度
-    // 绘制 x 轴
-    ctx.beginPath()
-    ctx.moveTo(x0, y0)
-    ctx.lineTo(canvas.width - padding, y0)
-    ctx.stroke()
-
-    // 绘制 x 轴的刻度
-    for (let x = x0 + gap; x < canvas.width - padding; x += gap) {
-      ctx.beginPath()
-      ctx.moveTo(x, y0)
-      ctx.lineTo(x, y0 - markWidth)
-      ctx.stroke()
-    }
-
-    // 绘制 y 轴
-    ctx.beginPath()
-    ctx.moveTo(x0, y0)
-    ctx.lineTo(x0, 0 + padding)
-    ctx.stroke()
-
-    // 绘制 y 轴的刻度
-    for (let y = y0 - gap; y > padding; y -= gap) {
-      ctx.beginPath()
-      ctx.moveTo(x0, y)
-      ctx.lineTo(x0 + markWidth, y)
-      ctx.stroke()
-    }
+    const axis = new Axis(canvas, ctx, padding, xGap, yGap, markWidth, strokeStyle) // 坐标轴
+    axis.init()
   }
 }
 </script>

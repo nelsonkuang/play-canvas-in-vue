@@ -33,7 +33,7 @@ const routes = [
     name: 'Demo2',
     component: () => import('@/views/demo-2/index'),
     meta: {
-      title: 'canvas 上画 坐标轴'
+      title: 'Canvas 坐标轴上画网格'
     }
   },
   {
