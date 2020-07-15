@@ -82,27 +82,35 @@ export default {
         const This = curve
         const offset = getDomOffset(This.canvas)
         let isDraging = false
+        let dragingName = ''
         This.canvas.onmousemove = function (event) {
           This.currentPos = { x: event.pageX - offset.left, y: event.pageY - offset.top }
-          const hoverDisplayObject = getHoverDisplayObject()
-          if (hoverDisplayObject && isDraging) {
+          if (isDraging && dragingName) {
             let p = []
             p[0] = This.currentPos.x
             p[1] = This.currentPos.y
-            This[hoverDisplayObject.name] = p
+            This[dragingName] = p
           }
         }
         This.canvas.onmousedown = function (event) {
           This.currentPos = { x: event.pageX - offset.left, y: event.pageY - offset.top }
-          if (getHoverDisplayObject()) {
+          const hoverDisplayObject = getHoverDisplayObject()
+          if (hoverDisplayObject) {
+            let p = []
+            p[0] = This.currentPos.x
+            p[1] = This.currentPos.y
+            dragingName = hoverDisplayObject.name
+            This[dragingName] = p
             isDraging = true
           }
         }
         This.canvas.onmouseup = function () {
           isDraging = false
+          dragingName = ''
         }
         This.canvas.onmouseleave = function () {
           isDraging = false
+          dragingName = ''
         }
       }
       const getDisplayObjects = () => {
@@ -190,6 +198,9 @@ li {
 }
 a {
   color: #42b983;
+}
+.canvas {
+  border: 1px dashed #ddd;
 }
 .canvas.hover {
   cursor: move;

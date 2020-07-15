@@ -10,6 +10,8 @@ import {
 
 const mathPow = Math.pow
 const mathSqrt = Math.sqrt
+const mathSin = Math.sin
+const mathAcos = Math.acos
 const EPSILON = 1e-8
 const EPSILON_NUMERIC = 1e-4
 
@@ -333,13 +335,13 @@ export function cubicRootAt (p0, p1, p2, p3, val, roots) {
     }
     else {
       let T = (2 * A * b - 3 * a * B) / (2 * mathSqrt(A * A * A))
-      let theta = Math.acos(T) / 3
+      let theta = mathAcos(T) / 3
       let ASqrt = mathSqrt(A)
       let tmp = Math.cos(theta)
 
       let t1 = (-b - 2 * ASqrt * tmp) / (3 * a)
-      let t2 = (-b + ASqrt * (tmp + THREE_SQRT * Math.sin(theta))) / (3 * a)
-      let t3 = (-b + ASqrt * (tmp - THREE_SQRT * Math.sin(theta))) / (3 * a)
+      let t2 = (-b + ASqrt * (tmp + THREE_SQRT * mathSin(theta))) / (3 * a)
+      let t3 = (-b + ASqrt * (tmp - THREE_SQRT * mathSin(theta))) / (3 * a)
       if (t1 >= 0 && t1 <= 1) {
         roots[n++] = t1
       }
