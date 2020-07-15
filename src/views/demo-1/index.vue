@@ -1,5 +1,5 @@
 <template>
-  <div class="hello">
+  <div>
     <h1>{{ $route.meta.title }}</h1>
     <div class="container">
       <canvas id="canvas" ref="canvas" class="canvas" width="500" height="500"></canvas>
@@ -14,9 +14,9 @@ import { getDomOffset } from '../../utils/tools'
 const curve = {
   canvas: null,
   path: new Path(),
-  p0: [150, 50],
-  p1: [160, 100],
-  p2: [200, 120],
+  p0: [80, 50],
+  p1: [100, 130],
+  p2: [200, 150],
   p3: [250, 90],
   r: 5,
   currentPos: {
@@ -77,6 +77,15 @@ export default {
 
         p.stroke(ctx)
         p.closePath()
+
+        // 画文字
+        ctx.font = '400 12px "Hiragino Sans GB W3","Microsoft YaHei",sans-serif'
+        ctx.textBaseline = 'middle'
+        ctx.fillStyle = '#333333'
+        ctx.fillText(`(${~~p0[0]}, ${~~p0[1]})`, p0[0] + 20, p0[1])
+        ctx.fillText(`(${~~p1[0]}, ${~~p1[1]})`, p1[0] + 20, p1[1])
+        ctx.fillText(`(${~~p2[0]}, ${~~p2[1]})`, p2[0] + 20, p2[1])
+        ctx.fillText(`(${~~p3[0]}, ${~~p3[1]})`, p3[0] + 20, p3[1])
       }
       const bindEvents = () => {
         const This = curve
