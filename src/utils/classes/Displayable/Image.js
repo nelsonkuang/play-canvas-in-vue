@@ -1,6 +1,6 @@
-import DisplayObject from './DisplayObject'
+import DisplayableObject from './Object'
 
-class DisplayImage extends DisplayObject {
+class DisplayableImage extends DisplayableObject {
   $el = null
 
   constructor(src, x, y, width, height, zIndex) {
@@ -30,14 +30,21 @@ class DisplayImage extends DisplayObject {
 
   draw (ctx) {
     const { $el, x, y, width, height, src, load } = this
+    const m = this.getMatrix()
+    const drawImage = (ctx, img) => {
+      ctx.save()
+      ctx.setTransform(m[0], m[1], m[2], m[3], m[4], m[5])
+      ctx.drawImage(img, x, y, width, height)
+      ctx.restore()
+    }
     if ($el) {
-      ctx.drawImage($el, x, y, width, height)
+      drawImage(ctx, $el)
     } else {
       load(src, (img) => {
-        ctx.drawImage(img, x, y, width, height)
+        drawImage(ctx, img)
       })
     }
   }
 }
 
-export default DisplayImage
+export default DisplayableImage

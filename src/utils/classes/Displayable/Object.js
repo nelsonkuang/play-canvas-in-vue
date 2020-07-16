@@ -1,7 +1,7 @@
 import * as matrix from '../../math/matrix'
 import * as guid from '../../tools/guid'
 
-class DisplayObject {
+class DisplayableObject {
   #matrix = null
 
   constructor(x, y, width, height, zIndex) {
@@ -38,4 +38,4 @@ class DisplayObject {
     this.#matrix = matrix.invert(this.#matrix)
   }
 }
-export default DisplayObject
+export default DisplayableObject
