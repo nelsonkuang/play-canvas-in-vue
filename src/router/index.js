@@ -36,15 +36,15 @@ const routes = [
       title: 'Canvas 坐标轴上画网格'
     }
   },
-/*   {
+  {
     path: '/demo-3',
     name: 'Demo3',
     component: () => import('@/views/demo-3/index'),
     meta: {
-      title: 'canvas 坐标轴上画网格'
+      title: 'Canvas 简单编辑图片'
     }
   },
-  {
+  /*   {
     path: '/demo-4',
     name: 'Demo4',
     component: () => import('@/views/demo-4/index'),
