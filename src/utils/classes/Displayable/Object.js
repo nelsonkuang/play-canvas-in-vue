@@ -10,6 +10,7 @@ class DisplayableObject {
     this.width = width || 0
     this.height = height || 0
     this.zIndex = zIndex || 0
+    this.defaultMatrix = matrix.create()
     this.#matrix = matrix.create()
     this.uid = guid()
   }

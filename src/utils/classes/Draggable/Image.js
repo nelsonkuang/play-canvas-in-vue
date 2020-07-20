@@ -5,6 +5,7 @@ class DraggableImage extends DisplayableImage {
     x: 0,
     y: 0
   }
+  #isDragging = false
 
   constructor(src, x, y, width, height, zIndex) {
     super(src, x, y, width, height, zIndex)
@@ -15,19 +16,23 @@ class DraggableImage extends DisplayableImage {
       x: event.pageX || event.changedTouches[0].pageX,
       y: event.pageY || event.changedTouches[0].pageY
     }
+    this.#isDragging = true
   }
 
   onDragMove (event) {
-    event.preventDefault()
-    const currentPos = {
-      x: event.pageX || event.changedTouches[0].pageX,
-      y: event.pageY || event.changedTouches[0].pageY
+    if (this.#isDragging) {
+      event.preventDefault()
+      const currentPos = {
+        x: event.pageX || event.changedTouches[0].pageX,
+        y: event.pageY || event.changedTouches[0].pageY
+      }
+      this.x = this.x + currentPos.x - this.#startPos.x
+      this.y = this.y + currentPos.y - this.#startPos.y
     }
-    this.x = this.x + currentPos.x - this.#startPos.x
-    this.y = this.y + currentPos.y - this.#startPos.y
   }
 
   onDragEnd () {
+    this.#isDragging = false
     this.#startPos = {
       x: 0,
       y: 0

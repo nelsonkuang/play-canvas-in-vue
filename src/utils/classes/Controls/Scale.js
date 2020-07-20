@@ -23,6 +23,7 @@ class ScaleControl extends DisplayableCircle {
     x: 0,
     y: 0
   }
+  #isDragging = false
 
   constructor({ position = controlPosition.topLeft, fillStyle = '#ffffff', strokeStyle = '#000000', lineWidth = 1, x = 0, y = 0, radius = 10, zIndex = 0 }) {
     super({ fillStyle, strokeStyle, lineWidth, x, y, radius, zIndex })
@@ -34,22 +35,25 @@ class ScaleControl extends DisplayableCircle {
       x: event.pageX || event.changedTouches[0].pageX,
       y: event.pageY || event.changedTouches[0].pageY
     }
+    this.#isDragging = true
   }
 
   onDragMove (event) {
-    event.preventDefault()
-    const currentPos = {
-      x: event.pageX || event.changedTouches[0].pageX,
-      y: event.pageY || event.changedTouches[0].pageY
-    }
-    const { x, y, position } = this
-    if (position === controlPosition.topLeft || position === controlPosition.topRight || position === controlPosition.bottomLeft || position === controlPosition.bottomRight) {
-      this.x = x + currentPos.x - this.#startPos.x
-      this.y = y + currentPos.y - this.#startPos.y
-    } else if (position === controlPosition.top || position === controlPosition.bottom) {
-      this.y = y + currentPos.y - this.#startPos.y
-    } else if (position === controlPosition.left || position === controlPosition.right) {
-      this.x = x + currentPos.x - this.#startPos.x
+    if (this.#isDragging) {
+      event.preventDefault()
+      const currentPos = {
+        x: event.pageX || event.changedTouches[0].pageX,
+        y: event.pageY || event.changedTouches[0].pageY
+      }
+      const { x, y, position } = this
+      if (position === controlPosition.topLeft || position === controlPosition.topRight || position === controlPosition.bottomLeft || position === controlPosition.bottomRight) {
+        this.x = x + currentPos.x - this.#startPos.x
+        this.y = y + currentPos.y - this.#startPos.y
+      } else if (position === controlPosition.top || position === controlPosition.bottom) {
+        this.y = y + currentPos.y - this.#startPos.y
+      } else if (position === controlPosition.left || position === controlPosition.right) {
+        this.x = x + currentPos.x - this.#startPos.x
+      }
     }
   }
 
@@ -58,6 +62,7 @@ class ScaleControl extends DisplayableCircle {
       x: 0,
       y: 0
     }
+    this.#isDragging = false
   }
 }
 
