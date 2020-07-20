@@ -2,11 +2,6 @@ import DisplayableImage from '../Displayable/Image'
 import { getDomOffset } from '../../tools/index'
 
 class RotateControl extends DisplayableImage {
-  #startPos = {
-    x: 0,
-    y: 0
-  }
-  #startAngle = 0
   #currentAngle = 0
   #p = [0, 0]
   #p0 = [0, 0]
@@ -24,12 +19,7 @@ class RotateControl extends DisplayableImage {
     this.#p = [this.#p0[0], this.#p0[1]]
   }
 
-  onDragStart (event) {
-    const offset = getDomOffset(event.target)
-    this.#startPos = {
-      x: (event.pageX || event.changedTouches[0].pageX) - offset.left,
-      y: (event.pageY || event.changedTouches[0].pageY) - offset.top
-    }
+  onDragStart () {
   }
 
   onDragMove (event) {
@@ -39,23 +29,33 @@ class RotateControl extends DisplayableImage {
       x: (event.pageX || event.changedTouches[0].pageX) - offset.left,
       y: (event.pageY || event.changedTouches[0].pageY) - offset.top
     }
-    this.#p[0] = currentPos.x
-    if (currentPos.x > this.#p[0] && currentPos.y < this.#p90[1]) { // 当前点在右上
-      this.#p[1] = this.radius - Math.sqrt((this.radius * this.radius) + ((currentPos.x - this.#p[0]) * (currentPos.x - this.#p[0])))
-    } else if (currentPos.x > this.#p[0] && currentPos.y > this.#p90[1]) { // 当前点在右下
-
-    } else if (currentPos.x < this.#p[0] && currentPos.y > this.#p90[1]) { // 当前点在左下
-
-    } else if (currentPos.x < this.#p[0] && currentPos.y < this.#p90[1]) { // 当前点在右上
-
+    const dy = Math.sqrt((this.radius * this.radius) - ((currentPos.x - this.#p0[0]) * (currentPos.x - this.#p0[0])))
+    if (currentPos.x > this.#p0[0] && currentPos.y < this.#p90[1]) { // 当前点在右上
+      this.#p[0] = currentPos.x < this.#p90[0] ? currentPos.x : this.#p90[0]
+      this.#p[1] = this.#p0[1] + this.radius - dy
+      this.#currentAngle = Math.acos(dy / this.radius)
+    } else if (currentPos.x > this.#p0[0] && currentPos.y > this.#p90[1]) { // 当前点在右下
+      this.#p[0] = currentPos.x < this.#p90[0] ? currentPos.x : this.#p90[0]
+      this.#p[1] = this.#p0[1] + this.radius + dy
+      this.#currentAngle = Math.PI - Math.acos(dy / this.radius)
+    } else if (currentPos.x < this.#p0[0] && currentPos.y > this.#p90[1]) { // 当前点在左下
+      this.#p[0] = currentPos.x > this.#p270[0] ? currentPos.x : this.#p270[0]
+      this.#p[1] = this.#p0[1] + this.radius + dy
+      this.#currentAngle = Math.PI + Math.acos(dy / this.radius)
+    } else if (currentPos.x < this.#p0[0] && currentPos.y < this.#p90[1]) { // 当前点在右上
+      this.#p[0] = currentPos.x > this.#p270[0] ? currentPos.x : this.#p270[0]
+      this.#p[1] = this.#p0[1] + this.radius - dy
+      this.#currentAngle = Math.PI * 2 - Math.acos(dy / this.radius)
     }
+    this.x = this.#p[0] - this.width / 2
+    this.y = this.#p[1] - this.height / 2
   }
 
   onDragEnd () {
-    this.#startPos = {
-      x: 0,
-      y: 0
-    }
+  }
+
+  getCurrentAngle () {
+    return this.#currentAngle
   }
 }
 
