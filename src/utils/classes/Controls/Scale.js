@@ -27,8 +27,20 @@ class ScaleControl extends DisplayableCircle {
   #translation = {
     x: 0,
     y: 0,
+    from: {
+      x: 0,
+      y: 0,
+    },
+    to: {
+      x: 0,
+      y: 0,
+    },
     position: controlPosition.topLeft
   }
+  // #preMatrix = this.getMatrix()
+  cursor = 'auto'
+
+  onChange = null
 
   constructor({ position = controlPosition.topLeft, fillStyle = '#ffffff', strokeStyle = '#000000', lineWidth = 1, x = 0, y = 0, radius = 10, zIndex = 0 }) {
     super({ fillStyle, strokeStyle, lineWidth, x, y, radius, zIndex })
@@ -40,6 +52,8 @@ class ScaleControl extends DisplayableCircle {
       x: event.pageX || event.changedTouches[0].pageX,
       y: event.pageY || event.changedTouches[0].pageY
     }
+    this.#translation.from = this.#startPos
+    // this.#preMatrix = this.getMatrix()
     this.#isDragging = true
   }
 
@@ -49,45 +63,48 @@ class ScaleControl extends DisplayableCircle {
         x: event.pageX || event.changedTouches[0].pageX,
         y: event.pageY || event.changedTouches[0].pageY
       }
-      const dx = currentPos.x - this.#startPos.x
-      const dy = currentPos.y - this.#startPos.y
-      switch (this.#translation.position) {
-        case controlPosition.topLeft:
-          this.#translation.x = dx
-          this.#translation.y = dx
-          break
-        case controlPosition.left:
-          this.#translation.x = dx
-          this.#translation.y = 0
-          break
-        case controlPosition.bottomLeft:
-          this.#translation.x = dx
-          this.#translation.y = -1 * dx
-          break
-        case controlPosition.topRight:
-          this.#translation.x = dx
-          this.#translation.y = -1 * dx
-          break
-        case controlPosition.right:
-          this.#translation.x = dx
-          this.#translation.y = 0
-          break
-        case controlPosition.bottomRight:
-          this.#translation.x = dx
-          this.#translation.y = dx
-          break
-        case controlPosition.top:
-          this.#translation.x = 0
-          this.#translation.y = dy
-          break
-        case controlPosition.bottom:
-          this.#translation.x = 0
-          this.#translation.y = dy
-          break
-        default:
-          break
-      }
-      this.translate([this.#translation.x, this.#translation.y])
+      this.#translation.x = currentPos.x - this.#startPos.x
+      this.#translation.y = currentPos.y - this.#startPos.y
+      this.#translation.to = currentPos
+      // switch (this.#translation.position) {
+      //   case controlPosition.topLeft:
+      //     this.#translation.x = dx
+      //     this.#translation.y = dx
+      //     break
+      //   case controlPosition.left:
+      //     this.#translation.x = dx
+      //     this.#translation.y = 0
+      //     break
+      //   case controlPosition.bottomLeft:
+      //     this.#translation.x = dx
+      //     this.#translation.y = -1 * dx
+      //     break
+      //   case controlPosition.topRight:
+      //     this.#translation.x = dx
+      //     this.#translation.y = -1 * dx
+      //     break
+      //   case controlPosition.right:
+      //     this.#translation.x = dx
+      //     this.#translation.y = 0
+      //     break
+      //   case controlPosition.bottomRight:
+      //     this.#translation.x = dx
+      //     this.#translation.y = dx
+      //     break
+      //   case controlPosition.top:
+      //     this.#translation.x = 0
+      //     this.#translation.y = dy
+      //     break
+      //   case controlPosition.bottom:
+      //     this.#translation.x = 0
+      //     this.#translation.y = dy
+      //     break
+      //   default:
+      //     break
+      // }
+      // this.setMatrix(this.#preMatrix)
+      // this.translate([this.#translation.x, this.#translation.y])
+      this.onChange && this.onChange(this.#translation)
     }
   }
 
@@ -99,9 +116,9 @@ class ScaleControl extends DisplayableCircle {
     this.#isDragging = false
   }
 
-  getTranslation () {
-    return this.#translation
-  }
+  // getTranslation () {
+  //   return this.#translation
+  // }
 }
 
 export default ScaleControl

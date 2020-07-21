@@ -10,6 +10,7 @@
 <script>
 /* eslint-disable no-alert, no-console */
 import DraggableImage from '../../utils/classes/Draggable/Image'
+import ScaleControl, { controlPosition } from '../../utils/classes/Controls/Scale'
 import BoundingRect from '../../utils/classes/BoundingRect'
 import { getDomOffset } from '../../utils/tools'
 import img from '../../assets/logo.png'
@@ -26,7 +27,10 @@ export default {
     const cWidth = Number(canvas.getAttribute('width'))
     const cHeight = Number(canvas.getAttribute('height'))
     const ctx = canvas.getContext('2d')
-    const myImage = new DraggableImage(img, 150, 150, 200, 200)
+    const stageObjects = {
+      keysByOrder: []
+    }
+
     let tapPos = {
       x: 0,
       y: 0
@@ -73,31 +77,42 @@ export default {
       }
     }
 
+    const addToStage = (obj) => {
+      stageObjects[obj.uid] = obj
+      stageObjects.keysByOrder.unshift(obj.uid)
+    }
+
     const getDisplayObjects = () => {
-      const myImageBoundingRect = new BoundingRect(myImage.x, myImage.y, myImage.width, myImage.height)
-      myImageBoundingRect.applyTransform(myImage.getMatrix())
-      return {
-        myImage: {
-          key: 'myImage',
-          value: myImage,
-          boundingRect: myImageBoundingRect,
-          bX: myImageBoundingRect.x,
-          bY: myImageBoundingRect.y,
-          bWidth: myImageBoundingRect.width,
-          bHeight: myImageBoundingRect.height
+      const result = {}
+      stageObjects.keysByOrder.forEach((key) => {
+        const boundingRect = new BoundingRect(stageObjects[key].x, stageObjects[key].y, stageObjects[key].width, stageObjects[key].height)
+        boundingRect.applyTransform(stageObjects[key].getMatrix())
+        result[key] = {
+          key: key,
+          value: stageObjects[key],
+          boundingRect: boundingRect,
+          bX: boundingRect.x,
+          bY: boundingRect.y,
+          bWidth: boundingRect.width,
+          bHeight: boundingRect.height,
+          bCenter: {
+            x: boundingRect.x + boundingRect.width / 2,
+            y: boundingRect.y + boundingRect.height / 2
+          }
         }
-      }
+      })
+      return result
     }
 
     const getHoverDisplayObject = () => {
-      const { myImage } = getDisplayObjects()
-      // console.log(tapPos)
-      // console.log(myImage)
-      if (tapPos.x > myImage.bX && tapPos.x < myImage.bX + myImage.bWidth && tapPos.y > myImage.bY && tapPos.y < myImage.bY + myImage.bHeight) {
-        return myImage
-      } else {
-        return null
+      const displayObjects = getDisplayObjects()
+      for (let i = 0; i < stageObjects.keysByOrder.length; i++) {
+        const displayObject = displayObjects[stageObjects.keysByOrder[i]]
+        if (tapPos.x > displayObject.bX && tapPos.x < displayObject.bX + displayObject.bWidth && tapPos.y > displayObject.bY && tapPos.y < displayObject.bY + displayObject.bHeight) {
+          return displayObject
+        }
       }
+      return null
     }
 
     const draw = () => {
@@ -121,6 +136,68 @@ export default {
       draw()
       animationID = requestAnimationFrame(update)
     }
+
+    /*************************** 程序主入口 *****************************/
+    const myImage = new DraggableImage(img, 150, 150, 200, 200)
+    const tlControl = new ScaleControl({
+      position: controlPosition.topLeft,
+      fillStyle: '#fff',
+      strokeStyle: '#f00',
+      lineWidth: 1,
+      x: 140,
+      y: 140,
+      radius: 10,
+      zIndex: 2
+    })
+    tlControl.cursor = 'nwse-resize'
+    tlControl.onChange = (translation) => {
+      // console.log(translation)
+      const displayObjects = getDisplayObjects()
+      const editingImage = displayObjects[myImage.uid]
+      const { bCenter, bX, bY, bWidth, bHeight } = editingImage
+      const { from, to, position } = translation
+      const dsFrom = Math.sqrt((from.x - bCenter.x) * (from.x - bCenter.x) + (from.y - bCenter.y) * (from.y - bCenter.y))
+      const dsTo = Math.sqrt((to.x - bCenter.x) * (to.x - bCenter.x) + (to.y - bCenter.y) * (to.y - bCenter.y))
+      const ds = dsTo - dsFrom
+      const isScaleUp = ds > 0
+      let newBWidth
+      let newBHeight
+      let dsB
+      let scaleX
+      let scaleY
+      let scale = [1, 1]
+      switch (position) {
+        case controlPosition.topLeft:
+          dsB = Math.sqrt(ds * ds / 2)
+          if (isScaleUp) {
+            newBWidth = bWidth + dsB
+          } else {
+            newBWidth = bWidth - dsB
+          }
+          scaleX = newBWidth / bWidth
+          scale = [scaleX, scaleX]
+          break
+        case controlPosition.left:
+          break
+        case controlPosition.bottomLeft:
+          break
+        case controlPosition.topRight:
+          break
+        case controlPosition.right:
+          break
+        case controlPosition.bottomRight:
+          break
+        case controlPosition.top:
+          break
+        case controlPosition.bottom:
+          break
+        default:
+          break
+      }
+    }
+
+    addToStage(myImage)
+    addToStage(tlControl)
 
     bindEvents()
     update()
