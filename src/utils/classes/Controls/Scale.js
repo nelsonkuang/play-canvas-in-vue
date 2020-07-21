@@ -40,7 +40,10 @@ class ScaleControl extends DisplayableCircle {
   // #preMatrix = this.getMatrix()
   cursor = 'auto'
 
-  onChange = null
+  dragChange = null
+  dragStart = null
+  dragMove = null
+  dragEnd = null
 
   constructor({ position = controlPosition.topLeft, fillStyle = '#ffffff', strokeStyle = '#000000', lineWidth = 1, x = 0, y = 0, radius = 10, zIndex = 0 }) {
     super({ fillStyle, strokeStyle, lineWidth, x, y, radius, zIndex })
@@ -54,6 +57,7 @@ class ScaleControl extends DisplayableCircle {
     }
     this.#translation.from = this.#startPos
     // this.#preMatrix = this.getMatrix()
+    this.dragStart && this.dragStart(this.#translation)
     this.#isDragging = true
   }
 
@@ -104,11 +108,13 @@ class ScaleControl extends DisplayableCircle {
       // }
       // this.setMatrix(this.#preMatrix)
       // this.translate([this.#translation.x, this.#translation.y])
-      this.onChange && this.onChange(this.#translation)
+      this.dragMove && this.dragMove(this.#translation)
     }
   }
 
   onDragEnd () {
+    this.dragEnd && this.dragEnd(this.#translation)
+    this.dragChange && this.dragChange(this.#translation)
     this.#startPos = {
       x: 0,
       y: 0

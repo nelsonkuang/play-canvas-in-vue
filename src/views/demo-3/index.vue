@@ -149,22 +149,33 @@ export default {
       radius: 10,
       zIndex: 2
     })
+    let currentImagePreMatrix
+    let currentControlPreMatrix
+    let editingImage
+    let currentControl
     tlControl.cursor = 'nwse-resize'
-    tlControl.onChange = (translation) => {
-      // console.log(translation)
+    tlControl.dragStart = () => {
       const displayObjects = getDisplayObjects()
-      const editingImage = displayObjects[myImage.uid]
-      const { bCenter, bX, bY, bWidth, bHeight } = editingImage
+      editingImage = displayObjects[myImage.uid]
+      currentControl = displayObjects[tlControl.uid]
+      currentImagePreMatrix = editingImage.value.getMatrix()
+      currentControlPreMatrix = currentControl.value.getMatrix()
+    }
+    tlControl.dragMove = (translation) => {
+      const displayObjects = getDisplayObjects()
+      editingImage = displayObjects[myImage.uid]
+      currentControl = displayObjects[tlControl.uid]
+      const { bCenter, bWidth } = editingImage
       const { from, to, position } = translation
       const dsFrom = Math.sqrt((from.x - bCenter.x) * (from.x - bCenter.x) + (from.y - bCenter.y) * (from.y - bCenter.y))
       const dsTo = Math.sqrt((to.x - bCenter.x) * (to.x - bCenter.x) + (to.y - bCenter.y) * (to.y - bCenter.y))
       const ds = dsTo - dsFrom
       const isScaleUp = ds > 0
       let newBWidth
-      let newBHeight
+      // let newBHeight
       let dsB
-      let scaleX
-      let scaleY
+      let scaleX = 1
+      // let scaleY = 1
       let scale = [1, 1]
       switch (position) {
         case controlPosition.topLeft:
@@ -177,6 +188,7 @@ export default {
           scaleX = newBWidth / bWidth
           scale = [scaleX, scaleX]
           break
+        // to do
         case controlPosition.left:
           break
         case controlPosition.bottomLeft:
@@ -194,6 +206,17 @@ export default {
         default:
           break
       }
+
+      const editingImageObject = editingImage.value
+      editingImageObject.setMatrix(currentImagePreMatrix)
+      editingImageObject.translate([-1 * bCenter.x, -1 * bCenter.y]) // 设置画布旋转锚点中心
+      editingImageObject.scale(scale)
+      editingImageObject.translate([bCenter.x, bCenter.y]) // 恢复画布锚点中心
+
+      const currentControlTranslationX = isScaleUp ? -1 * dsB / 2 : dsB / 2
+      const currentControlObject = currentControl.value
+      currentControlObject.setMatrix(currentControlPreMatrix)
+      currentControlObject.translate([currentControlTranslationX, currentControlTranslationX])
     }
 
     addToStage(myImage)
