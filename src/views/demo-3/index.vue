@@ -23,6 +23,8 @@ export default {
   },
   mounted () {
     const canvas = this.$refs.canvas
+    const cWidth = Number(canvas.getAttribute('width'))
+    const cHeight = Number(canvas.getAttribute('height'))
     const ctx = canvas.getContext('2d')
     const myImage = new DraggableImage(img, 150, 150, 200, 200)
     let tapPos = {
@@ -99,6 +101,8 @@ export default {
     }
 
     const update = () => {
+      ctx.clearRect(0, 0, cWidth, cHeight)
+
       const hoverDisplayObject = getHoverDisplayObject()
       // console.log(hoverDisplayObject)
       if (hoverDisplayObject && hoverDisplayObject.value.cursor) {
