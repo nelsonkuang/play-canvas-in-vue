@@ -13,10 +13,10 @@ import DraggableImage from '../../utils/classes/Draggable/Image'
 import BoundingRect from '../../utils/classes/BoundingRect'
 import { getDomOffset } from '../../utils/tools'
 import img from '../../assets/logo.png'
+let animationID = null
 export default {
   data () {
     return {
-      animationID: null
     }
   },
   computed: {
@@ -100,26 +100,33 @@ export default {
       }
     }
 
+    const draw = () => {
+      const displayObjects = getDisplayObjects()
+      for (let key in displayObjects) {
+        const displayObject = displayObjects[key].value
+        displayObject.draw && displayObject.draw(ctx)
+      }
+    }
+
     const update = () => {
       ctx.clearRect(0, 0, cWidth, cHeight)
 
       const hoverDisplayObject = getHoverDisplayObject()
-      // console.log(hoverDisplayObject)
       if (hoverDisplayObject && hoverDisplayObject.value.cursor) {
         canvas.style.cursor = hoverDisplayObject.value.cursor
       } else {
         canvas.style.cursor = 'auto'
       }
 
-      myImage.draw(ctx)
-      this.animationID = requestAnimationFrame(update)
+      draw()
+      animationID = requestAnimationFrame(update)
     }
 
     bindEvents()
     update()
   },
   beforeDestroy () {
-    cancelAnimationFrame(this.animationID)
+    animationID && cancelAnimationFrame(animationID)
   }
 }
 </script>
