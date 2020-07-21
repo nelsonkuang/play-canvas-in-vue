@@ -9,6 +9,10 @@ class DraggableImage extends DisplayableImage {
   cursor = 'move'
   #preMatrix = this.getMatrix()
 
+  dragStart = null
+  dragMove = null
+  dragEnd = null
+
   constructor(src, x, y, width, height, zIndex) {
     super(src, x, y, width, height, zIndex)
   }
@@ -19,6 +23,7 @@ class DraggableImage extends DisplayableImage {
       y: event.pageY || event.changedTouches[0].pageY
     }
     this.#preMatrix = this.getMatrix()
+    this.dragStart && this.dragStart(this.#startPos)
     this.#isDragging = true
   }
 
@@ -29,11 +34,14 @@ class DraggableImage extends DisplayableImage {
         y: event.pageY || event.changedTouches[0].pageY
       }
       this.setMatrix(this.#preMatrix)
-      this.translate([currentPos.x - this.#startPos.x, currentPos.y - this.#startPos.y])
+      const v2 = [currentPos.x - this.#startPos.x, currentPos.y - this.#startPos.y]
+      this.translate(v2)
+      this.dragMove && this.dragMove(v2)
     }
   }
 
   onDragEnd () {
+    this.dragEnd && this.dragEnd()
     this.#isDragging = false
     this.#startPos = {
       x: 0,

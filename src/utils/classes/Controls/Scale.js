@@ -40,7 +40,6 @@ class ScaleControl extends DisplayableCircle {
   // #preMatrix = this.getMatrix()
   cursor = 'auto'
 
-  dragChange = null
   dragStart = null
   dragMove = null
   dragEnd = null
@@ -56,7 +55,6 @@ class ScaleControl extends DisplayableCircle {
       y: event.pageY || event.changedTouches[0].pageY
     }
     this.#translation.from = this.#startPos
-    // this.#preMatrix = this.getMatrix()
     this.dragStart && this.dragStart(this.#translation)
     this.#isDragging = true
   }
@@ -70,61 +68,18 @@ class ScaleControl extends DisplayableCircle {
       this.#translation.x = currentPos.x - this.#startPos.x
       this.#translation.y = currentPos.y - this.#startPos.y
       this.#translation.to = currentPos
-      // switch (this.#translation.position) {
-      //   case controlPosition.topLeft:
-      //     this.#translation.x = dx
-      //     this.#translation.y = dx
-      //     break
-      //   case controlPosition.left:
-      //     this.#translation.x = dx
-      //     this.#translation.y = 0
-      //     break
-      //   case controlPosition.bottomLeft:
-      //     this.#translation.x = dx
-      //     this.#translation.y = -1 * dx
-      //     break
-      //   case controlPosition.topRight:
-      //     this.#translation.x = dx
-      //     this.#translation.y = -1 * dx
-      //     break
-      //   case controlPosition.right:
-      //     this.#translation.x = dx
-      //     this.#translation.y = 0
-      //     break
-      //   case controlPosition.bottomRight:
-      //     this.#translation.x = dx
-      //     this.#translation.y = dx
-      //     break
-      //   case controlPosition.top:
-      //     this.#translation.x = 0
-      //     this.#translation.y = dy
-      //     break
-      //   case controlPosition.bottom:
-      //     this.#translation.x = 0
-      //     this.#translation.y = dy
-      //     break
-      //   default:
-      //     break
-      // }
-      // this.setMatrix(this.#preMatrix)
-      // this.translate([this.#translation.x, this.#translation.y])
       this.dragMove && this.dragMove(this.#translation)
     }
   }
 
   onDragEnd () {
     this.dragEnd && this.dragEnd(this.#translation)
-    this.dragChange && this.dragChange(this.#translation)
     this.#startPos = {
       x: 0,
       y: 0
     }
     this.#isDragging = false
   }
-
-  // getTranslation () {
-  //   return this.#translation
-  // }
 }
 
 export default ScaleControl
