@@ -38,7 +38,6 @@ class RotateControl extends DisplayableImage {
   */
   onDragMove (event) {
     if (this.#isDragging) {
-      event.preventDefault()
       const offset = getDomOffset(event.target)
       const currentPos = {
         x: (event.pageX || event.changedTouches[0].pageX) - offset.left,
@@ -62,12 +61,12 @@ class RotateControl extends DisplayableImage {
         this.#p[1] = this.#p0[1] + this.radius - dy
         this.#currentAngle = Math.PI * 2 - Math.acos(dy / this.radius)
       }
-      this.x = this.#p[0] - this.width / 2
-      this.y = this.#p[1] - this.height / 2
+      // 先旋转，后平移
       this.setMatrix([...this.defaultMatrix])
-      this.translate([-1 * (this.x + this.width / 2), -1 * (this.y + this.height / 2 / 2)]) // 设置画布旋转锚点中心
+      this.translate([-1 * (this.x + this.width / 2), -1 * (this.y + this.height / 2)]) // 设置画布旋转锚点中心
       this.rotate(this.#currentAngle)
       this.translate([this.x + this.width / 2, this.y + this.height / 2]) // 恢复画布锚点中心
+      this.translate([this.#p[0] - this.#p0[0], this.#p[1] - this.#p0[1]])
     }
   }
 

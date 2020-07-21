@@ -24,10 +24,15 @@ class ScaleControl extends DisplayableCircle {
     y: 0
   }
   #isDragging = false
+  #translation = {
+    x: 0,
+    y: 0,
+    position: controlPosition.topLeft
+  }
 
   constructor({ position = controlPosition.topLeft, fillStyle = '#ffffff', strokeStyle = '#000000', lineWidth = 1, x = 0, y = 0, radius = 10, zIndex = 0 }) {
     super({ fillStyle, strokeStyle, lineWidth, x, y, radius, zIndex })
-    this.position = position
+    this.#translation.position = position
   }
 
   onDragStart (event) {
@@ -40,20 +45,49 @@ class ScaleControl extends DisplayableCircle {
 
   onDragMove (event) {
     if (this.#isDragging) {
-      event.preventDefault()
       const currentPos = {
         x: event.pageX || event.changedTouches[0].pageX,
         y: event.pageY || event.changedTouches[0].pageY
       }
-      const { x, y, position } = this
-      if (position === controlPosition.topLeft || position === controlPosition.topRight || position === controlPosition.bottomLeft || position === controlPosition.bottomRight) {
-        this.x = x + currentPos.x - this.#startPos.x
-        this.y = y + currentPos.y - this.#startPos.y
-      } else if (position === controlPosition.top || position === controlPosition.bottom) {
-        this.y = y + currentPos.y - this.#startPos.y
-      } else if (position === controlPosition.left || position === controlPosition.right) {
-        this.x = x + currentPos.x - this.#startPos.x
+      const dx = currentPos.x - this.#startPos.x
+      const dy = currentPos.y - this.#startPos.y
+      switch (this.#translation.position) {
+        case controlPosition.topLeft:
+          this.#translation.x = dx
+          this.#translation.y = dx
+          break
+        case controlPosition.left:
+          this.#translation.x = dx
+          this.#translation.y = 0
+          break
+        case controlPosition.bottomLeft:
+          this.#translation.x = dx
+          this.#translation.y = -1 * dx
+          break
+        case controlPosition.topRight:
+          this.#translation.x = dx
+          this.#translation.y = -1 * dx
+          break
+        case controlPosition.right:
+          this.#translation.x = dx
+          this.#translation.y = 0
+          break
+        case controlPosition.bottomRight:
+          this.#translation.x = dx
+          this.#translation.y = dx
+          break
+        case controlPosition.top:
+          this.#translation.x = 0
+          this.#translation.y = dy
+          break
+        case controlPosition.bottom:
+          this.#translation.x = 0
+          this.#translation.y = dy
+          break
+        default:
+          break
       }
+      this.translate([this.#translation.x, this.#translation.y])
     }
   }
 
@@ -63,6 +97,10 @@ class ScaleControl extends DisplayableCircle {
       y: 0
     }
     this.#isDragging = false
+  }
+
+  getTranslation () {
+    return this.#translation
   }
 }
 

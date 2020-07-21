@@ -1,5 +1,5 @@
 import * as matrix from '../../math/matrix'
-import * as guid from '../../tools/guid'
+import guid from '../../tools/guid'
 
 class DisplayableObject {
   #matrix = null
