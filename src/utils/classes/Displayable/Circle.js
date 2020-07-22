@@ -3,7 +3,7 @@ import DisplayableObject from './Object'
 class DisplayableCircle extends DisplayableObject {
 
   constructor({ fillStyle = '#ffffff', strokeStyle = '#000000', lineWidth = 1, x = 0, y = 0, radius = 10, zIndex = 0 }) {
-    super(x, y, x + radius * 2, y + radius * 2, zIndex)
+    super(x, y, radius * 2, radius * 2, zIndex)
     this.fillStyle = fillStyle
     this.strokeStyle = strokeStyle
     this.lineWidth = lineWidth

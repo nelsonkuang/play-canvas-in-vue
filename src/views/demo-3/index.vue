@@ -127,6 +127,7 @@ export default {
       ctx.clearRect(0, 0, cWidth, cHeight)
 
       const hoverDisplayObject = getHoverDisplayObject()
+      // console.log(hoverDisplayObject)
       if (hoverDisplayObject && hoverDisplayObject.value.cursor) {
         canvas.style.cursor = hoverDisplayObject.value.cursor
       } else {
