@@ -193,6 +193,21 @@ export default {
     trControl.dragMove = scaleControlDragMoveHandler
     trControl.dragEnd = scaleControldragEndHandler
 
+    const lControl = new ScaleControl({
+      position: controlPosition.left,
+      fillStyle: '#fff',
+      strokeStyle: '#f00',
+      lineWidth: 1,
+      x: myImageRect.x - 10,
+      y: myImageRect.y + myImageRect.height / 2 - 10,
+      radius: 10,
+      zIndex: 2
+    })
+    lControl.cursor = 'ew-resize'
+    lControl.dragStart = scaleControlDragStartHandler
+    lControl.dragMove = scaleControlDragMoveHandler
+    lControl.dragEnd = scaleControldragEndHandler
+
     myImage.dragStart = () => {
       const displayObjects = getDisplayObjects()
       stageObjects.keysOfScaleControl.forEach((key) => {
@@ -220,6 +235,7 @@ export default {
     addToStage(myImage)
     addToStage(tlControl)
     addToStage(trControl)
+    addToStage(lControl)
 
     bindEvents()
     update()
@@ -263,8 +279,17 @@ export default {
             v2[0] = isScaleUp ? -1 * dsB / 2 : dsB / 2
             v2[1] = v2[0]
             break
-          // to do
           case controlPosition.left:
+            dsB = Math.sqrt(ds * ds) * 2 // 增加灵敏度
+            if (isScaleUp) {
+              newBWidth = bWidth + dsB
+            } else {
+              newBWidth = bWidth - dsB
+            }
+            scaleX = newBWidth / bWidth
+            scale = [scaleX, 1]
+            v2[0] = isScaleUp ? -1 * dsB / 2 : dsB / 2
+            v2[1] = 0
             break
           // to do
           case controlPosition.bottomLeft:
@@ -322,13 +347,17 @@ export default {
       switch (position) {
         case controlPosition.topLeft:
           controlTranslations[controlPosition.topRight] = [-1 * v2[0], v2[1]]
+          controlTranslations[controlPosition.left] = [v2[0], 0]
           break
         case controlPosition.left:
+          controlTranslations[controlPosition.topLeft] = [v2[0], 0]
+          controlTranslations[controlPosition.topRight] = [-1 * v2[0], 0]
           break
         case controlPosition.bottomLeft:
           break
         case controlPosition.topRight:
           controlTranslations[controlPosition.topLeft] = [-1 * v2[0], v2[1]]
+          controlTranslations[controlPosition.left] = [-1 * v2[0], 0]
           break
         case controlPosition.right:
           break
