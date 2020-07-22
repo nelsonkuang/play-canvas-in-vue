@@ -269,7 +269,6 @@ export default {
         let scaleX = 1
         // let scaleY = 1
         let scale = [1, 1]
-        let v2 = [0, 0]
         switch (position) {
           case controlPosition.topLeft:
             dsB = Math.sqrt(ds * ds / 2) * 3 // 增加灵敏度
@@ -280,8 +279,8 @@ export default {
             }
             scaleX = newBWidth / bWidth
             scale = [scaleX, scaleX]
-            v2[0] = isScaleUp ? -1 * dsB / 2 : dsB / 2
-            v2[1] = v2[0]
+            // v2[0] = isScaleUp ? -1 * dsB / 2 : dsB / 2
+            // v2[1] = v2[0]
             break
           case controlPosition.left:
             dsB = Math.sqrt(ds * ds) * 2 // 增加灵敏度
@@ -292,8 +291,8 @@ export default {
             }
             scaleX = newBWidth / bWidth
             scale = [scaleX, 1]
-            v2[0] = isScaleUp ? -1 * dsB / 2 : dsB / 2
-            v2[1] = 0
+            // v2[0] = isScaleUp ? -1 * dsB / 2 : dsB / 2
+            // v2[1] = 0
             break
           // to do
           case controlPosition.bottomLeft:
@@ -307,8 +306,8 @@ export default {
             }
             scaleX = newBWidth / bWidth
             scale = [scaleX, scaleX]
-            v2[0] = isScaleUp ? dsB / 2 : -1 * dsB / 2
-            v2[1] = isScaleUp ? -1 * dsB / 2 : dsB / 2
+            // v2[0] = isScaleUp ? dsB / 2 : -1 * dsB / 2
+            // v2[1] = isScaleUp ? -1 * dsB / 2 : dsB / 2
             break
           // to do
           case controlPosition.right:
@@ -324,6 +323,7 @@ export default {
           default:
             break
         }
+        const v2 = getV2ByLinearFunction(isScaleUp, currentControlLinearFunction, dsB)
         let controlTranslations = getScaleControlTranslations(v2, position)
         const editingImageObject = editingImage.value
         editingImageObject.setMatrix(currentImagePreMatrix)
@@ -386,8 +386,40 @@ export default {
       return {
         k: k,
         b: b,
-        linearFunction: 'y = kx + b'
+        linearFunction: `y = ${k} * x + ${b}`,
+        direction: {
+          x: p1[0] - p0[0],
+          y: p1[1] - p1[1]
+        }
       }
+    }
+    function getV2ByLinearFunction (isScaleUp, linearFunction, dsB) {
+      let v2 = [0, 0]
+      const ldx = Math.abs(linearFunction.direction.x)
+      if (isScaleUp) {
+        if (ldx < 0.0001) {
+          v2[0] = 0
+          v2[1] = linearFunction.direction.y < 0 ? -1 * dsB / 2 : dsB / 2
+        } else if (linearFunction.direction.x < -0.0001) {
+          v2[0] = -1 * dsB / 2
+          v2[1] = linearFunction.k * v2[0] + linearFunction.b
+        } else if (linearFunction.direction.x > 0.0001) {
+          v2[0] = dsB / 2
+          v2[1] = linearFunction.k * v2[0] + linearFunction.b
+        }
+      } else {
+        if (ldx < 0.0001) {
+          v2[0] = 0
+          v2[1] = linearFunction.direction.y > 0 ? -1 * dsB / 2 : dsB / 2
+        } else if (linearFunction.direction.x < -0.0001) {
+          v2[0] = dsB / 2
+          v2[1] = linearFunction.k * v2[0] + linearFunction.b
+        } else if (linearFunction.direction.x > 0.0001) {
+          v2[0] = - 1 * dsB / 2
+          v2[1] = linearFunction.k * v2[0] + linearFunction.b
+        }
+      }
+      return v2
     }
   },
   beforeDestroy () {
