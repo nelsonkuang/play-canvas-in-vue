@@ -13,7 +13,7 @@ import DraggableImage from '../../utils/classes/Draggable/Image'
 import ScaleControl, { controlPosition } from '../../utils/classes/Controls/Scale'
 import BoundingRect from '../../utils/classes/BoundingRect'
 import { getDomOffset } from '../../utils/tools'
-import img from '../../assets/logo.png'
+import img from '../../assets/logo.jpg'
 let animationID = null
 export default {
   data () {
@@ -138,14 +138,20 @@ export default {
     }
 
     /*************************** 程序主入口 *****************************/
-    const myImage = new DraggableImage(img, 150, 150, 200, 200)
+    const myImageRect = {
+      x: 150,
+      y: 150,
+      width: 200,
+      height: 200
+    }
+    const myImage = new DraggableImage(img, myImageRect.x, myImageRect.y, myImageRect.width, myImageRect.height)
     const tlControl = new ScaleControl({
       position: controlPosition.topLeft,
       fillStyle: '#fff',
       strokeStyle: '#f00',
       lineWidth: 1,
-      x: 140,
-      y: 140,
+      x: myImageRect.x - 10,
+      y: myImageRect.y - 10,
       radius: 10,
       zIndex: 2
     })
