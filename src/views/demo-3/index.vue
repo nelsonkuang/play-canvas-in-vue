@@ -154,6 +154,8 @@ export default {
     let currentScaleControlPreMatrixs = {}
     let editingImage
     let currentScaleControls = {}
+    let currentScaleControl
+    let currentControlLinearFunction
     let dragging = false
 
     const myImageRect = {
@@ -241,10 +243,12 @@ export default {
     update()
 
     /*************************** 主程序用到的函数 *****************************/
-    function scaleControlDragStartHandler () {
+    function scaleControlDragStartHandler (translation, uid) {
       const displayObjects = getDisplayObjects()
       editingImage = displayObjects[stageObjects.keysOfDraggableImage[0]] // 暂时只有一个图片
       currentImagePreMatrix = editingImage.value.getMatrix()
+      currentScaleControl = displayObjects[uid]
+      currentControlLinearFunction = getCurrentControlLinearFunction(editingImage.bCenter, currentScaleControl.bCenter)
       stageObjects.keysOfScaleControl.forEach((key) => {
         currentScaleControls[key] = displayObjects[key]
         currentScaleControlPreMatrixs[key] = displayObjects[key].value.getMatrix()
@@ -371,6 +375,19 @@ export default {
           break
       }
       return controlTranslations
+    }
+    function getCurrentControlLinearFunction (p0, p1) {
+      // y = kx + b
+      // p0[1] = k * p0[0] + b
+      // p1[1] = k * p1[0] + b
+      // => k = (p0[0] - p1[0]) / (p0[1] - p1[1])
+      const k = (p0[0] - p1[0]) / (p0[1] - p1[1])
+      const b = p0[1] - k * p0[0]
+      return {
+        k: k,
+        b: b,
+        linearFunction: 'y = kx + b'
+      }
     }
   },
   beforeDestroy () {

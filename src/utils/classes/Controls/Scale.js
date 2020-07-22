@@ -56,7 +56,7 @@ class ScaleControl extends DisplayableCircle {
       y: event.pageY || event.changedTouches[0].pageY
     }
     this.#translation.from = this.#startPos
-    this.dragStart && this.dragStart(this.#translation)
+    this.dragStart && this.dragStart(this.#translation, this.uid)
     this.#isDragging = true
   }
 
