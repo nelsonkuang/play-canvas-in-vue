@@ -2,6 +2,7 @@ import * as matrix from '../../math/matrix'
 import guid from '../../tools/guid'
 
 class DisplayableObject {
+  type = 'DisplayableObject'
   #matrix = null
 
   constructor(x, y, width, height, zIndex) {

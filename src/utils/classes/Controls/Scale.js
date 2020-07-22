@@ -19,6 +19,7 @@ export const controlPosition = {
   length: 8
 }
 class ScaleControl extends DisplayableCircle {
+  type = 'ScaleControl'
   #startPos = {
     x: 0,
     y: 0
@@ -79,6 +80,10 @@ class ScaleControl extends DisplayableCircle {
       y: 0
     }
     this.#isDragging = false
+  }
+
+  getPosition () {
+    return this.#translation.position
   }
 }
 

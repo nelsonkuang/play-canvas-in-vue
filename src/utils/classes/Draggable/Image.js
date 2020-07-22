@@ -1,6 +1,7 @@
 import DisplayableImage from '../Displayable/Image'
 
 class DraggableImage extends DisplayableImage {
+  type = 'DraggableImage'
   #startPos = {
     x: 0,
     y: 0

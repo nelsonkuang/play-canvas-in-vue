@@ -2,6 +2,7 @@ import DisplayableImage from '../Displayable/Image'
 import { getDomOffset } from '../../tools/index'
 
 class RotateControl extends DisplayableImage {
+  type = 'RotateControl'
   #isDragging = false
   #currentAngle = 0
   #p = [0, 0] // 当前中心点

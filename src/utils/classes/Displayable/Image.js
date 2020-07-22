@@ -1,6 +1,7 @@
 import DisplayableObject from './Object'
 
 class DisplayableImage extends DisplayableObject {
+  type = 'DisplayableImage'
   $el = null
 
   constructor(src, x, y, width, height, zIndex) {
