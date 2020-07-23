@@ -252,7 +252,7 @@ export default {
       currentControlLinearFunction = getCurrentControlLinearFunction(editingImage.bCenter, currentScaleControl.bCenter)
       stageObjects.keysOfScaleControl.forEach((key) => {
         currentScaleControls[key] = displayObjects[key]
-        currentControlLinearFunctions[displayObjects[key].value.position] = getCurrentControlLinearFunction(editingImage.bCenter, displayObjects[key].bCenter)
+        currentControlLinearFunctions[displayObjects[key].value.getPosition()] = getCurrentControlLinearFunction(editingImage.bCenter, displayObjects[key].bCenter)
         currentScaleControlPreMatrixs[key] = displayObjects[key].value.getMatrix()
       })
       dragging = true
@@ -326,13 +326,13 @@ export default {
             break
         }
         const v2 = getV2ByLinearFunction(isScaleUp, currentControlLinearFunction, dsB)
-        let controlTranslations = getScaleControlTranslations(v2, position, currentControlLinearFunctions)
+        let controlTranslations = getScaleControlTranslations(v2, position, currentControlLinearFunctions, dsB, isScaleUp)
         const editingImageObject = editingImage.value
         editingImageObject.setMatrix(currentImagePreMatrix)
         editingImageObject.translate([-1 * bCenter.x, -1 * bCenter.y]) // 设置画布旋转锚点中心
         editingImageObject.scale(scale)
         editingImageObject.translate([bCenter.x, bCenter.y]) // 恢复画布锚点中心
-
+        console.log(controlTranslations)
         stageObjects.keysOfScaleControl.forEach((key) => {
           const scaleControl = currentScaleControls[key].value
           scaleControl.setMatrix(currentScaleControlPreMatrixs[key])
@@ -347,31 +347,55 @@ export default {
       currentScaleControls = {}
       dragging = false
     }
-    function getScaleControlTranslations (v2, position, linearFunctions) {
+    function getScaleControlTranslations (v2, position, linearFunctions, dsB, isScaleUp) {
       const controlTranslations = {}
       controlTranslations[position] = v2
+      const d = Math.abs(v2[0] * v2[0] + v2[1] * v2[1])
+      /**
+      * y = kx + b
+      * d^2 = x^2 + y^2
+      * 标准形式 ax²+bx+c=0（a≠0）
+      * 求根公式x=[-b±√(b²-4ac)]/2a ，加 / 减取决于 Scale Up 及 direction
+      */
       switch (position) {
         case controlPosition.topLeft:
-          controlTranslations[controlPosition.topRight] = [-1 * v2[0], v2[1]]
-          controlTranslations[controlPosition.left] = [v2[0], 0]
+          controlTranslations[controlPosition.bottomRight] = [-1 * v2[0], -1 * v2[1]]
+          if (isScaleUp) {
+            if (linearFunctions[controlPosition.topRight].direction.x > 0) {
+              const v = [0, 0]
+              const { k, b } = linearFunctions[controlPosition.topRight]
+              v[0] = (-1 * (2 * k * b) + Math.sqrt((2 * k * b) ** 2 - 4 * (k ** 2 + 1) * (b ** 2 - d ** 2))) / (2 * (k ** 2 + 1))
+              v[1] = k * v[0] + b
+              controlTranslations[controlPosition.topRight] = v
+            } else {
+              const v = [0, 0]
+              const { k, b } = linearFunctions[controlPosition.topRight]
+              v[0] = (-1 * (2 * k * b) - Math.sqrt((2 * k * b) ** 2 - 4 * (k ** 2 + 1) * (b ** 2 - d ** 2))) / (2 * (k ** 2 + 1))
+              v[1] = k * v[0] + b
+              controlTranslations[controlPosition.topRight] = v
+            }
+          }
           break
         case controlPosition.left:
-          controlTranslations[controlPosition.topLeft] = [v2[0], 0]
-          controlTranslations[controlPosition.topRight] = [-1 * v2[0], 0]
+          controlTranslations[controlPosition.right] = [-1 * v2[0], -1 * v2[1]]
           break
         case controlPosition.bottomLeft:
+          controlTranslations[controlPosition.topRight] = [-1 * v2[0], -1 * v2[1]]
           break
         case controlPosition.topRight:
-          controlTranslations[controlPosition.topLeft] = [-1 * v2[0], v2[1]]
-          controlTranslations[controlPosition.left] = [-1 * v2[0], 0]
+          controlTranslations[controlPosition.bottomLeft] = [-1 * v2[0], -1 * v2[1]]
           break
         case controlPosition.right:
+          controlTranslations[controlPosition.left] = [-1 * v2[0], -1 * v2[1]]
           break
         case controlPosition.bottomRight:
+          controlTranslations[controlPosition.topLeft] = [-1 * v2[0], -1 * v2[1]]
           break
         case controlPosition.top:
+          controlTranslations[controlPosition.bottom] = [-1 * v2[0], -1 * v2[1]]
           break
         case controlPosition.bottom:
+          controlTranslations[controlPosition.top] = [-1 * v2[0], -1 * v2[1]]
           break
         default:
           break
