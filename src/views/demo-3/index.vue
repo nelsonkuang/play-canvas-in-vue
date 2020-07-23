@@ -154,8 +154,6 @@ export default {
     let currentScaleControlPreMatrixs = {}
     let editingImage
     let currentScaleControls = {}
-    let currentScaleControl
-    let currentControlLinearFunction
     let currentControlLinearFunctions = {}
     let dragging = false
 
@@ -238,18 +236,16 @@ export default {
     addToStage(myImage)
     addToStage(tlControl)
     addToStage(trControl)
-    addToStage(lControl)
+    // addToStage(lControl)
 
     bindEvents()
     update()
 
     /*************************** 主程序用到的函数 *****************************/
-    function scaleControlDragStartHandler (translation, uid) {
+    function scaleControlDragStartHandler () {
       const displayObjects = getDisplayObjects()
       editingImage = displayObjects[stageObjects.keysOfDraggableImage[0]] // 暂时只有一个图片
       currentImagePreMatrix = editingImage.value.getMatrix()
-      currentScaleControl = displayObjects[uid]
-      currentControlLinearFunction = getCurrentControlLinearFunction(editingImage.bCenter, currentScaleControl.bCenter)
       stageObjects.keysOfScaleControl.forEach((key) => {
         currentScaleControls[key] = displayObjects[key]
         currentControlLinearFunctions[displayObjects[key].value.getPosition()] = getCurrentControlLinearFunction(editingImage.bCenter, displayObjects[key].bCenter)
@@ -259,20 +255,25 @@ export default {
     }
     function scaleControlDragMoveHandler (translation) {
       if (dragging) {
-        const { bCenter, bWidth } = editingImage
+        const { bCenter, bWidth, bHeight } = editingImage
         const { from, to, position } = translation
         const dsFrom = Math.sqrt((from.x - bCenter.x) * (from.x - bCenter.x) + (from.y - bCenter.y) * (from.y - bCenter.y))
         const dsTo = Math.sqrt((to.x - bCenter.x) * (to.x - bCenter.x) + (to.y - bCenter.y) * (to.y - bCenter.y))
         const ds = dsTo - dsFrom
         const isScaleUp = ds > 0
-        let newBWidth
-        // let newBHeight
+        let newBWidth = 0
+        let newBHeight = 0
         let dsB
         let scaleX = 1
-        // let scaleY = 1
+        let scaleY = 1
         let scale = [1, 1]
+        const { direction } = currentControlLinearFunctions[position]
+        let absLdx
         switch (position) {
           case controlPosition.topLeft:
+          case controlPosition.bottomLeft:
+          case controlPosition.topRight:
+          case controlPosition.bottomRight:
             dsB = Math.sqrt(ds * ds / 2) * 3 // 增加灵敏度
             if (isScaleUp) {
               newBWidth = bWidth + dsB
@@ -281,58 +282,45 @@ export default {
             }
             scaleX = newBWidth / bWidth
             scale = [scaleX, scaleX]
-            // v2[0] = isScaleUp ? -1 * dsB / 2 : dsB / 2
-            // v2[1] = v2[0]
             break
           case controlPosition.left:
-            dsB = Math.sqrt(ds * ds) * 2 // 增加灵敏度
-            if (isScaleUp) {
-              newBWidth = bWidth + dsB
-            } else {
-              newBWidth = bWidth - dsB
-            }
-            scaleX = newBWidth / bWidth
-            scale = [scaleX, 1]
-            // v2[0] = isScaleUp ? -1 * dsB / 2 : dsB / 2
-            // v2[1] = 0
-            break
-          // to do
-          case controlPosition.bottomLeft:
-            break
-          case controlPosition.topRight:
-            dsB = Math.sqrt(ds * ds / 2) * 3
-            if (isScaleUp) {
-              newBWidth = bWidth + dsB
-            } else {
-              newBWidth = bWidth - dsB
-            }
-            scaleX = newBWidth / bWidth
-            scale = [scaleX, scaleX]
-            // v2[0] = isScaleUp ? dsB / 2 : -1 * dsB / 2
-            // v2[1] = isScaleUp ? -1 * dsB / 2 : dsB / 2
-            break
-          // to do
           case controlPosition.right:
-            break
-          case controlPosition.bottomRight:
-            break
-          // to do
           case controlPosition.top:
-            break
-          // to do
           case controlPosition.bottom:
+            dsB = Math.sqrt(ds * ds) * 2 // 增加灵敏度
+            absLdx = Math.abs(direction.x)
+            if (absLdx > 0.0001) {
+              if (isScaleUp) {
+                newBWidth = bWidth + dsB
+              } else {
+                newBWidth = bWidth - dsB
+              }
+            } else {
+              if (isScaleUp) {
+                newBHeight = bHeight + dsB
+              } else {
+                newBHeight = bHeight - dsB
+              }
+            }
+            scaleX = newBWidth / bWidth
+            scaleY = newBHeight / bWidth
+            if (position === controlPosition.top || controlPosition.bottom) {
+              scale = [scaleX || scaleY, 1]
+            } else {
+              scale = [1, scaleX || scaleY]
+            }
             break
           default:
             break
         }
-        const v2 = getV2ByLinearFunction(isScaleUp, currentControlLinearFunction, dsB)
+        const v2 = getV2ByLinearFunction(isScaleUp, currentControlLinearFunctions[position], dsB)
         let controlTranslations = getScaleControlTranslations(v2, position, currentControlLinearFunctions, dsB, isScaleUp)
         const editingImageObject = editingImage.value
         editingImageObject.setMatrix(currentImagePreMatrix)
         editingImageObject.translate([-1 * bCenter.x, -1 * bCenter.y]) // 设置画布旋转锚点中心
         editingImageObject.scale(scale)
         editingImageObject.translate([bCenter.x, bCenter.y]) // 恢复画布锚点中心
-        console.log(controlTranslations)
+        // console.log(controlTranslations)
         stageObjects.keysOfScaleControl.forEach((key) => {
           const scaleControl = currentScaleControls[key].value
           scaleControl.setMatrix(currentScaleControlPreMatrixs[key])
