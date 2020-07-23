@@ -156,6 +156,7 @@ export default {
     let currentScaleControls = {}
     let currentScaleControl
     let currentControlLinearFunction
+    let currentControlLinearFunctions = {}
     let dragging = false
 
     const myImageRect = {
@@ -251,6 +252,7 @@ export default {
       currentControlLinearFunction = getCurrentControlLinearFunction(editingImage.bCenter, currentScaleControl.bCenter)
       stageObjects.keysOfScaleControl.forEach((key) => {
         currentScaleControls[key] = displayObjects[key]
+        currentControlLinearFunctions[displayObjects[key].value.position] = getCurrentControlLinearFunction(editingImage.bCenter, displayObjects[key].bCenter)
         currentScaleControlPreMatrixs[key] = displayObjects[key].value.getMatrix()
       })
       dragging = true
@@ -324,7 +326,7 @@ export default {
             break
         }
         const v2 = getV2ByLinearFunction(isScaleUp, currentControlLinearFunction, dsB)
-        let controlTranslations = getScaleControlTranslations(v2, position)
+        let controlTranslations = getScaleControlTranslations(v2, position, currentControlLinearFunctions)
         const editingImageObject = editingImage.value
         editingImageObject.setMatrix(currentImagePreMatrix)
         editingImageObject.translate([-1 * bCenter.x, -1 * bCenter.y]) // 设置画布旋转锚点中心
@@ -332,9 +334,9 @@ export default {
         editingImageObject.translate([bCenter.x, bCenter.y]) // 恢复画布锚点中心
 
         stageObjects.keysOfScaleControl.forEach((key) => {
-          const currentScaleControl = currentScaleControls[key].value
-          currentScaleControl.setMatrix(currentScaleControlPreMatrixs[key])
-          currentScaleControl.translate(controlTranslations[currentScaleControl.getPosition()])
+          const scaleControl = currentScaleControls[key].value
+          scaleControl.setMatrix(currentScaleControlPreMatrixs[key])
+          scaleControl.translate(controlTranslations[scaleControl.getPosition()])
         })
       }
     }
@@ -345,7 +347,7 @@ export default {
       currentScaleControls = {}
       dragging = false
     }
-    function getScaleControlTranslations (v2, position) {
+    function getScaleControlTranslations (v2, position, linearFunctions) {
       const controlTranslations = {}
       controlTranslations[position] = v2
       switch (position) {
@@ -378,18 +380,18 @@ export default {
     }
     function getCurrentControlLinearFunction (p0, p1) {
       // y = kx + b
-      // p0[1] = k * p0[0] + b
-      // p1[1] = k * p1[0] + b
-      // => k = (p0[0] - p1[0]) / (p0[1] - p1[1])
-      const k = (p0[0] - p1[0]) / (p0[1] - p1[1])
-      const b = p0[1] - k * p0[0]
+      // p0.y = k * p0.x + b
+      // p1.y = k * p1.x + b
+      // => k = (p0.x - p1.x) / (p0.y - p1.y)
+      const k = (p0.x - p1.x) / (p0.y - p1.y)
+      const b = p0.y - k * p0.x
       return {
         k: k,
         b: b,
         linearFunction: `y = ${k} * x + ${b}`,
         direction: {
-          x: p1[0] - p0[0],
-          y: p1[1] - p1[1]
+          x: p1.x - p0.x,
+          y: p1.y - p1.y
         }
       }
     }
