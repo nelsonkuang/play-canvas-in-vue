@@ -11,6 +11,7 @@ class DraggableImage extends DisplayableImage {
   #isDragging = false
   cursor = 'move'
   #preMatrix = this.getMatrix()
+  #preAngle = 0
 
   dragStart = null
   dragMove = null
@@ -69,6 +70,14 @@ class DraggableImage extends DisplayableImage {
 
   getRotateControlCenterByV2 () {
     return applyTransform([this.x + this.width / 2, this.y - 40], this.getMatrix())
+  }
+
+  setAngle (angle) {
+    this.#preAngle = angle
+  }
+
+  getAngle () {
+    return this.#preAngle
   }
 }
 

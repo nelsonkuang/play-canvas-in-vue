@@ -155,6 +155,7 @@ export default {
     let editingImage
     let currentScaleControls = {}
     let currentRotateControl
+    let currentImagePreAngle
     let currentControlLinearFunctions = {}
     let dragging = false
 
@@ -195,6 +196,36 @@ export default {
     trControl.dragMove = scaleControlDragMoveHandler
     trControl.dragEnd = scaleControldragEndHandler
 
+    const tControl = new ScaleControl({
+      position: controlPosition.top,
+      fillStyle: '#fff',
+      strokeStyle: '#f00',
+      lineWidth: 1,
+      x: myImageRect.x + myImageRect.width / 2 - 10,
+      y: myImageRect.y - 10,
+      radius: 10,
+      zIndex: 2
+    })
+    tControl.cursor = 'ns-resize'
+    tControl.dragStart = scaleControlDragStartHandler
+    tControl.dragMove = scaleControlDragMoveHandler
+    tControl.dragEnd = scaleControldragEndHandler
+
+    const rControl = new ScaleControl({
+      position: controlPosition.right,
+      fillStyle: '#fff',
+      strokeStyle: '#f00',
+      lineWidth: 1,
+      x: myImageRect.x + myImageRect.width - 10,
+      y: myImageRect.y + myImageRect.height / 2 - 10,
+      radius: 10,
+      zIndex: 2
+    })
+    rControl.cursor = 'ew-resize'
+    rControl.dragStart = scaleControlDragStartHandler
+    rControl.dragMove = scaleControlDragMoveHandler
+    rControl.dragEnd = scaleControldragEndHandler
+
     const lControl = new ScaleControl({
       position: controlPosition.left,
       fillStyle: '#fff',
@@ -209,6 +240,51 @@ export default {
     lControl.dragStart = scaleControlDragStartHandler
     lControl.dragMove = scaleControlDragMoveHandler
     lControl.dragEnd = scaleControldragEndHandler
+
+    const bControl = new ScaleControl({
+      position: controlPosition.bottom,
+      fillStyle: '#fff',
+      strokeStyle: '#f00',
+      lineWidth: 1,
+      x: myImageRect.x + myImageRect.width / 2 - 10,
+      y: myImageRect.y + myImageRect.height - 10,
+      radius: 10,
+      zIndex: 2
+    })
+    bControl.cursor = 'ns-resize'
+    bControl.dragStart = scaleControlDragStartHandler
+    bControl.dragMove = scaleControlDragMoveHandler
+    bControl.dragEnd = scaleControldragEndHandler
+
+    const blControl = new ScaleControl({
+      position: controlPosition.bottomLeft,
+      fillStyle: '#fff',
+      strokeStyle: '#f00',
+      lineWidth: 1,
+      x: myImageRect.x - 10,
+      y: myImageRect.y + myImageRect.height - 10,
+      radius: 10,
+      zIndex: 2
+    })
+    blControl.cursor = 'nesw-resize'
+    blControl.dragStart = scaleControlDragStartHandler
+    blControl.dragMove = scaleControlDragMoveHandler
+    blControl.dragEnd = scaleControldragEndHandler
+
+    const brControl = new ScaleControl({
+      position: controlPosition.bottomRight,
+      fillStyle: '#fff',
+      strokeStyle: '#f00',
+      lineWidth: 1,
+      x: myImageRect.x + myImageRect.width - 10,
+      y: myImageRect.y + myImageRect.height - 10,
+      radius: 10,
+      zIndex: 2
+    })
+    brControl.cursor = 'nwse-resize'
+    brControl.dragStart = scaleControlDragStartHandler
+    brControl.dragMove = scaleControlDragMoveHandler
+    brControl.dragEnd = scaleControldragEndHandler
 
     const rotateControl = new RotateControl(rotateCtrImg, myImageRect.x + myImageRect.width / 2 - 20, myImageRect.y - 40 - 20, 40, 40)
 
@@ -243,6 +319,7 @@ export default {
       const displayObjects = getDisplayObjects()
       editingImage = displayObjects[stageObjects.keysOfDraggableImage[0]] // 暂时只有一个图片
       currentImagePreMatrix = editingImage.value.getMatrix()
+      currentImagePreAngle = editingImage.value.getAngle()
       stageObjects.keysOfScaleControl.forEach((key) => {
         currentScaleControls[key] = displayObjects[key]
       })
@@ -278,8 +355,10 @@ export default {
         const editingImageObject = editingImage.value
         editingImageObject.setMatrix(currentImagePreMatrix)
         editingImageObject.translate([-1 * bCenter.x, -1 * bCenter.y]) // 设置画布旋转锚点中心
+        editingImageObject.rotate(-1 * currentImagePreAngle)
         editingImageObject.rotate(angle)
         editingImageObject.translate([bCenter.x, bCenter.y]) // 恢复画布锚点中心
+        editingImageObject.setAngle(angle)
 
         const scaleControlCenters = editingImageObject.getScaleControlCentersByV2()
         stageObjects.keysOfScaleControl.forEach((key) => {
@@ -299,6 +378,7 @@ export default {
       currentRotateControl = null
       currentImagePreMatrix = null
       currentScaleControls = {}
+      currentImagePreAngle = null
       dragging = false
     }
 
@@ -306,6 +386,11 @@ export default {
     addToStage(tlControl)
     addToStage(trControl)
     addToStage(lControl)
+    addToStage(tControl)
+    addToStage(rControl)
+    addToStage(bControl)
+    addToStage(brControl)
+    addToStage(blControl)
     addToStage(rotateControl)
 
     bindEvents()
@@ -316,6 +401,7 @@ export default {
       const displayObjects = getDisplayObjects()
       editingImage = displayObjects[stageObjects.keysOfDraggableImage[0]] // 暂时只有一个图片
       currentImagePreMatrix = editingImage.value.getMatrix()
+      currentImagePreAngle = editingImage.value.getAngle()
       stageObjects.keysOfScaleControl.forEach((key) => {
         currentScaleControls[key] = displayObjects[key]
         currentControlLinearFunctions[displayObjects[key].value.getPosition()] = getCurrentControlLinearFunction(editingImage.bCenter, displayObjects[key].bCenter)
@@ -386,7 +472,9 @@ export default {
         const editingImageObject = editingImage.value
         editingImageObject.setMatrix(currentImagePreMatrix)
         editingImageObject.translate([-1 * bCenter.x, -1 * bCenter.y]) // 设置画布旋转锚点中心
+        editingImageObject.rotate(-1 * currentImagePreAngle)
         editingImageObject.scale(scale)
+        editingImageObject.rotate(currentImagePreAngle)
         editingImageObject.translate([bCenter.x, bCenter.y]) // 恢复画布锚点中心
         const scaleControlCenters = editingImageObject.getScaleControlCentersByV2()
         stageObjects.keysOfScaleControl.forEach((key) => {
@@ -404,6 +492,7 @@ export default {
       editingImage = null
       currentRotateControl = null
       currentImagePreMatrix = null
+      currentImagePreAngle = null
       currentScaleControls = {}
       dragging = false
     }
