@@ -55,7 +55,7 @@ export default {
         if (hoverDisplayObject) {
           isDraging = true
           dragingObject = hoverDisplayObject.value
-          dragingObject.onDragStart && dragingObject.onDragStart(event)
+          dragingObject.onDragStart && dragingObject.onDragStart(event, { ...tapPos }, offset)
         }
       }
 
@@ -65,7 +65,7 @@ export default {
           y: event.pageY - offset.top
         }
         if (isDraging && dragingObject) {
-          dragingObject.onDragMove && dragingObject.onDragMove(event)
+          dragingObject.onDragMove && dragingObject.onDragMove(event, { ...tapPos }, offset)
         }
       }
 
@@ -152,7 +152,6 @@ export default {
 
     /*************************** 程序主入口 *****************************/
     let currentImagePreMatrix
-    let currentScaleControlPreMatrixs = {}
     let editingImage
     let currentScaleControls = {}
     let currentRotateControl
@@ -240,6 +239,35 @@ export default {
       dragging = false
     }
 
+    rotateControl.dragStart = () => {
+      const displayObjects = getDisplayObjects()
+      editingImage = displayObjects[stageObjects.keysOfDraggableImage[0]] // 暂时只有一个图片
+      currentImagePreMatrix = editingImage.value.getMatrix()
+      stageObjects.keysOfScaleControl.forEach((key) => {
+        currentScaleControls[key] = displayObjects[key]
+      })
+      currentRotateControl = displayObjects[stageObjects.keysOfRotateControl[0]].value
+      dragging = true
+    }
+
+    rotateControl.dragMove = () => {
+      // rotateControl.dragMove = (translation) => {
+      // if (dragging) {
+      //   const { bCenter } = editingImage
+      //   const { from, to, x, y } = translation
+      //   const dsFrom = Math.sqrt((from.x - bCenter.x) * (from.x - bCenter.x) + (from.y - bCenter.y) * (from.y - bCenter.y))
+      //   const dsTo = Math.sqrt((to.x - bCenter.x) * (to.x - bCenter.x) + (to.y - bCenter.y) * (to.y - bCenter.y))
+      //   const ds = dsTo - dsFrom
+      //   const isScaleUp = ds > 0
+      //   let newBWidth = 0
+      //   let newBHeight = 0
+      // }
+    }
+
+    rotateControl.dragEnd = () => {
+
+    }
+
     addToStage(myImage)
     addToStage(tlControl)
     addToStage(trControl)
@@ -257,7 +285,6 @@ export default {
       stageObjects.keysOfScaleControl.forEach((key) => {
         currentScaleControls[key] = displayObjects[key]
         currentControlLinearFunctions[displayObjects[key].value.getPosition()] = getCurrentControlLinearFunction(editingImage.bCenter, displayObjects[key].bCenter)
-        currentScaleControlPreMatrixs[key] = displayObjects[key].value.getMatrix()
       })
       currentRotateControl = displayObjects[stageObjects.keysOfRotateControl[0]].value
       dragging = true
@@ -343,7 +370,6 @@ export default {
       editingImage = null
       currentRotateControl = null
       currentImagePreMatrix = null
-      currentScaleControlPreMatrixs = {}
       currentScaleControls = {}
       dragging = false
     }
@@ -375,5 +401,7 @@ export default {
 <style scoped>
 .canvas {
   border: 1px dashed #ddd;
+  display: block;
+  margin: 0 auto;
 }
 </style>

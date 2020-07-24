@@ -30,11 +30,8 @@ class RotateControl extends DisplayableImage {
     super(src, x, y, width, height, zIndex)
   }
 
-  onDragStart () {
-    this.#startPos = {
-      x: event.pageX || event.changedTouches[0].pageX,
-      y: event.pageY || event.changedTouches[0].pageY
-    }
+  onDragStart (event, tapPos) {
+    this.#startPos = tapPos
     this.#translation.from = this.#startPos
     this.dragStart && this.dragStart(this.#translation, this.uid)
     this.#isDragging = true
@@ -52,12 +49,9 @@ class RotateControl extends DisplayableImage {
   * O   |   O
   *     O
   */
-  onDragMove (event) {
+  onDragMove (event, tapPos) {
     if (this.#isDragging) {
-      const currentPos = {
-        x: event.pageX || event.changedTouches[0].pageX,
-        y: event.pageY || event.changedTouches[0].pageY
-      }
+      const currentPos = tapPos
       this.#translation.x = currentPos.x - this.#startPos.x
       this.#translation.y = currentPos.y - this.#startPos.y
       this.#translation.to = currentPos
