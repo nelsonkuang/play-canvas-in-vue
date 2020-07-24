@@ -261,16 +261,19 @@ export default {
         // bCenter.y = bCenter.x * k + b
         // y = x * k + b
         // => k = (y - bCenter.y) / (x - bCenter.x)
-        let k = (y - bCenter.y) / (x - bCenter.x)
-        let angle = -1 * (Math.PI / 2 - Math.abs(Math.atan(k)))
-        /* if (x >= bCenter.x && y <= bCenter.y) { // 右上
-          angle = angle
-        } else  */ if (x >= bCenter.x && y > bCenter.y) { // 右下
-          angle -= Math.PI / 2
-        } else if (x < bCenter.x && y >= bCenter.y) { // 左下
-          angle -= Math.PI
-        } else if (x >= bCenter.x && y < bCenter.y) { // 左上
-          angle -= 1.5 * Math.PI
+        let d = Math.sqrt((y - bCenter.y) ** 2 + (x - bCenter.x) ** 2)
+        let dx = Math.abs(x - bCenter.x)
+        let dy = Math.abs(y - bCenter.y)
+        let angle
+        if (x >= bCenter.x && y < bCenter.y) { // 右上
+          angle = Math.asin(dx / d)
+        } else if (x > bCenter.x && y >= bCenter.y) { // 右下
+          angle = Math.asin(dy / d) + Math.PI / 2
+          // console.log(angle)
+        } else if (x <= bCenter.x && y > bCenter.y) { // 左下
+          angle = Math.asin(dx / d) + Math.PI
+        } else if (x <= bCenter.x && y <= bCenter.y) { // 左上
+          angle = Math.asin(dy / d) + 1.5 * Math.PI
         }
         const editingImageObject = editingImage.value
         editingImageObject.setMatrix(currentImagePreMatrix)
