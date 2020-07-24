@@ -39,7 +39,7 @@ class DraggableImage extends DisplayableImage {
       this.setMatrix(this.#preMatrix)
       const v2 = [currentPos.x - this.#startPos.x, currentPos.y - this.#startPos.y]
       this.translate(v2)
-      this.dragMove && this.dragMove(this.getScaleControlCentersByV2())
+      this.dragMove && this.dragMove(this.getScaleControlCentersByV2(), this.getRotateControlCenterByV2())
     }
   }
 

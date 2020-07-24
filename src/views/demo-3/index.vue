@@ -155,6 +155,7 @@ export default {
     let currentScaleControlPreMatrixs = {}
     let editingImage
     let currentScaleControls = {}
+    let currentRotateControl
     let currentControlLinearFunctions = {}
     let dragging = false
 
@@ -216,11 +217,11 @@ export default {
       const displayObjects = getDisplayObjects()
       stageObjects.keysOfScaleControl.forEach((key) => {
         currentScaleControls[key] = displayObjects[key]
-        currentScaleControlPreMatrixs[key] = displayObjects[key].value.getMatrix()
       })
+      currentRotateControl = displayObjects[stageObjects.keysOfRotateControl[0]].value
       dragging = true
     }
-    myImage.dragMove = (scaleControlCenters) => {
+    myImage.dragMove = (scaleControlCenters, rotateControlCenter) => {
       if (dragging) {
         stageObjects.keysOfScaleControl.forEach((key) => {
           const scaleControl = currentScaleControls[key].value
@@ -228,12 +229,14 @@ export default {
           scaleControl.x = v2[0] - scaleControl.width / 2
           scaleControl.y = v2[1] - scaleControl.height / 2
         })
+        currentRotateControl.x = rotateControlCenter[0] - currentRotateControl.width / 2
+        currentRotateControl.y = rotateControlCenter[1] - currentRotateControl.height / 2
       }
     }
     myImage.dragEnd = () => {
       editingImage = null
-      currentScaleControlPreMatrixs = {}
       currentScaleControls = {}
+      currentRotateControl = null
       dragging = false
     }
 
@@ -256,6 +259,7 @@ export default {
         currentControlLinearFunctions[displayObjects[key].value.getPosition()] = getCurrentControlLinearFunction(editingImage.bCenter, displayObjects[key].bCenter)
         currentScaleControlPreMatrixs[key] = displayObjects[key].value.getMatrix()
       })
+      currentRotateControl = displayObjects[stageObjects.keysOfRotateControl[0]].value
       dragging = true
     }
     function scaleControlDragMoveHandler (translation) {
@@ -330,10 +334,14 @@ export default {
           scaleControl.x = v2[0] - scaleControl.width / 2
           scaleControl.y = v2[1] - scaleControl.height / 2
         })
+        const rotateControlCenter = editingImageObject.getRotateControlCenterByV2()
+        currentRotateControl.x = rotateControlCenter[0] - currentRotateControl.width / 2
+        currentRotateControl.y = rotateControlCenter[1] - currentRotateControl.height / 2
       }
     }
     function scaleControldragEndHandler () {
       editingImage = null
+      currentRotateControl = null
       currentImagePreMatrix = null
       currentScaleControlPreMatrixs = {}
       currentScaleControls = {}
