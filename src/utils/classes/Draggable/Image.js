@@ -66,6 +66,10 @@ class DraggableImage extends DisplayableImage {
       [controlPosition.left]: applyTransform([x, y + height / 2], m)
     }
   }
+
+  getRotateControlCenterByV2 () {
+    return applyTransform([this.x + this.width / 2, this.y - 40], this.getMatrix())
+  }
 }
 
 export default DraggableImage

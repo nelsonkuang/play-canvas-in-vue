@@ -11,9 +11,11 @@
 /* eslint-disable no-alert, no-console */
 import DraggableImage from '../../utils/classes/Draggable/Image'
 import ScaleControl, { controlPosition } from '../../utils/classes/Controls/Scale'
+import RotateControl from '../../utils/classes/Controls/Rotate'
 import BoundingRect from '../../utils/classes/BoundingRect'
 import { getDomOffset } from '../../utils/tools'
 import img from '../../assets/logo.jpg'
+import rotateCtrImg from '../../assets/rotate.png'
 let animationID = null
 export default {
   data () {
@@ -208,6 +210,8 @@ export default {
     lControl.dragMove = scaleControlDragMoveHandler
     lControl.dragEnd = scaleControldragEndHandler
 
+    const rotateControl = new RotateControl(rotateCtrImg, myImageRect.x + myImageRect.width / 2 - 20, myImageRect.y - 40 - 20, 40, 40)
+
     myImage.dragStart = () => {
       const displayObjects = getDisplayObjects()
       stageObjects.keysOfScaleControl.forEach((key) => {
@@ -237,6 +241,7 @@ export default {
     addToStage(tlControl)
     addToStage(trControl)
     addToStage(lControl)
+    addToStage(rotateControl)
 
     bindEvents()
     update()

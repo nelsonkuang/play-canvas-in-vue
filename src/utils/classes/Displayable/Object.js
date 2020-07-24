@@ -1,5 +1,6 @@
 import * as matrix from '../../math/matrix'
 import guid from '../../tools/guid'
+import { applyTransform } from '../../math/vector2'
 
 class DisplayableObject {
   type = 'DisplayableObject'
@@ -38,6 +39,10 @@ class DisplayableObject {
 
   invert () {
     this.#matrix = matrix.invert(this.#matrix)
+  }
+
+  getCenterByV2 () {
+    return applyTransform([this.x, this.y], this.#matrix)
   }
 }
 export default DisplayableObject
