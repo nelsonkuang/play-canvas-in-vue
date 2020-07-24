@@ -250,22 +250,53 @@ export default {
       dragging = true
     }
 
-    rotateControl.dragMove = () => {
-      // rotateControl.dragMove = (translation) => {
-      // if (dragging) {
-      //   const { bCenter } = editingImage
-      //   const { from, to, x, y } = translation
-      //   const dsFrom = Math.sqrt((from.x - bCenter.x) * (from.x - bCenter.x) + (from.y - bCenter.y) * (from.y - bCenter.y))
-      //   const dsTo = Math.sqrt((to.x - bCenter.x) * (to.x - bCenter.x) + (to.y - bCenter.y) * (to.y - bCenter.y))
-      //   const ds = dsTo - dsFrom
-      //   const isScaleUp = ds > 0
-      //   let newBWidth = 0
-      //   let newBHeight = 0
-      // }
+    rotateControl.dragMove = (translation) => {
+      if (dragging) {
+        const { bCenter } = editingImage
+        const { x, y } = translation.to
+        // y = kx + b
+        // k = tanα
+        // 倾斜角 α 是函数图像上某点的切线与 x 轴的夹角
+        // 下面求 k：
+        // bCenter.y = bCenter.x * k + b
+        // y = x * k + b
+        // => k = (y - bCenter.y) / (x - bCenter.x)
+        let k = (y - bCenter.y) / (x - bCenter.x)
+        let angle = -1 * (Math.PI / 2 - Math.abs(Math.atan(k)))
+        /* if (x >= bCenter.x && y <= bCenter.y) { // 右上
+          angle = angle
+        } else  */ if (x >= bCenter.x && y > bCenter.y) { // 右下
+          angle -= Math.PI / 2
+        } else if (x < bCenter.x && y >= bCenter.y) { // 左下
+          angle -= Math.PI
+        } else if (x >= bCenter.x && y < bCenter.y) { // 左上
+          angle -= 1.5 * Math.PI
+        }
+        const editingImageObject = editingImage.value
+        editingImageObject.setMatrix(currentImagePreMatrix)
+        editingImageObject.translate([-1 * bCenter.x, -1 * bCenter.y]) // 设置画布旋转锚点中心
+        editingImageObject.rotate(angle)
+        editingImageObject.translate([bCenter.x, bCenter.y]) // 恢复画布锚点中心
+
+        const scaleControlCenters = editingImageObject.getScaleControlCentersByV2()
+        stageObjects.keysOfScaleControl.forEach((key) => {
+          const scaleControl = currentScaleControls[key].value
+          const v2 = scaleControlCenters[scaleControl.getPosition()]
+          scaleControl.x = v2[0] - scaleControl.width / 2
+          scaleControl.y = v2[1] - scaleControl.height / 2
+        })
+        const rotateControlCenter = editingImageObject.getRotateControlCenterByV2()
+        currentRotateControl.x = rotateControlCenter[0] - currentRotateControl.width / 2
+        currentRotateControl.y = rotateControlCenter[1] - currentRotateControl.height / 2
+      }
     }
 
     rotateControl.dragEnd = () => {
-
+      editingImage = null
+      currentRotateControl = null
+      currentImagePreMatrix = null
+      currentScaleControls = {}
+      dragging = false
     }
 
     addToStage(myImage)
