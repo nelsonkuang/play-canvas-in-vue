@@ -423,8 +423,6 @@ export default {
         let scaleX = 1
         let scaleY = 1
         let scale = [1, 1]
-        const { direction } = currentControlLinearFunctions[position]
-        let absLdx
         switch (position) {
           case controlPosition.topLeft:
           case controlPosition.bottomLeft:
@@ -444,26 +442,27 @@ export default {
           case controlPosition.top:
           case controlPosition.bottom:
             dsB = Math.sqrt(ds * ds) * 2 // 增加灵敏度
-            absLdx = Math.abs(direction.x)
-            if (absLdx > 0.0001) {
-              if (isScaleUp) {
-                newBWidth = bWidth + dsB
-              } else {
-                newBWidth = bWidth - dsB
-              }
+            if (isScaleUp) {
+              newBWidth = bWidth + dsB
+              newBHeight = bHeight + dsB
             } else {
-              if (isScaleUp) {
-                newBHeight = bHeight + dsB
-              } else {
-                newBHeight = bHeight - dsB
-              }
+              newBWidth = bWidth - dsB
+              newBHeight = bHeight - dsB
             }
             scaleX = newBWidth / bWidth
             scaleY = newBHeight / bWidth
-            if (position === controlPosition.top || controlPosition.bottom) {
-              scale = [scaleX || scaleY, 1]
+            if (isScaleUp) {
+              if (position === controlPosition.top || position === controlPosition.bottom) {
+                scale = [1, Math.max(scaleX, scaleY)]
+              } else {
+                scale = [Math.max(scaleX, scaleY), 1]
+              }
             } else {
-              scale = [1, scaleX || scaleY]
+              if (position === controlPosition.top || position === controlPosition.bottom) {
+                scale = [1, Math.min(scaleX, scaleY)]
+              } else {
+                scale = [Math.min(scaleX, scaleY), 1]
+              }
             }
             break
           default:
