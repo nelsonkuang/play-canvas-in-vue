@@ -2,7 +2,7 @@
   <div class="hello">
     <h1>{{ $route.meta.title }}</h1>
     <div class="container">
-      <canvas id="canvas" ref="canvas" class="canvas" width="500" height="500"></canvas>
+      <canvas id="canvas" ref="canvas" class="canvas" width="400" height="500"></canvas>
     </div>
   </div>
 </template>
@@ -41,44 +41,82 @@ export default {
       y: 0
     }
 
+    const supportedTouch = window.hasOwnProperty('ontouchstart')
+
     const bindEvents = () => {
       let isDraging = false
       let dragingObject = null
       const offset = getDomOffset(canvas)
-      // const supportedTouch = window.hasOwnProperty('ontouchstart')
-      canvas.onmousedown = function (event) {
-        tapPos = {
-          x: event.pageX - offset.left,
-          y: event.pageY - offset.top
+      if (supportedTouch) {
+        canvas.ontouchstart = function (event) {
+          tapPos = {
+            x: event.changedTouches[0].pageX - offset.left,
+            y: event.changedTouches[0].pageY - offset.top
+          }
+          const hoverDisplayObject = getHoverDisplayObject()
+          if (hoverDisplayObject) {
+            isDraging = true
+            dragingObject = hoverDisplayObject.value
+            dragingObject.onDragStart && dragingObject.onDragStart(event, { ...tapPos }, offset)
+          }
         }
-        const hoverDisplayObject = getHoverDisplayObject()
-        if (hoverDisplayObject) {
-          isDraging = true
-          dragingObject = hoverDisplayObject.value
-          dragingObject.onDragStart && dragingObject.onDragStart(event, { ...tapPos }, offset)
-        }
-      }
 
-      canvas.onmousemove = function (event) {
-        tapPos = {
-          x: event.pageX - offset.left,
-          y: event.pageY - offset.top
+        canvas.ontouchmove = function (event) {
+          event.preventDefault()
+          tapPos = {
+            x: event.changedTouches[0].pageX - offset.left,
+            y: event.changedTouches[0].pageY - offset.top
+          }
+          if (isDraging && dragingObject) {
+            dragingObject.onDragMove && dragingObject.onDragMove(event, { ...tapPos }, offset)
+          }
         }
-        if (isDraging && dragingObject) {
-          dragingObject.onDragMove && dragingObject.onDragMove(event, { ...tapPos }, offset)
+
+        canvas.ontouchend = function () {
+          dragingObject && dragingObject.onDragEnd && dragingObject.onDragEnd()
+          isDraging = false
+          dragingObject = null
         }
-      }
+      } else {
+        canvas.onmousedown = function (event) {
+          tapPos = {
+            x: event.pageX - offset.left,
+            y: event.pageY - offset.top
+          }
+          const hoverDisplayObject = getHoverDisplayObject()
+          if (hoverDisplayObject) {
+            isDraging = true
+            dragingObject = hoverDisplayObject.value
+            dragingObject.onDragStart && dragingObject.onDragStart(event, { ...tapPos }, offset)
+          }
+        }
 
-      canvas.onmouseup = function () {
-        dragingObject && dragingObject.onDragEnd && dragingObject.onDragEnd()
-        isDraging = false
-        dragingObject = null
-      }
+        canvas.onmousemove = function (event) {
+          tapPos = {
+            x: event.pageX - offset.left,
+            y: event.pageY - offset.top
+          }
+          if (isDraging && dragingObject) {
+            dragingObject.onDragMove && dragingObject.onDragMove(event, { ...tapPos }, offset)
+          }
+        }
 
-      canvas.onmouseleave = function () {
-        dragingObject && dragingObject.onDragEnd && dragingObject.onDragEnd()
-        isDraging = false
-        dragingObject = null
+        canvas.onmouseup = function () {
+          dragingObject && dragingObject.onDragEnd && dragingObject.onDragEnd()
+          isDraging = false
+          dragingObject = null
+        }
+
+        canvas.onmouseleave = function () {
+          dragingObject && dragingObject.onDragEnd && dragingObject.onDragEnd()
+          isDraging = false
+          dragingObject = null
+          animationID && cancelAnimationFrame(animationID)
+        }
+
+        canvas.onmouseenter = function () {
+          update()
+        }
       }
     }
 
@@ -160,7 +198,7 @@ export default {
     let dragging = false
 
     const myImageRect = {
-      x: 150,
+      x: 100,
       y: 150,
       width: 200,
       height: 200
@@ -394,7 +432,7 @@ export default {
     addToStage(rotateControl)
 
     bindEvents()
-    update()
+    supportedTouch ? update() : draw()
 
     /*************************** 主程序用到的函数 *****************************/
     function scaleControlDragStartHandler () {
