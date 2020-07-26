@@ -1,7 +1,7 @@
 <template>
   <div class="hello">
     <h1>{{ msg }}</h1>
-    <h3>Demos</h3>
+    <h3>不断更新中...</h3>
     <ul>
       <li
         v-for="route in routes"
@@ -21,7 +21,7 @@ export default {
   name: 'HelloWorld',
   data () {
     return {
-      msg: 'Play Canvas in Vue.js'
+      msg: '玩转 Canvas'
     }
   },
   computed: {
