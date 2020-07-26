@@ -111,11 +111,6 @@ export default {
           dragingObject && dragingObject.onDragEnd && dragingObject.onDragEnd()
           isDraging = false
           dragingObject = null
-          animationID && cancelAnimationFrame(animationID)
-        }
-
-        canvas.onmouseenter = function () {
-          update()
         }
       }
     }
@@ -432,7 +427,7 @@ export default {
     addToStage(rotateControl)
 
     bindEvents()
-    supportedTouch ? update() : draw()
+    update()
 
     /*************************** 主程序用到的函数 *****************************/
     function scaleControlDragStartHandler () {
