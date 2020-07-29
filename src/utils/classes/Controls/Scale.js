@@ -1,4 +1,8 @@
 import DisplayableCircle from '../Displayable/Circle'
+/**
+ * @enum {Number|String}
+ * @desc 所有的控制点
+ */
 export const controlPosition = {
   0: 'top',
   1: 'right',
@@ -20,6 +24,12 @@ export const controlPosition = {
 }
 class ScaleControl extends DisplayableCircle {
   type = 'ScaleControl'
+  /**
+   * @var {Object}
+   * @desc 开始位置
+   * @property {Number} x 横向
+   * @property {Number} y 纵向
+   */
   #startPos = {
     x: 0,
     y: 0
