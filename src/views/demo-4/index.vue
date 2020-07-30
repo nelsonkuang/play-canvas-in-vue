@@ -20,7 +20,7 @@ export default {
     canvas.setAttribute('width', `${cWidth}px`)
     canvas.setAttribute('height', `${cHeight}px`)
     const ctx = canvas.getContext('2d')
-    const myRectParticleSystem = new RectParticleSystem(0, 100, 500, 500, { x: 0, y: 0, width: cWidth, height: cHeight })
+    const myRectParticleSystem = new RectParticleSystem(0, 50, cWidth, cHeight - 100, { x: 0, y: 0, width: cWidth, height: cHeight })
     const update = () => {
       ctx.clearRect(0, 0, cWidth, cHeight)
       myRectParticleSystem.update()
