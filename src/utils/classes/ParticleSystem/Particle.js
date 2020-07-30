@@ -40,6 +40,6 @@ class Particle {
 * @default 1
 * @desc 最大速度
 */
-Particle.maxVelocity = 1024
+Particle.maxVelocity = 16
 
 export default Particle

@@ -1,10 +1,5 @@
 <template>
-  <div class="hello">
-    <h1>{{ $route.meta.title }}</h1>
-    <div class="container">
-      <canvas id="canvas" ref="canvas" class="canvas" width="400" height="400"></canvas>
-    </div>
-  </div>
+  <canvas id="canvas" ref="canvas" class="canvas" width="400" height="400"></canvas>
 </template>
 
 <script>
@@ -20,10 +15,12 @@ export default {
   },
   mounted () {
     const canvas = this.$refs.canvas
-    const cWidth = Number(canvas.getAttribute('width'))
-    const cHeight = Number(canvas.getAttribute('height'))
+    const cWidth = window.innerWidth
+    const cHeight = window.innerHeight
+    canvas.setAttribute('width', `${cWidth}px`)
+    canvas.setAttribute('height', `${cHeight}px`)
     const ctx = canvas.getContext('2d')
-    const myRectParticleSystem = new RectParticleSystem(0, 0, 300, 300, { x: 0, y: 0, width: 400, height: 400 })
+    const myRectParticleSystem = new RectParticleSystem(0, 0, 600, 400, { x: 0, y: 0, width: cWidth, height: cHeight })
     const update = () => {
       ctx.clearRect(0, 0, cWidth, cHeight)
       myRectParticleSystem.update()
@@ -41,9 +38,6 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .canvas {
-  border: 1px dashed #ddd;
-  display: block;
-  margin: 0 auto;
   background-color: #000;
 }
 </style>
