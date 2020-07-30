@@ -21,6 +21,14 @@ const routes = [
     }
   },
   {
+    path: '/demo-4',
+    name: 'Demo4',
+    component: () => import('@/views/demo-4/index'),
+    meta: {
+      title: 'Canvas 简单矩形粒子系统'
+    }
+  },
+  {
     path: '/demo-1',
     name: 'Demo1',
     component: () => import('@/views/demo-1/index'),
@@ -42,14 +50,6 @@ const routes = [
     component: () => import('@/views/demo-2/index'),
     meta: {
       title: 'Canvas 坐标轴上画网格'
-    }
-  },
-    {
-    path: '/demo-4',
-    name: 'Demo4',
-    component: () => import('@/views/demo-4/index'),
-    meta: {
-      title: 'Canvas 简单粒子系统'
     }
   }
 ]
