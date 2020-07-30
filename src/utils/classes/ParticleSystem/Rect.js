@@ -46,7 +46,7 @@ class RectParticleSystem {
     const { x, y } = this
     for (i = 0; i < this.width; i += 8) {
       for (j = 0; j < this.height; j += 8) {
-        this.particles.push(new Particle(vec2.fromValues(x + i, y + j), 0, '#ffffff', 2, 2))
+        this.particles.push(new Particle(vec2.fromValues(x + i, y + j), 0, '#ffffff', Math.random() * 2, Math.random() * 2))
       }
     }
   }
@@ -60,9 +60,9 @@ class RectParticleSystem {
     for (i = 0; i < this.particles.length; i++) {
       p = this.particles[i]
       vec2.subtract(out, this.attractor, p.position)
-      let distance = Math.max(2, vec2.length(out))
+      let distance = Math.max(1, vec2.length(out))
       vec2.normalize(out, out)
-      vec2.scale(out, out, distance / 512)
+      vec2.scale(out, out, distance / 1024)
       vec2.add(p.velocity, out, p.velocity)
       if (vec2.length(p.velocity) > Particle.maxVelocity) {
         vec2.normalize(p.velocity, p.velocity);
