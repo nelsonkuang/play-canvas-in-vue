@@ -29,6 +29,14 @@ const routes = [
     }
   },
   {
+    path: '/demo-5',
+    name: 'Demo5',
+    component: () => import('@/views/demo-5/index'),
+    meta: {
+      title: 'Webgl 教程 例子 一：绘制三角形(只使用顶点)'
+    }
+  },
+  {
     path: '/demo-1',
     name: 'Demo1',
     component: () => import('@/views/demo-1/index'),
