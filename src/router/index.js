@@ -29,14 +29,6 @@ const routes = [
     }
   },
   {
-    path: '/demo-5',
-    name: 'Demo5',
-    component: () => import('@/views/demo-5/index'),
-    meta: {
-      title: 'Webgl 教程 例子 一：绘制三角形(只使用顶点)'
-    }
-  },
-  {
     path: '/demo-1',
     name: 'Demo1',
     component: () => import('@/views/demo-1/index'),
@@ -58,6 +50,22 @@ const routes = [
     component: () => import('@/views/demo-2/index'),
     meta: {
       title: 'Canvas 坐标轴上画网格'
+    }
+  },
+  {
+    path: '/demo-5',
+    name: 'Demo5',
+    component: () => import('@/views/demo-5/index'),
+    meta: {
+      title: 'Webgl 教程 绘出一个绿色的长方形来填充整个画板'
+    }
+  },
+  {
+    path: '/demo-6',
+    name: 'Demo6',
+    component: () => import('@/views/demo-6/index'),
+    meta: {
+      title: 'Webgl 教程 绘画 50 个尺寸和颜色均随机的矩阵'
     }
   }
 ]

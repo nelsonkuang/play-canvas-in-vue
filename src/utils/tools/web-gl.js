@@ -93,6 +93,11 @@ export function createProgram (
   return program;
 }
 
+const defaultShaderType = [
+  'VERTEX_SHADER',
+  'FRAGMENT_SHADER',
+];
+
 /**
   * Creates a program from 2 sources.
   *
@@ -243,7 +248,7 @@ export function createUniformSetters (gl, program) {
     }
     if ((type === gl.SAMPLER_2D || type === gl.SAMPLER_CUBE) && isArray) {
       const units = [];
-      for (let ii = 0; ii < info.size; ++ii) {
+      for (let ii = 0; ii < uniformInfo.size; ++ii) {
         units.push(textureUnit++);
       }
       return function (bindPoint, units) {
@@ -569,7 +574,7 @@ export function createProgramInfo (
     const script = document.getElementById(source);
     return script ? script.text : source;
   });
-  const program = webglUtils.createProgramFromSources(gl, shaderSources, opt_attribs, opt_locations, opt_errorCallback);
+  const program = createProgramFromSources(gl, shaderSources, opt_attribs, opt_locations, opt_errorCallback);
   if (!program) {
     return null;
   }
