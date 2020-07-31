@@ -46,7 +46,7 @@ class RectParticleSystem {
     const { x, y } = this
     for (i = 0; i < this.width; i += 8) {
       for (j = 0; j < this.height; j += 8) {
-        this.particles.push(new Particle(vec2.fromValues(x + i, y + j), 0, '#ffffff', Math.random() * 2, Math.random() * 2))
+        this.particles.push(new Particle(vec2.fromValues(x + i, y + j), 0, '#ffffff', Math.random() * 4, Math.random() * 4))
       }
     }
   }
