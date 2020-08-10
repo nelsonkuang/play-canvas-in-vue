@@ -67,6 +67,14 @@ const routes = [
     meta: {
       title: 'Webgl 教程 绘画 50 个尺寸和颜色均随机的矩阵'
     }
+  },
+  {
+    path: '/demo-7',
+    name: 'Demo7',
+    component: () => import('@/views/demo-7/index'),
+    meta: {
+      title: '可用鼠标操控的 3D 立方体'
+    }
   }
 ]
 
