@@ -453,18 +453,23 @@ export default {
 
       const up = [0, 1, 0]
 
-      // Compute the camera's matrix using look at.
-      mat4.targetTo(cameraMatrix, cameraPosition, fPosition, up)
+      // 两种方式求 viewMatrix，都可以
+      // 1. Compute the camera's matrix using targetTo.
+      // mat4.targetTo(cameraMatrix, cameraPosition, fPosition, up)
 
       // Make a view matrix from the camera matrix
+      // let viewMatrix = mat4.create()
+      // mat4.invert(viewMatrix, cameraMatrix)
+
+      // 2. Compute the view's matrix using look at directly.
       let viewMatrix = mat4.create()
-      mat4.invert(viewMatrix, cameraMatrix)
+      mat4.lookAt(viewMatrix, cameraPosition, fPosition, up)
 
       // Compute a view projection matrix
       let viewProjectionMatrix = mat4.create()
       mat4.multiply(viewProjectionMatrix, projectionMatrix, viewMatrix)
 
-      for (var ii = 0; ii < numFs; ++ii) {
+      for (let ii = 0; ii < numFs; ++ii) {
         const angle = ii * Math.PI * 2 / numFs
         const x = Math.cos(angle) * radius
         const z = Math.sin(angle) * radius
