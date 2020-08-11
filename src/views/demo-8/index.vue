@@ -376,7 +376,6 @@ export default {
     let cameraAngleRadians = [degToRad(0), degToRad(270)]
     let fieldOfViewRadians = degToRad(60) // 可控制缩放
 
-    drawScene()
     function drawScene () {
       // Tell WebGL how to convert from clip space to pixels
       gl.viewport(0, 0, gl.canvas.clientWidth, gl.canvas.clientHeight)
@@ -422,8 +421,7 @@ export default {
       stride = 0               // 0 = move forward size * sizeof(type) each iteration to get the next position
       offset = 0               // start at the beginning of the buffer
       gl.vertexAttribPointer(
-        colorLocation, size, type, normalize, stride, offset);
-
+        colorLocation, size, type, normalize, stride, offset)
 
       const numFs = 6
       const radius = 200
@@ -503,6 +501,7 @@ export default {
     let dX = 0
     let dY = 0
     let drag = false
+    const supportedTouch = window.hasOwnProperty('ontouchstart')
     /* ================= Mouse events ====================== */
     function bindMouseEvents () {
       let oldX = 0
@@ -537,8 +536,42 @@ export default {
       canvas.addEventListener('mouseout', mouseUp, false)
       canvas.addEventListener('mousemove', mouseMove, false)
     }
+    /* ================= Touch events ====================== */
+    function bindTouchEvents () {
+      let oldX = 0
+      let oldY = 0
 
-    bindMouseEvents()
+      const touchStart = function (e) {
+        drag = true
+        oldX = e.changedTouches[0].pageX
+        oldY = e.changedTouches[0].pageY
+        e.preventDefault()
+        return false
+      }
+
+      const touchEnd = function () {
+        drag = false
+      }
+
+      const touchMove = function (e) {
+        if (!drag) return false
+        dX = (e.changedTouches[0].pageX - oldX) * 2 * Math.PI / cWidth
+        dY = (e.changedTouches[0].pageY - oldY) * 2 * Math.PI / cHeight
+        theta += dX
+        phi += dY
+        oldX = e.changedTouches[0].pageX
+        oldY = e.changedTouches[0].pageY
+        updateCameraAngle(theta, phi)
+        e.preventDefault()
+      }
+
+      canvas.addEventListener('touchstart', touchStart, false)
+      canvas.addEventListener('touchend', touchEnd, false)
+      canvas.addEventListener('touchmove', touchMove, false)
+    }
+    
+    drawScene()
+    supportedTouch ? bindTouchEvents() : bindMouseEvents()
   },
   beforeDestroy () {
     animationID && cancelAnimationFrame(animationID)

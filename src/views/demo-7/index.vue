@@ -105,6 +105,7 @@ export default {
     let dX = 0
     let dY = 0
     let drag = false
+    const supportedTouch = window.hasOwnProperty('ontouchstart')
     /* ================= Mouse events ====================== */
     function bindMouseEvents () {
       let oldX = 0
@@ -139,6 +140,39 @@ export default {
       canvas.addEventListener('mousemove', mouseMove, false)
     }
 
+    /* ================= Touch events ====================== */
+    function bindTouchEvents () {
+      let oldX = 0
+      let oldY = 0
+
+      const touchStart = function (e) {
+        drag = true
+        oldX = e.changedTouches[0].pageX
+        oldY = e.changedTouches[0].pageY
+        e.preventDefault()
+        return false
+      }
+
+      const touchEnd = function () {
+        drag = false
+      }
+
+      const touchMove = function (e) {
+        if (!drag) return false
+        dX = (e.changedTouches[0].pageX - oldX) * 2 * Math.PI / cWidth
+        dY = (e.changedTouches[0].pageY - oldY) * 2 * Math.PI / cHeight
+        theta += dX
+        phi += dY
+        oldX = e.changedTouches[0].pageX
+        oldY = e.changedTouches[0].pageY
+        e.preventDefault()
+      }
+
+      canvas.addEventListener('touchstart', touchStart, false)
+      canvas.addEventListener('touchend', touchEnd, false)
+      canvas.addEventListener('touchmove', touchMove, false)
+    }
+
     /* =================== Drawing =================== */
     const animate = function () {
       if (!drag) {
@@ -171,7 +205,7 @@ export default {
 
       animationID = requestAnimationFrame(animate)
     }
-    bindMouseEvents()
+    supportedTouch ? bindTouchEvents() : bindMouseEvents()
     animate()
   },
   beforeDestroy () {
