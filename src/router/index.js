@@ -73,7 +73,15 @@ const routes = [
     name: 'Demo7',
     component: () => import('@/views/demo-7/index'),
     meta: {
-      title: '可用鼠标操控的 3D 立方体'
+      title: 'Webgl 教程 可用鼠标操控的 3D 立方体'
+    }
+  },
+  {
+    path: '/demo-8',
+    name: 'Demo8',
+    component: () => import('@/views/demo-8/index'),
+    meta: {
+      title: 'Webgl 教程 三维相机'
     }
   }
 ]

@@ -20,7 +20,7 @@ export default {
     const cHeight = window.innerHeight
     canvas.setAttribute('width', `${cWidth}px`)
     canvas.setAttribute('height', `${cHeight}px`)
-    const gl = canvas.getContext('experimental-webgl')
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
 
     /* ========== Defining and storing the geometry ========== */
     const vertices = [

@@ -1,17 +1,10 @@
 <template>
   <div class="hello">
     <h1>{{ msg }}</h1>
-    <h3>不断更新中...</h3>
     <ul>
-      <li
-        v-for="route in routes"
-        :key="route.path"
-      ><a
-          href="javascript:void(0);"
-          @click="$router.push(route.path)"
-          rel="noopener"
-        >{{ route.meta.title }}</a></li>
+      <li v-for="route in routes" :key="route.path"><a href="javascript:void(0);" @click="$router.push(route.path)" rel="noopener">{{ route.meta.title }}</a></li>
     </ul>
+    <h3>不断更新中...</h3>
   </div>
 </template>
 
