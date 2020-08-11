@@ -85,6 +85,7 @@ export default {
 
     // Fill the buffer with the values that define a letter 'F'.
     function setGeometry (gl) {
+      const fScale = 0.5
       const positions = new Float32Array([
         // left column front
         0, 0, 0,
@@ -212,7 +213,7 @@ export default {
         0, 150, 30,
         0, 0, 0,
         0, 150, 30,
-        0, 150, 0].map(_ => _ * 50 / 100))
+        0, 150, 0].map(_ => _ * fScale))
 
       // Center the F around the origin and Flip it around. We do this because
       // we're in 3D now with and +Y is up where as before when we started with 2D
@@ -223,7 +224,7 @@ export default {
       // never do stuff at draw time if you can do it at init time.
       let matrix = mat4.create()
       mat4.rotateX(matrix, matrix, Math.PI)
-      mat4.translate(matrix, matrix, [-50, -75, -15].map(_ => _ * 50 / 100))
+      mat4.translate(matrix, matrix, [-50, -75, -15].map(_ => _ * fScale))
 
       for (let ii = 0; ii < positions.length; ii += 3) {
         let v4 = vec4.create()
@@ -372,8 +373,8 @@ export default {
     }
 
     // Draw the scene.
-    let cameraAngleRadians = [degToRad(0), degToRad(0)]
-    let fieldOfViewRadians = degToRad(60)
+    let cameraAngleRadians = [degToRad(0), degToRad(270)]
+    let fieldOfViewRadians = degToRad(60) // 可控制缩放
 
     drawScene()
     function drawScene () {
