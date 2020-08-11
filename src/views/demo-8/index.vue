@@ -371,8 +371,8 @@ export default {
     }
 
     // Draw the scene.
-    let cameraAngleRadians = degToRad(0)
-    const fieldOfViewRadians = degToRad(60)
+    let cameraAngleRadians = [degToRad(0), degToRad(0)]
+    let fieldOfViewRadians = degToRad(60)
 
     drawScene()
     function drawScene () {
@@ -439,7 +439,8 @@ export default {
       // Use matrix math to compute a position on a circle where
       // the camera is
       let cameraMatrix = mat4.create()
-      mat4.rotateY(cameraMatrix, cameraMatrix, cameraAngleRadians)
+      mat4.rotateX(cameraMatrix, cameraMatrix, cameraAngleRadians[0])
+      mat4.rotateY(cameraMatrix, cameraMatrix, cameraAngleRadians[1])
       mat4.translate(cameraMatrix, cameraMatrix, [0, 0, radius * 1.5])
 
       // Get the camera's position from the matrix we computed
@@ -483,26 +484,26 @@ export default {
       }
     }
 
-    function updateCameraAngle (value) {
-      cameraAngleRadians = value
+    function updateCameraAngle (theta, phi) {
+      cameraAngleRadians = [phi, theta]
       drawScene()
     }
 
     // let amorization = 0.95
-    let theta = 0
-    // let phi = 0
+    let theta = cameraAngleRadians[1]
+    let phi = cameraAngleRadians[0]
     let dX = 0
-    // let dY = 0
+    let dY = 0
     let drag = false
     /* ================= Mouse events ====================== */
     function bindMouseEvents () {
       let oldX = 0
-      // let oldY = 0
+      let oldY = 0
 
       const mouseDown = function (e) {
         drag = true
         oldX = e.pageX
-        // oldY = e.pageY
+        oldY = e.pageY
         e.preventDefault()
         return false
       }
@@ -514,12 +515,12 @@ export default {
       const mouseMove = function (e) {
         if (!drag) return false
         dX = (e.pageX - oldX) * 2 * Math.PI / cWidth
-        // dY = (e.pageY - oldY) * 2 * Math.PI / cHeight
+        dY = (e.pageY - oldY) * 2 * Math.PI / cHeight
         theta -= dX
-        // phi += dY
+        phi -= dY
         oldX = e.pageX
-        // oldY = e.pageY
-        updateCameraAngle(theta)
+        oldY = e.pageY
+        updateCameraAngle(theta, phi)
         e.preventDefault()
       }
 
