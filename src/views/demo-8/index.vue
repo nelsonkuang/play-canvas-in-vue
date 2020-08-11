@@ -73,60 +73,6 @@ export default {
     // Put color data into buffer
     setColors(gl)
 
-    // let amorization = 0.95
-    // let theta = 0
-    // let phi = 0
-    // let dX = 0
-    // let dY = 0
-    // let drag = false
-    // /* ================= Mouse events ====================== */
-    // function bindMouseEvents () {
-    //   let oldX = 0
-    //   let oldY = 0
-
-    //   const mouseDown = function (e) {
-    //     drag = true
-    //     oldX = e.pageX
-    //     oldY = e.pageY
-    //     e.preventDefault()
-    //     return false
-    //   }
-
-    //   const mouseUp = function () {
-    //     drag = false
-    //   }
-
-    //   const mouseMove = function (e) {
-    //     if (!drag) return false
-    //     dX = (e.pageX - oldX) * 2 * Math.PI / cWidth
-    //     dY = (e.pageY - oldY) * 2 * Math.PI / cHeight
-    //     theta += dX
-    //     phi += dY
-    //     oldX = e.pageX
-    //     oldY = e.pageY
-    //     e.preventDefault()
-    //   }
-
-    //   canvas.addEventListener('mousedown', mouseDown, false)
-    //   canvas.addEventListener('mouseup', mouseUp, false)
-    //   canvas.addEventListener('mouseout', mouseUp, false)
-    //   canvas.addEventListener('mousemove', mouseMove, false)
-    // }
-
-    /* =================== Drawing =================== */
-    // const animate = function () {
-    //   if (!drag) {
-    //     dX *= amorization
-    //     dY *= amorization
-    //     theta += dX
-    //     phi += dY
-    //   }
-
-    //   animationID = requestAnimationFrame(animate)
-    // }
-    // bindMouseEvents()
-    // animate()
-
     /* =================== 通用函数 =================== */
     // function radToDeg (r) {
     //   return r * 180 / Math.PI
@@ -138,7 +84,7 @@ export default {
 
     // Fill the buffer with the values that define a letter 'F'.
     function setGeometry (gl) {
-      var positions = new Float32Array([
+      const positions = new Float32Array([
         // left column front
         0, 0, 0,
         0, 150, 0,
@@ -265,7 +211,7 @@ export default {
         0, 150, 30,
         0, 0, 0,
         0, 150, 30,
-        0, 150, 0]);
+        0, 150, 0].map(_ => _ * 50 / 100))
 
       // Center the F around the origin and Flip it around. We do this because
       // we're in 3D now with and +Y is up where as before when we started with 2D
@@ -276,7 +222,7 @@ export default {
       // never do stuff at draw time if you can do it at init time.
       let matrix = mat4.create()
       mat4.rotateX(matrix, matrix, Math.PI)
-      mat4.translate(matrix, matrix, [-50, -75, -15])
+      mat4.translate(matrix, matrix, [-50, -75, -15].map(_ => _ * 50 / 100))
 
       for (let ii = 0; ii < positions.length; ii += 3) {
         let v4 = vec4.create()
@@ -425,7 +371,7 @@ export default {
     }
 
     // Draw the scene.
-    const cameraAngleRadians = degToRad(0)
+    let cameraAngleRadians = degToRad(0)
     const fieldOfViewRadians = degToRad(60)
 
     drawScene()
@@ -536,6 +482,54 @@ export default {
         gl.drawArrays(primitiveType, offset, count)
       }
     }
+
+    function updateCameraAngle (value) {
+      cameraAngleRadians = value
+      drawScene()
+    }
+
+    // let amorization = 0.95
+    let theta = 0
+    // let phi = 0
+    let dX = 0
+    // let dY = 0
+    let drag = false
+    /* ================= Mouse events ====================== */
+    function bindMouseEvents () {
+      let oldX = 0
+      // let oldY = 0
+
+      const mouseDown = function (e) {
+        drag = true
+        oldX = e.pageX
+        // oldY = e.pageY
+        e.preventDefault()
+        return false
+      }
+
+      const mouseUp = function () {
+        drag = false
+      }
+
+      const mouseMove = function (e) {
+        if (!drag) return false
+        dX = (e.pageX - oldX) * 2 * Math.PI / cWidth
+        // dY = (e.pageY - oldY) * 2 * Math.PI / cHeight
+        theta -= dX
+        // phi += dY
+        oldX = e.pageX
+        // oldY = e.pageY
+        updateCameraAngle(theta)
+        e.preventDefault()
+      }
+
+      canvas.addEventListener('mousedown', mouseDown, false)
+      canvas.addEventListener('mouseup', mouseUp, false)
+      canvas.addEventListener('mouseout', mouseUp, false)
+      canvas.addEventListener('mousemove', mouseMove, false)
+    }
+
+    bindMouseEvents()
   },
   beforeDestroy () {
     animationID && cancelAnimationFrame(animationID)
