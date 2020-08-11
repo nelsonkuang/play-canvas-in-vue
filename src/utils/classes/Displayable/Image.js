@@ -41,7 +41,7 @@ class DisplayableImage extends DisplayableObject {
     if ($el) {
       drawImage(ctx, $el)
     } else {
-      load(src, (img) => {
+      src && load(src, (img) => {
         drawImage(ctx, img)
       })
     }
