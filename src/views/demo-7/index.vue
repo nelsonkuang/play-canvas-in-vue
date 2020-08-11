@@ -4,6 +4,7 @@
 
 <script>
 /* eslint-disable no-alert, no-console */
+// Reference from: https://www.tutorialspoint.com/webgl/webgl_interactive_cube.htm
 import { mat4 } from 'gl-matrix'
 import { createProgram, loadShader, createBufferFromTypedArray } from '../../utils/tools/web-gl'
 let animationID = null

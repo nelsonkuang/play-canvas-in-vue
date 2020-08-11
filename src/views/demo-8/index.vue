@@ -4,6 +4,7 @@
 
 <script>
 /* eslint-disable no-alert, no-console */
+// Reference from: https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-3d-camera.html
 import { mat4, vec4 } from 'gl-matrix'
 import { createProgram, loadShader } from '../../utils/tools/web-gl'
 let animationID = null
@@ -423,7 +424,7 @@ export default {
         colorLocation, size, type, normalize, stride, offset);
 
 
-      const numFs = 5
+      const numFs = 6
       const radius = 200
 
       // Compute the projection matrix
@@ -466,19 +467,20 @@ export default {
       for (var ii = 0; ii < numFs; ++ii) {
         const angle = ii * Math.PI * 2 / numFs
         const x = Math.cos(angle) * radius
-        const y = Math.sin(angle) * radius
+        const z = Math.sin(angle) * radius
 
         // starting with the view projection matrix
         // compute a matrix for the F
         let matrix = mat4.create()
-        mat4.translate(matrix, viewProjectionMatrix, [x, 0, y])
+        mat4.translate(matrix, viewProjectionMatrix, [x, 0, z])
+        mat4.rotateY(matrix, matrix, Math.PI - angle)
 
         // Set the matrix.
         gl.uniformMatrix4fv(matrixLocation, false, matrix)
 
         // Draw the geometry.
         const primitiveType = gl.TRIANGLES
-        const offset = 0;
+        const offset = 0
         const count = 16 * 6;
         gl.drawArrays(primitiveType, offset, count)
       }
