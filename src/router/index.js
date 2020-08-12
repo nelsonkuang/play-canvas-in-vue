@@ -83,6 +83,14 @@ const routes = [
     meta: {
       title: 'Webgl 教程 三维相机'
     }
+  },
+  {
+    path: '/demo-9',
+    name: 'Demo9',
+    component: () => import('@/views/demo-9/index'),
+    meta: {
+      title: 'Webgl 教程 三维相机 + 3D 纹理的使用'
+    }
   }
 ]
 
