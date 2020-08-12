@@ -91,6 +91,14 @@ const routes = [
     meta: {
       title: 'Webgl 教程 三维相机 + 3D 纹理的使用'
     }
+  },
+  {
+    path: '/demo-10',
+    name: 'Demo10',
+    component: () => import('@/views/demo-10/index'),
+    meta: {
+      title: 'Webgl 教程 三维平行光源'
+    }
   }
 ]
 

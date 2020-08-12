@@ -5,9 +5,8 @@
 <script>
 /* eslint-disable no-alert, no-console */
 // Reference from: https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-3d-camera.html
-import { mat4, vec4 } from 'gl-matrix'
+import { mat4, vec4, vec3 } from 'gl-matrix'
 import { createProgram, loadShader } from '../../utils/tools/web-gl'
-let animationID = null
 export default {
   data () {
     return {
@@ -26,14 +25,20 @@ export default {
     const vertexShaderCode = `
       attribute vec4 a_position;
       attribute vec4 a_color;
+      attribute vec3 a_normal;
 
-      uniform mat4 u_matrix;
+      uniform mat4 u_worldViewProjection;
+      uniform mat4 u_worldInverseTranspose;
 
+      varying vec3 v_normal;
       varying vec4 v_color;
 
       void main() {
         // Multiply the position by the matrix.
-        gl_Position = u_matrix * a_position;
+        gl_Position = u_worldViewProjection * a_position;
+
+        // orient the normals and pass to the fragment shader
+        v_normal = mat3(u_worldInverseTranspose) * a_normal;
 
         // Pass the color to the fragment shader.
         v_color = a_color;
@@ -44,21 +49,37 @@ export default {
       precision mediump float;
 
       // Passed in from the vertex shader.
+      varying vec3 v_normal;
+
+      uniform vec3 u_reverseLightDirection;
       varying vec4 v_color;
 
       void main() {
+        // because v_normal is a varying it's interpolated
+        // so it will not be a unit vector. Normalizing it
+        // will make it a unit vector again
+        vec3 normal = normalize(v_normal);
+
+        float light = dot(normal, u_reverseLightDirection);
+
         gl_FragColor = v_color;
-      }
+
+        // Lets multiply just the color portion (not the alpha)
+        // by the light
+        gl_FragColor.rgb *= light;
     `
 
     const program = createProgram(gl, [loadShader(gl, vertexShaderCode, gl.VERTEX_SHADER), loadShader(gl, fragmentShaderCode, gl.FRAGMENT_SHADER)])
 
     // look up where the vertex data needs to go.
     const positionLocation = gl.getAttribLocation(program, 'a_position')
-    const colorLocation = gl.getAttribLocation(program, 'a_color')
+    const normalLocation = gl.getAttribLocation(program, 'a_normal')
 
     // lookup uniforms
-    const matrixLocation = gl.getUniformLocation(program, 'u_matrix')
+    const worldViewProjectionLocation = gl.getUniformLocation(program, 'u_worldViewProjection')
+    const worldInverseTransposeLocation = gl.getUniformLocation(program, 'u_worldInverseTranspose')
+    const colorLocation = gl.getAttribLocation(program, 'a_color')
+    const reverseLightDirectionLocation = gl.getUniformLocation(program, 'u_reverseLightDirection')
 
     // Create a buffer to put positions in
     const positionBuffer = gl.createBuffer()
@@ -66,6 +87,13 @@ export default {
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
     // Put geometry data into buffer
     setGeometry(gl)
+
+    // Create a buffer to put normals in
+    const normalBuffer = gl.createBuffer()
+    // Bind it to ARRAY_BUFFER (think of it as ARRAY_BUFFER = normalBuffer)
+    gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer)
+    // Put normals data into buffer
+    setNormals(gl)
 
     // Create a buffer to put colors in
     const colorBuffer = gl.createBuffer()
@@ -372,8 +400,140 @@ export default {
         gl.STATIC_DRAW)
     }
 
+    function setNormals (gl) {
+      const normals = new Float32Array([
+        // left column front
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+
+        // top rung front
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+
+        // middle rung front
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+
+        // left column back
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+
+        // top rung back
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+
+        // middle rung back
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+
+        // top
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
+
+        // top rung right
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+
+        // under top rung
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+
+        // between top rung and middle
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+
+        // top of middle rung
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
+
+        // right of middle rung
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+
+        // bottom of middle rung.
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+
+        // right of bottom
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+
+        // bottom
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+
+        // left side
+        -1, 0, 0,
+        -1, 0, 0,
+        -1, 0, 0,
+        -1, 0, 0,
+        -1, 0, 0,
+        -1, 0, 0])
+      gl.bufferData(gl.ARRAY_BUFFER, normals, gl.STATIC_DRAW)
+    }
+
     // Draw the scene.
-    let cameraAngleRadians = [degToRad(0), degToRad(270)]
+    let fAngleRadians = [degToRad(0), degToRad(0)]
     let fieldOfViewRadians = degToRad(60) // 可控制缩放
 
     function drawScene () {
@@ -423,8 +583,20 @@ export default {
       gl.vertexAttribPointer(
         colorLocation, size, type, normalize, stride, offset)
 
-      const numFs = 6
-      const radius = 200
+      // Turn on the normal attribute
+      gl.enableVertexAttribArray(normalLocation)
+
+      // Bind the normal buffer.
+      gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer)
+
+      // Tell the attribute how to get data out of normalBuffer (ARRAY_BUFFER)
+      size = 3                 // 3 components per iteration
+      type = gl.FLOAT  // the data is 32bit floating point values
+      normalize = false         // normalize the data (convert from 0-255 to 0-1)
+      stride = 0               // 0 = move forward size * sizeof(type) each iteration to get the next position
+      offset = 0               // start at the beginning of the buffer
+      gl.vertexAttribPointer(
+        normalLocation, size, type, normalize, stride, offset)
 
       // Compute the projection matrix
       const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight
@@ -433,23 +605,10 @@ export default {
       let projectionMatrix = mat4.create()
       mat4.perspective(projectionMatrix, fieldOfViewRadians, aspect, zNear, zFar)
 
-      // Compute the position of the first F
-      const fPosition = [radius, 0, 0]
 
-      // Use matrix math to compute a position on a circle where
-      // the camera is
-      let cameraMatrix = mat4.create()
-      mat4.rotateX(cameraMatrix, cameraMatrix, cameraAngleRadians[0])
-      mat4.rotateY(cameraMatrix, cameraMatrix, cameraAngleRadians[1])
-      mat4.translate(cameraMatrix, cameraMatrix, [0, 0, radius * 1.5])
-
-      // Get the camera's position from the matrix we computed
-      const cameraPosition = [
-        cameraMatrix[12],
-        cameraMatrix[13],
-        cameraMatrix[14],
-      ]
-
+      // Compute the camera's matrix
+      const camera = [100, 150, 200]
+      const target = [0, 35, 0]
       const up = [0, 1, 0]
 
       // 两种方式求 viewMatrix，都可以
@@ -462,42 +621,48 @@ export default {
 
       // 2. Compute the view's matrix using look at directly.
       let viewMatrix = mat4.create()
-      mat4.lookAt(viewMatrix, cameraPosition, fPosition, up)
+      mat4.lookAt(viewMatrix, camera, target, up)
 
       // Compute a view projection matrix
       let viewProjectionMatrix = mat4.create()
       mat4.multiply(viewProjectionMatrix, projectionMatrix, viewMatrix)
 
-      for (let ii = 0; ii < numFs; ++ii) {
-        const angle = ii * Math.PI * 2 / numFs
-        const x = Math.cos(angle) * radius
-        const z = Math.sin(angle) * radius
+      // Draw a F at the origin
+      let worldMatrix = mat4.create()
+      mat4.rotateY(worldMatrix, worldMatrix, fAngleRadians[1])
+      mat4.rotateX(worldMatrix, worldMatrix, fAngleRadians[0])
 
-        // starting with the view projection matrix
-        // compute a matrix for the F
-        let matrix = mat4.create()
-        mat4.translate(matrix, viewProjectionMatrix, [x, 0, z])
-        mat4.rotateY(matrix, matrix, Math.PI - angle)
+      // Multiply the matrices.
+      let worldViewProjectionMatrix = mat4.create()
+      mat4.multiply(worldViewProjectionMatrix, viewProjectionMatrix, worldMatrix)
+      let worldInverseMatrix = mat4.create()
+      mat4.invert(worldInverseMatrix, worldMatrix) // 求逆
+      let worldInverseTransposeMatrix = mat4.create()
+      mat4.transpose(worldInverseTransposeMatrix, worldInverseMatrix) // 转置
 
-        // Set the matrix.
-        gl.uniformMatrix4fv(matrixLocation, false, matrix)
+      // Set the matrices
+      gl.uniformMatrix4fv(worldViewProjectionLocation, false, worldViewProjectionMatrix)
+      gl.uniformMatrix4fv(worldInverseTransposeLocation, false, worldInverseTransposeMatrix)
 
-        // Draw the geometry.
-        const primitiveType = gl.TRIANGLES
-        const offset = 0
-        const count = 16 * 6;
-        gl.drawArrays(primitiveType, offset, count)
-      }
+      // set the light direction.
+      let v3 = vec3.fromValues(0.5, 0.7, 1)
+      vec3.normalize(v3, v3)
+      gl.uniform3fv(reverseLightDirectionLocation, v3)
+
+      const primitiveType = gl.TRIANGLES
+      offset = 0
+      const count = 16 * 6
+      gl.drawArrays(primitiveType, offset, count)
     }
 
     function updateCameraAngle (theta, phi) {
-      cameraAngleRadians = [phi, theta]
+      fAngleRadians = [phi, theta]
       drawScene()
     }
 
     // let amorization = 0.95
-    let theta = cameraAngleRadians[1]
-    let phi = cameraAngleRadians[0]
+    let theta = fAngleRadians[1]
+    let phi = fAngleRadians[0]
     let dX = 0
     let dY = 0
     let drag = false
@@ -521,8 +686,8 @@ export default {
 
       const mouseMove = function (e) {
         if (!drag) return false
-        dX = (e.pageX - oldX) * 2 * Math.PI / cWidth
-        dY = (e.pageY - oldY) * 2 * Math.PI / cHeight
+        dX = (e.pageX - oldX) * 2 * Math.PI / gl.canvas.clientWidth
+        dY = (e.pageY - oldY) * 2 * Math.PI / gl.canvas.clientHeight
         theta -= dX
         phi -= dY
         oldX = e.pageX
@@ -555,8 +720,8 @@ export default {
 
       const touchMove = function (e) {
         if (!drag) return false
-        dX = (e.changedTouches[0].pageX - oldX) * 2 * Math.PI / cWidth
-        dY = (e.changedTouches[0].pageY - oldY) * 2 * Math.PI / cHeight
+        dX = (e.changedTouches[0].pageX - oldX) * 2 * Math.PI / gl.canvas.clientWidth
+        dY = (e.changedTouches[0].pageY - oldY) * 2 * Math.PI / gl.canvas.clientHeight
         theta += dX
         phi += dY
         oldX = e.changedTouches[0].pageX
@@ -569,12 +734,11 @@ export default {
       canvas.addEventListener('touchend', touchEnd, false)
       canvas.addEventListener('touchmove', touchMove, false)
     }
-    
+
     drawScene()
     supportedTouch ? bindTouchEvents() : bindMouseEvents()
   },
   beforeDestroy () {
-    animationID && cancelAnimationFrame(animationID)
   }
 }
 </script>
