@@ -60,7 +60,7 @@ export default {
         // will make it a unit vector again
         vec3 normal = normalize(v_normal);
 
-        float light = dot(normal, u_reverseLightDirection); // 面方向矢量与光的方向矢量点积得到一个标量，表示归一化的投影，根据余弦定理，90 度，投影则成一点，但最亮。
+        float light = dot(normal, u_reverseLightDirection); // 面方向向量与光的方向向量点积得到一个标量，表示归一化的投影，根据余弦定理，90 度，投影则成一点，但最亮。
 
         gl_FragColor = v_color;
 
@@ -636,7 +636,7 @@ export default {
       // Multiply the matrices.
       let worldViewProjectionMatrix = mat4.create()
       mat4.multiply(worldViewProjectionMatrix, viewProjectionMatrix, worldMatrix)
-      // 下面求逆加转置用于求物体各个面的方向矢量
+      // 下面求逆加转置用于求物体各个面的方向向量
       let worldInverseMatrix = mat4.create()
       mat4.invert(worldInverseMatrix, worldMatrix) // 求逆
       let worldInverseTransposeMatrix = mat4.create()
