@@ -27,25 +27,36 @@ export default {
       attribute vec4 a_color;
       attribute vec3 a_normal;
 
+      uniform vec3 u_lightWorldPosition;
+      uniform vec3 u_viewWorldPosition;
+
+      uniform mat4 u_world;
       uniform mat4 u_worldViewProjection;
       uniform mat4 u_worldInverseTranspose;
-      // uniform mat4 u_world;
 
       varying vec3 v_normal;
+
+      varying vec3 v_surfaceToLight;
+      varying vec3 v_surfaceToView;
       varying vec4 v_color;
 
       void main() {
         // Multiply the position by the matrix.
         gl_Position = u_worldViewProjection * a_position;
 
-        // 重定向法向量并传递给片断着色器。法向量是方向所以不用关心位移， 矩阵的左上 3x3 部分才是控制姿态
-        // v_normal = mat3(u_world) * a_normal;
-
-        // 这里有一个问题我不知道如何表述所以就用图解展示。 我们用 normal 和 u_world 相乘去重定向法向量， 如果世界矩阵被缩放了怎么办？事实是会得到错误的法向量。
         // orient the normals and pass to the fragment shader
-        v_normal = mat3(u_worldInverseTranspose) * a_normal; // 求逆再转置，与上面直接相乘效果是一样的，但避免了缩放带来的影响
-        // 或者
-        // v_normal = (u_worldInverseTranspose * vec4(a_normal, 0)).xyz; // 这可能是更常用的方式
+        v_normal = mat3(u_worldInverseTranspose) * a_normal;
+
+        // compute the world position of the surfoace
+        vec3 surfaceWorldPosition = (u_world * a_position).xyz;
+
+        // compute the vector of the surface to the light
+        // and pass it to the fragment shader
+        v_surfaceToLight = u_lightWorldPosition - surfaceWorldPosition;
+
+        // compute the vector of the surface to the view/camera
+        // and pass it to the fragment shader
+        v_surfaceToView = normalize(u_viewWorldPosition - surfaceWorldPosition);
 
         // Pass the color to the fragment shader.
         v_color = a_color;
@@ -57,8 +68,12 @@ export default {
 
       // Passed in from the vertex shader.
       varying vec3 v_normal;
+      varying vec3 v_surfaceToLight;
+      varying vec3 v_surfaceToView;
 
-      uniform vec3 u_reverseLightDirection;
+      uniform float u_shininess;
+      uniform vec3 u_lightColor;
+      uniform vec3 u_specularColor;
       varying vec4 v_color;
 
       void main() {
@@ -67,13 +82,26 @@ export default {
         // will make it a unit vector again
         vec3 normal = normalize(v_normal);
 
-        float light = dot(normal, u_reverseLightDirection); // 面方向向量与光的方向向量点积得到一个标量，表示归一化的投影，根据余弦定理，90 度，投影则成一点，但最亮。
+        vec3 surfaceToLightDirection = normalize(v_surfaceToLight);
+        vec3 surfaceToViewDirection = normalize(v_surfaceToView);
+        vec3 halfVector = normalize(surfaceToLightDirection + surfaceToViewDirection);
+
+        float light = dot(normal, surfaceToLightDirection); // 求光强弱
+        float specular = 0.0;
+        if (light > 0.0) { // 如果 = 0 则，垂起照射，高光最强
+          specular = pow(dot(normal, halfVector), u_shininess); // halfVector 与 normal 角度越小，光照越强
+        }
 
         gl_FragColor = v_color;
 
         // Lets multiply just the color portion (not the alpha)
         // by the light
-        gl_FragColor.rgb *= light;
+        gl_FragColor.rgb *= light * u_lightColor;
+        // gl_FragColor.rgb *= light;
+
+        // 直接加上高光
+        // Just add in the specular
+        gl_FragColor.rgb += specular * u_specularColor;
       }
     `
 
@@ -87,7 +115,12 @@ export default {
     // lookup uniforms
     const worldViewProjectionLocation = gl.getUniformLocation(program, 'u_worldViewProjection')
     const worldInverseTransposeLocation = gl.getUniformLocation(program, 'u_worldInverseTranspose')
-    const reverseLightDirectionLocation = gl.getUniformLocation(program, 'u_reverseLightDirection')
+    const shininessLocation = gl.getUniformLocation(program, 'u_shininess')
+    const lightWorldPositionLocation = gl.getUniformLocation(program, 'u_lightWorldPosition')
+    const viewWorldPositionLocation = gl.getUniformLocation(program, 'u_viewWorldPosition')
+    const worldLocation = gl.getUniformLocation(program, 'u_world')
+    const lightColorLocation = gl.getUniformLocation(program, 'u_lightColor')
+    const specularColorLocation = gl.getUniformLocation(program, 'u_specularColor')
 
     // Create a buffer to put positions in
     const positionBuffer = gl.createBuffer()
@@ -546,6 +579,7 @@ export default {
     // Draw the scene.
     let fAngleRadians = [degToRad(0), degToRad(0)]
     let fieldOfViewRadians = degToRad(60) // 可控制缩放
+    let shininess = 150
 
     function drawScene () {
       // Tell WebGL how to convert from clip space to pixels
@@ -655,11 +689,22 @@ export default {
       // Set the matrices
       gl.uniformMatrix4fv(worldViewProjectionLocation, false, worldViewProjectionMatrix)
       gl.uniformMatrix4fv(worldInverseTransposeLocation, false, worldInverseTransposeMatrix)
+      gl.uniformMatrix4fv(worldLocation, false, worldMatrix)
 
+      // set the light position
+      gl.uniform3fv(lightWorldPositionLocation, [20, 30, 60])
+      // set the camera/view position
+      gl.uniform3fv(viewWorldPositionLocation, camera)
+      // set the shininess
+      gl.uniform1f(shininessLocation, shininess)
       // set the light direction.
-      let v3 = vec3.fromValues(0.5, 0.7, 1)
+      let v3 = vec3.fromValues(1, 0.6, 0.6) // red light
       vec3.normalize(v3, v3)
-      gl.uniform3fv(reverseLightDirectionLocation, v3)
+      gl.uniform3fv(lightColorLocation, v3)
+
+      // set the specular color
+      v3 = vec3.fromValues(1, 0.2, 0.2) // red light
+      gl.uniform3fv(specularColorLocation, v3)
 
       const primitiveType = gl.TRIANGLES
       offset = 0
