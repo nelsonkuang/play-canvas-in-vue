@@ -38,7 +38,7 @@ export default {
         gl_Position = u_worldViewProjection * a_position;
 
         // orient the normals and pass to the fragment shader
-        v_normal = mat3(u_worldInverseTranspose) * a_normal;
+        v_normal = mat3(u_worldInverseTranspose) * a_normal; // 用来表示每个面的方向
 
         // Pass the color to the fragment shader.
         v_color = a_color;
@@ -60,7 +60,7 @@ export default {
         // will make it a unit vector again
         vec3 normal = normalize(v_normal);
 
-        float light = dot(normal, u_reverseLightDirection);
+        float light = dot(normal, u_reverseLightDirection); // 点积得到一个标量，表示归一化的投影，根据余弦定理，90 度，投影则成一点，但最亮。
 
         gl_FragColor = v_color;
 
