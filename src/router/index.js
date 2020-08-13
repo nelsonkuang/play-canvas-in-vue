@@ -107,6 +107,14 @@ const routes = [
     meta: {
       title: 'Webgl 教程 三维点光源'
     }
+  },
+  {
+    path: '/demo-12',
+    name: 'Demo12',
+    component: () => import('@/views/demo-12/index'),
+    meta: {
+      title: 'Webgl 教程 三维聚光灯光源'
+    }
   }
 ]
 
