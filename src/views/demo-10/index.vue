@@ -67,6 +67,7 @@ export default {
         // Lets multiply just the color portion (not the alpha)
         // by the light
         gl_FragColor.rgb *= light;
+      }
     `
 
     const program = createProgram(gl, [loadShader(gl, vertexShaderCode, gl.VERTEX_SHADER), loadShader(gl, fragmentShaderCode, gl.FRAGMENT_SHADER)])
@@ -74,11 +75,11 @@ export default {
     // look up where the vertex data needs to go.
     const positionLocation = gl.getAttribLocation(program, 'a_position')
     const normalLocation = gl.getAttribLocation(program, 'a_normal')
+    const colorLocation = gl.getAttribLocation(program, 'a_color')
 
     // lookup uniforms
     const worldViewProjectionLocation = gl.getUniformLocation(program, 'u_worldViewProjection')
     const worldInverseTransposeLocation = gl.getUniformLocation(program, 'u_worldInverseTranspose')
-    const colorLocation = gl.getAttribLocation(program, 'a_color')
     const reverseLightDirectionLocation = gl.getUniformLocation(program, 'u_reverseLightDirection')
 
     // Create a buffer to put positions in
@@ -113,7 +114,7 @@ export default {
 
     // Fill the buffer with the values that define a letter 'F'.
     function setGeometry (gl) {
-      const fScale = 0.5
+      const fScale = 0.8
       const positions = new Float32Array([
         // left column front
         0, 0, 0,
@@ -688,8 +689,8 @@ export default {
         if (!drag) return false
         dX = (e.pageX - oldX) * 2 * Math.PI / gl.canvas.clientWidth
         dY = (e.pageY - oldY) * 2 * Math.PI / gl.canvas.clientHeight
-        theta -= dX
-        phi -= dY
+        theta += dX
+        phi += dY
         oldX = e.pageX
         oldY = e.pageY
         updateCameraAngle(theta, phi)
