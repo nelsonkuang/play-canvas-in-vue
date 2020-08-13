@@ -636,6 +636,7 @@ export default {
       // Multiply the matrices.
       let worldViewProjectionMatrix = mat4.create()
       mat4.multiply(worldViewProjectionMatrix, viewProjectionMatrix, worldMatrix)
+      // 下面求逆加转置用于求物体各个面的方向矢量
       let worldInverseMatrix = mat4.create()
       mat4.invert(worldInverseMatrix, worldMatrix) // 求逆
       let worldInverseTransposeMatrix = mat4.create()
