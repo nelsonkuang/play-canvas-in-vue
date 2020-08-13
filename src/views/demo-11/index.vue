@@ -4,7 +4,7 @@
 
 <script>
 /* eslint-disable no-alert, no-console */
-// Reference from: https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-3d-camera.html
+// Reference from: https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-3d-lighting-point.html
 import { mat4, vec4, vec3 } from 'gl-matrix'
 import { createProgram, loadShader } from '../../utils/tools/web-gl'
 export default {
