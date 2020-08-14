@@ -5,20 +5,22 @@ class MatrixStack {
   #stack = []
   #matrixType = 4
   #m = mat4
+  #out
 
   constructor(matrixType = 4) {
     this.#matrixType = matrixType
     if (matrixType !== 4) {
       this.#m = mat3
     }
-    this.#stack[0] = this.#m.identity()
+    this.#out = this.#m.create()
+    this.#stack[0] = this.#m.identity(this.#out)
   }
 
   restore () {
     this.#stack.pop()
     // Never let the stack be totally empty
-    if (this.stack.length < 1) {
-      this.#stack[0] = this.#m.identity()
+    if (this.#stack.length < 1) {
+      this.#stack[0] = this.#m.identity(this.#out)
     }
   }
 
