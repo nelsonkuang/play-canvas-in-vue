@@ -90,7 +90,7 @@ export default {
     ]
 
     let drawInfos = []
-    let numToDraw = 9
+    let numToDraw = 100
     let speed = [60, 60]
     for (let ii = 0; ii < numToDraw; ++ii) {
       const drawInfo = {
