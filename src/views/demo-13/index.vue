@@ -3,7 +3,8 @@
 </template>
 
 <script>
-/* eslint-disable no-alert, no-console */
+// Reference from: https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-2d-drawimage.html
+/* eslint-disable no-alert, no-console, no-debugger */
 import { mat4 } from 'gl-matrix'
 import { createProgram, loadShader } from '../../utils/tools/web-gl'
 import fTextureImg from '../../assets/f-texture.jpg'
