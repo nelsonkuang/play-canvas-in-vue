@@ -107,7 +107,7 @@ export default {
         img.onload = null
         cb(img)
         return
-      };
+      }
       img.onerror = function () {
         img.onerror = null
         cb(img)
