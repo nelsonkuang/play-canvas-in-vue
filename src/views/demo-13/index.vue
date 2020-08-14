@@ -111,10 +111,6 @@ export default {
       }
       drawInfos.push(drawInfo)
     }
-    // const update = () => {
-    //   animationID = requestAnimationFrame(update)
-    // }
-    // update()
     /*** 通用函数 ***/
     function AsynLoadImage (url, cb) {
       const img = new Image()
