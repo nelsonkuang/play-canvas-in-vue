@@ -24,22 +24,61 @@ class Box {
     const nearZ = this.centerZ + this.depth / 2
     const farZ = this.centerZ - this.depth / 2
     this.#cornerVertices = {
-      nearTopLeft: [leftX, topY, nearZ],
-      nearTopRight: [rightX, topY, nearZ],
-      nearBottomLeft: [leftX, bottomY, nearZ],
-      nearBottomRight: [rightX, bottomY, nearZ],
-      farTopLeft: [leftX, topY, farZ],
-      farTopRight: [rightX, topY, farZ],
-      farBottomLeft: [leftX, bottomY, farZ],
-      farBottomRight: [rightX, bottomY, farZ]
+      nearTopLeft: vec3.fromValues(leftX, topY, nearZ),
+      nearTopRight: vec3.fromValues(rightX, topY, nearZ),
+      nearBottomLeft: vec3.fromValues(leftX, bottomY, nearZ),
+      nearBottomRight: vec3.fromValues(rightX, bottomY, nearZ),
+      farTopLeft: vec3.fromValues(leftX, topY, farZ),
+      farTopRight: vec3.fromValues(rightX, topY, farZ),
+      farBottomLeft: vec3.fromValues(leftX, bottomY, farZ),
+      farBottomRight: vec3.fromValues(rightX, bottomY, farZ)
     }
   }
 
-  applyTransform () {
-    Object.keys(this.#cornerVertices).forEach((key) => {
-      vec3.transformMat4(this.#cornerVertices[key], this.#cornerVertices[key], this.#matrix)
+  getCornerVertices () {
+    return this.#cornerVertices
+  }
+
+  getMin (cornerVertices) {
+    cornerVertices = cornerVertices || this.#cornerVertices
+    let minX = + Infinity
+    let minY = + Infinity
+    let minZ = + Infinity
+    Object.values(cornerVertices).forEach((point) => {
+      const x = point[0]
+      const y = point[1]
+      const z = point[2]
+      if (x < minX) minX = x
+      if (y < minY) minY = y
+      if (z < minZ) minZ = z
     })
-    mat4.identity(this.#matrix)
+    return vec3.fromValues(minX, minY, minZ)
+  }
+
+  getMax (cornerVertices) {
+    cornerVertices = cornerVertices || this.#cornerVertices
+    let maxX = - Infinity
+    let maxY = - Infinity
+    let maxZ = - Infinity
+    Object.values(cornerVertices).forEach((point) => {
+      const x = point[0]
+      const y = point[1]
+      const z = point[2]
+      if (x > maxX) maxX = x
+      if (y > maxY) maxY = y
+      if (z > maxZ) maxZ = z
+    })
+    return vec3.fromValues(maxX, maxY, maxZ)
+  }
+
+  applyTransform (cornerVertices) {
+    const faked = !!cornerVertices
+    cornerVertices = cornerVertices || this.#cornerVertices
+    Object.keys(cornerVertices).forEach((key) => {
+      vec3.transformMat4(cornerVertices[key], cornerVertices[key], this.#matrix)
+    })
+    !faked && mat4.identity(this.#matrix)
+    return cornerVertices
   }
 
   getMatrix () {
