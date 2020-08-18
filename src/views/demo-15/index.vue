@@ -5,8 +5,11 @@
 <script>
 /* eslint-disable no-alert, no-console */
 // Reference from: https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-3d-lighting-spot.html
-import { mat4, vec4 } from 'gl-matrix'
-import { createProgram, loadShader, createUniformSetters, createAttributeSetters } from '../../utils/tools/web-gl'
+import { mat4 } from 'gl-matrix'
+import { createProgram, loadShader, createUniformSetters, createAttributeSetters, setAttributes, setUniforms } from '../../utils/tools/web-gl'
+import { createBufferFunc, createSphereVertices } from '../../utils/tools/primitives'
+import { makeStripeTexture, makeCheckerTexture, makeCircleTexture } from '../../utils/tools/texture'
+let animationID = null
 export default {
   data () {
     return {
@@ -89,11 +92,153 @@ export default {
       }
     `
 
+    const createSphereBuffers = createBufferFunc(createSphereVertices)
+    const buffers = createSphereBuffers(gl, 10, 48, 24)
+
     const program = createProgram(gl, [loadShader(gl, vertexShaderCode, gl.VERTEX_SHADER), loadShader(gl, fragmentShaderCode, gl.FRAGMENT_SHADER)])
     const uniformSetters = createUniformSetters(gl, program)
-    const attribSetters  = createAttributeSetters(gl, program)
+    const attribSetters = createAttributeSetters(gl, program)
+
+    const attribs = {
+      a_position: { buffer: buffers.position, numComponents: 3, },
+      a_normal: { buffer: buffers.normal, numComponents: 3, },
+      a_texcoord: { buffer: buffers.texcoord, numComponents: 2, },
+    }
+
+    function degToRad (d) {
+      return d * Math.PI / 180
+    }
+
+    // const cameraAngleRadians = degToRad(0)
+    const fieldOfViewRadians = degToRad(60)
+    // const cameraHeight = 50
+
+    const uniformsThatAreTheSameForAllObjects = {
+      u_lightWorldPos: [-50, 30, 100],
+      u_viewInverse: mat4.create(),
+      u_lightColor: [1, 1, 1, 1],
+    }
+
+    const uniformsThatAreComputedForEachObject = {
+      u_worldViewProjection: mat4.create(),
+      u_world: mat4.create(),
+      u_worldInverseTranspose: mat4.create(),
+    }
+
+    function rand (min, max) {
+      if (max === undefined) {
+        max = min
+        min = 0
+      }
+      return min + Math.random() * (max - min)
+    }
+
+    function randInt (range) {
+      return Math.floor(Math.random() * range)
+    }
+
+    const textures = [
+      makeStripeTexture(gl, { color1: '#FFF', color2: '#CCC', }),
+      makeCheckerTexture(gl, { color1: '#FFF', color2: '#CCC', }),
+      makeCircleTexture(gl, { color1: '#FFF', color2: '#CCC', }),
+    ]
+
+    const objects = []
+    const numObjects = 100
+    const baseColorVal = 240
+
+    for (let ii = 0; ii < numObjects; ++ii) {
+      objects.push({
+        radius: rand(150),
+        xRotation: rand(Math.PI * 2),
+        yRotation: rand(Math.PI),
+        materialUniforms: {
+          u_colorMult: [rand(baseColorVal) / baseColorVal, rand(baseColorVal) / baseColorVal, rand(baseColorVal) / baseColorVal, 1],
+          u_diffuse: textures[randInt(textures.length)],
+          u_specular: [1, 1, 1, 1],
+          u_shininess: rand(500),
+          u_specularFactor: rand(1),
+        }
+      })
+    }
+
+    drawScene(0)
+
+    // Draw the scene.
+    function drawScene (time) {
+      time = time * 0.0001 + 5;
+
+      // Tell WebGL how to convert from clip space to pixels
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+      // Clear the canvas AND the depth buffer.
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+      gl.enable(gl.CULL_FACE);
+      gl.enable(gl.DEPTH_TEST);
+
+      // Compute the projection matrix
+      const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight
+      const zNear = 1
+      const zFar = 2000
+      let projectionMatrix = mat4.create()
+      mat4.perspective(projectionMatrix, fieldOfViewRadians, aspect, zNear, zFar)
+
+      // Compute the camera's matrix
+      const cameraPosition = [0, 0, 100]
+      const target = [0, 0, 0]
+      const up = [0, 1, 0]
+      // 2. Compute the view's matrix using look at directly.
+      let viewMatrix = mat4.create()
+      mat4.lookAt(viewMatrix, cameraPosition, target, up)
+
+      // Compute a view projection matrix
+      let viewProjectionMatrix = mat4.create()
+      mat4.multiply(viewProjectionMatrix, projectionMatrix, viewMatrix)
+
+      gl.useProgram(program)
+
+      // Setup all the needed attributes.
+      setAttributes(attribSetters, attribs)
+
+      // Bind the indices.
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices)
+
+      // Set the uniforms that are the same for all objects.
+      setUniforms(uniformSetters, uniformsThatAreTheSameForAllObjects)
+
+      // Draw objects
+      objects.forEach(function (object) {
+
+        // Compute a position for this object based on the time.
+        let worldMatrix = mat4.create()
+        mat4.rotateX(worldMatrix, worldMatrix, object.xRotation * time)
+        mat4.rotateY(worldMatrix, worldMatrix, object.yRotation * time)
+        mat4.translate(worldMatrix, worldMatrix, [0, 0, object.radius])
+        uniformsThatAreComputedForEachObject.u_world = worldMatrix
+
+        // Multiply the matrices.
+        mat4.multiply(uniformsThatAreComputedForEachObject.u_worldViewProjection, viewProjectionMatrix, worldMatrix)
+        // 下面求逆加转置用于求物体各个面的方向向量
+        let worldInverseMatrix = mat4.create()
+        mat4.invert(worldInverseMatrix, worldMatrix) // 求逆
+        mat4.transpose(uniformsThatAreComputedForEachObject.u_worldInverseTranspose, worldInverseMatrix)
+
+        // Set the uniforms we just computed
+        setUniforms(uniformSetters, uniformsThatAreComputedForEachObject)
+
+        // Set the uniforms that are specific to the this object.
+        setUniforms(uniformSetters, object.materialUniforms)
+
+        // Draw the geometry.
+        gl.drawElements(gl.TRIANGLES, buffers.numElements, gl.UNSIGNED_SHORT, 0)
+      })
+
+      animationID = requestAnimationFrame(drawScene)
+    }
   },
   beforeDestroy () {
+    animationID && cancelAnimationFrame(animationID)
   }
 }
 </script>

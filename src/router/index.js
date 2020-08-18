@@ -131,6 +131,14 @@ const routes = [
     meta: {
       title: 'Webgl 教程 使用矩阵栈实现类似 ctx.save & ctx.store'
     }
+  },
+  {
+    path: '/demo-15',
+    name: 'Demo15',
+    component: () => import('@/views/demo-15/index'),
+    meta: {
+      title: 'Webgl 教程 球坐标系构建球模型'
+    }
   }
 ]
 
