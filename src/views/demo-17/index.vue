@@ -93,11 +93,12 @@ export default {
       }
     `
 
-    // a single triangle
+    // an indexed quad
     const arrays = {
-      position: { numComponents: 3, data: [0, -10, 0, 10, 10, 0, -10, 10, 0], },
-      texcoord: { numComponents: 2, data: [0.5, 0, 1, 1, 0, 1], },
-      normal: { numComponents: 3, data: [0, 0, 1, 0, 0, 1, 0, 0, 1], },
+      position: { numComponents: 3, data: [0, 0, 0, 10, 0, 0, 0, 10, 0, 10, 10, 0], },
+      texcoord: { numComponents: 2, data: [0, 0, 0, 1, 1, 0, 1, 1], },
+      normal: { numComponents: 3, data: [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1], },
+      indices: { numComponents: 3, data: [0, 1, 2, 1, 2, 3], },
     }
 
     const bufferInfo = createBufferInfoFromArrays(gl, arrays)
@@ -145,7 +146,7 @@ export default {
     ]
 
     const objects = []
-    const numObjects = 100
+    const numObjects = 300
     const baseColorVal = 240
 
     for (let ii = 0; ii < numObjects; ++ii) {
@@ -226,7 +227,7 @@ export default {
         setUniforms(uniformSetters, object.materialUniforms)
 
         // Draw the geometry.
-        gl.drawArrays(gl.TRIANGLES, 0, bufferInfo.numElements)
+        gl.drawElements(gl.TRIANGLES, bufferInfo.numElements, gl.UNSIGNED_SHORT, 0)
       })
 
       animationID = requestAnimationFrame(drawScene)

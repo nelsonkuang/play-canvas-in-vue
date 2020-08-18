@@ -147,6 +147,14 @@ const routes = [
     meta: {
       title: 'Webgl 教程 抽象与简化创建三角形的代码'
     }
+  },
+  {
+    path: '/demo-17',
+    name: 'Demo17',
+    component: () => import('@/views/demo-17/index'),
+    meta: {
+      title: 'Webgl 教程 继续抽象与简化代码使用顶点索引'
+    }
   }
 ]
 
