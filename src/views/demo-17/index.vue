@@ -6,7 +6,7 @@
 /* eslint-disable no-alert, no-console */
 // Reference from: https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-less-code-more-fun.html
 import { mat4 } from 'gl-matrix'
-import { createProgram, loadShader, createUniformSetters, createAttributeSetters, setBuffersAndAttributes, setUniforms, createBufferInfoFromArrays } from '../../utils/tools/web-gl'
+import { createProgramInfo, setBuffersAndAttributes, setUniforms, createBufferInfoFromArrays } from '../../utils/tools/web-gl'
 import { makeStripeTexture, makeCheckerTexture, makeCircleTexture } from '../../utils/tools/texture'
 let animationID = null
 export default {
@@ -102,10 +102,13 @@ export default {
     }
 
     const bufferInfo = createBufferInfoFromArrays(gl, arrays)
-
-    const program = createProgram(gl, [loadShader(gl, vertexShaderCode, gl.VERTEX_SHADER), loadShader(gl, fragmentShaderCode, gl.FRAGMENT_SHADER)])
-    const uniformSetters = createUniformSetters(gl, program)
-    const attribSetters = createAttributeSetters(gl, program)
+    /* 方式一 */
+    // const program = createProgram(gl, [loadShader(gl, vertexShaderCode, gl.VERTEX_SHADER), loadShader(gl, fragmentShaderCode, gl.FRAGMENT_SHADER)])
+    // const uniformSetters = createUniformSetters(gl, program)
+    // const attribSetters = createAttributeSetters(gl, program)
+    /* 方式二 */
+    // setup GLSL program
+    const programInfo = createProgramInfo(gl, [vertexShaderCode, fragmentShaderCode])
 
     function degToRad (d) {
       return d * Math.PI / 180
@@ -195,13 +198,15 @@ export default {
       let viewProjectionMatrix = mat4.create()
       mat4.multiply(viewProjectionMatrix, projectionMatrix, viewMatrix)
 
-      gl.useProgram(program)
+      gl.useProgram(programInfo.program)
 
       // Setup all the needed attributes.
-      setBuffersAndAttributes(gl, attribSetters, bufferInfo);
+      // setBuffersAndAttributes(gl, attribSetters, bufferInfo) // 方式一
+      setBuffersAndAttributes(gl, programInfo, bufferInfo) // 方式二
 
       // Set the uniforms that are the same for all objects.
-      setUniforms(uniformSetters, uniformsThatAreTheSameForAllObjects)
+      // setUniforms(uniformSetters, uniformsThatAreTheSameForAllObjects) // 方式一
+      setUniforms(programInfo, uniformsThatAreTheSameForAllObjects) // 方式二
 
       // Draw objects
       objects.forEach(function (object) {
@@ -221,10 +226,12 @@ export default {
         mat4.transpose(uniformsThatAreComputedForEachObject.u_worldInverseTranspose, worldInverseMatrix)
 
         // Set the uniforms we just computed
-        setUniforms(uniformSetters, uniformsThatAreComputedForEachObject)
+        // setUniforms(uniformSetters, uniformsThatAreComputedForEachObject) // 方式一
+        setUniforms(programInfo, uniformsThatAreComputedForEachObject) // 方式二
 
         // Set the uniforms that are specific to the this object.
-        setUniforms(uniformSetters, object.materialUniforms)
+        // setUniforms(uniformSetters, object.materialUniforms) // 方式一
+        setUniforms(programInfo, object.materialUniforms) // 方式二
 
         // Draw the geometry.
         gl.drawElements(gl.TRIANGLES, bufferInfo.numElements, gl.UNSIGNED_SHORT, 0)
