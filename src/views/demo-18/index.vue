@@ -6,9 +6,9 @@
 /* eslint-disable no-alert, no-console */
 // Reference from: https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-less-code-more-fun.html
 import { mat4 } from 'gl-matrix'
-import { createProgram, loadShader, createUniformSetters, createAttributeSetters, setAttributes, setUniforms } from '../../utils/tools/web-gl'
-import { createBufferFunc, createSphereVertices } from '../../utils/tools/primitives'
-import { makeStripeTexture, makeCheckerTexture, makeCircleTexture } from '../../utils/tools/texture'
+import { createProgramInfo setAttributes, setUniforms, setBuffersAndAttributes } from '../../utils/tools/web-gl'
+import { createBufferFunc, createSphereVertices, create3DFBufferInfo, createPlaneBufferInfo } from '../../utils/tools/primitives'
+import { makeStripeTexture, makeCheckerTexture, makeCircleTexture, generateTextCanvas } from '../../utils/tools/texture'
 let animationID = null
 export default {
   data () {
@@ -26,156 +26,179 @@ export default {
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
 
     const vertexShaderCode = `
-      uniform mat4 u_worldViewProjection;
-      uniform vec3 u_lightWorldPos;
-      uniform mat4 u_world;
-      uniform mat4 u_viewInverse;
-      uniform mat4 u_worldInverseTranspose;
+attribute vec4 a_position;
+attribute vec4 a_color;
 
-      attribute vec4 a_position;
-      attribute vec3 a_normal;
-      attribute vec2 a_texcoord;
+uniform mat4 u_matrix;
 
-      varying vec4 v_position;
-      varying vec2 v_texCoord;
-      varying vec3 v_normal;
-      varying vec3 v_surfaceToLight;
-      varying vec3 v_surfaceToView;
+varying vec4 v_color;
 
-      void main() {
-        v_texCoord = a_texcoord;
-        v_position = (u_worldViewProjection * a_position);
-        v_normal = (u_worldInverseTranspose * vec4(a_normal, 0)).xyz;
-        v_surfaceToLight = u_lightWorldPos - (u_world * a_position).xyz;
-        v_surfaceToView = (u_viewInverse[3] - (u_world * a_position)).xyz;
-        gl_Position = v_position;
-      }
+void main() {
+  // Multiply the position by the matrix.
+  gl_Position = u_matrix * a_position;
+
+  // Pass the color to the fragment shader.
+  v_color = a_color;
+}
     `
     // 为片段着色器设计一个关于颜色的输入
     const fragmentShaderCode = `
-      precision mediump float;
+ precision mediump float;
 
-      varying vec4 v_position;
-      varying vec2 v_texCoord;
-      varying vec3 v_normal;
-      varying vec3 v_surfaceToLight;
-      varying vec3 v_surfaceToView;
+// Passed in from the vertex shader.
+varying vec4 v_color;
 
-      uniform vec4 u_lightColor;
-      uniform vec4 u_colorMult;
-      uniform sampler2D u_diffuse;
-      uniform vec4 u_specular;
-      uniform float u_shininess;
-      uniform float u_specularFactor;
+void main() {
+   gl_FragColor = v_color;
+}
+    `
+    const textVertexShaderCode = `
+attribute vec4 a_position;
+attribute vec2 a_texcoord;
 
-      vec4 lit(float l ,float h, float m) {
-        return vec4(1.0,
-                    abs(l),
-                    (l > 0.0) ? pow(max(0.0, h), m) : 0.0,
-                    1.0);
-      }
+uniform mat4 u_matrix;
 
-      void main() {
-        vec4 diffuseColor = texture2D(u_diffuse, v_texCoord);
-        vec3 a_normal = normalize(v_normal);
-        vec3 surfaceToLight = normalize(v_surfaceToLight);
-        vec3 surfaceToView = normalize(v_surfaceToView);
-        vec3 halfVector = normalize(surfaceToLight + surfaceToView);
-        vec4 litR = lit(dot(a_normal, surfaceToLight),
-                          dot(a_normal, halfVector), u_shininess);
-        vec4 outColor = vec4((
-        u_lightColor * (diffuseColor * litR.y * u_colorMult +
-                      u_specular * litR.z * u_specularFactor)).rgb,
-            diffuseColor.a);
-        gl_FragColor = outColor;
-      //  gl_FragColor = vec4(litR.yyy, 1);
-      }
+varying vec2 v_texcoord;
+
+void main() {
+  // Multiply the position by the matrix.
+  gl_Position = u_matrix * a_position;
+
+  // Pass the texcoord to the fragment shader.
+  v_texcoord = a_texcoord;
+}
+    `
+    const textFragmentShaderCode = `
+precision mediump float;
+
+// Passed in from the vertex shader.
+varying vec2 v_texcoord;
+
+uniform sampler2D u_texture;
+uniform vec4 u_color;
+
+void main() {
+   gl_FragColor = texture2D(u_texture, v_texcoord) * u_color;
+}
     `
 
-    const createSphereBuffers = createBufferFunc(createSphereVertices)
-    const buffers = createSphereBuffers(gl, 10, 48, 24)
+    // Create data for 'F'
+    const fBufferInfo = create3DFBufferInfo(gl)
+    // Create a unit quad for the 'text'
+    const matrix = mat4.create()
+    mat4.rotateX(matrix, matrix, Math.PI / 2)
+    const textBufferInfo = createPlaneBufferInfo(gl, 1, 1, 1, 1, matrix)
 
-    const program = createProgram(gl, [loadShader(gl, vertexShaderCode, gl.VERTEX_SHADER), loadShader(gl, fragmentShaderCode, gl.FRAGMENT_SHADER)])
-    const uniformSetters = createUniformSetters(gl, program)
-    const attribSetters = createAttributeSetters(gl, program)
+    // setup GLSL programs
+    const fProgramInfo = createProgramInfo(gl, [vertexShaderCode, fragmentShaderCode]);
+    const textProgramInfo = createProgramInfo(gl, [textVertexShaderCode, textFragmentShaderCode]);
 
-    const attribs = {
-      a_position: { buffer: buffers.position, numComponents: 3, },
-      a_normal: { buffer: buffers.normal, numComponents: 3, },
-      a_texcoord: { buffer: buffers.texcoord, numComponents: 2, },
+    // colors, 1 for each F
+    const colors = [
+      [0.0, 0.0, 0.0, 1], // 0
+      [1.0, 0.0, 0.0, 1], // 1
+      [0.0, 1.0, 0.0, 1], // 2
+      [1.0, 1.0, 0.0, 1], // 3
+      [0.0, 0.0, 1.0, 1], // 4
+      [1.0, 0.0, 1.0, 1], // 5
+      [0.0, 1.0, 1.0, 1], // 6
+      [0.5, 0.5, 0.5, 1], // 7
+      [0.5, 0.0, 0.0, 1], // 8
+      [0.0, 0.0, 0.0, 1], // 9
+      [0.5, 5.0, 0.0, 1], // 10
+      [0.0, 5.0, 0.0, 1], // 11
+      [0.5, 0.0, 5.0, 1], // 12,
+      [0.0, 0.0, 5.0, 1], // 13,
+      [0.5, 5.0, 5.0, 1], // 14,
+      [0.0, 5.0, 5.0, 1], // 15,
+    ]
+
+    // create text textures, one for each F
+    var textTextures = [
+      "anna",   // 0
+      "colin",  // 1
+      "james",  // 2
+      "danny",  // 3
+      "kalin",  // 4
+      "hiro",   // 5
+      "eddie",  // 6
+      "shu",    // 7
+      "brian",  // 8
+      "tami",   // 9
+      "rick",   // 10
+      "gene",   // 11
+      "natalie",// 12,
+      "evan",   // 13,
+      "sakura", // 14,
+      "kai",    // 15,
+    ].map(function (text) {
+      const textCanvas = generateTextCanvas({ text, width: 100, height: 26 })
+      var textWidth = textCanvas.width
+      var textHeight = textCanvas.height
+      var textTex = gl.createTexture()
+      gl.bindTexture(gl.TEXTURE_2D, textTex)
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true)
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textCanvas)
+      // make sure we can render it even if it's not a power of 2
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+      return {
+        texture: textTex,
+        width: textWidth,
+        height: textHeight,
+      }
+    })
+
+    const fUniforms = {
+      u_matrix: mat4.create(),
+    }
+
+    const textUniforms = {
+      u_matrix: mat4.create(),
+      u_texture: null,
     }
 
     function degToRad (d) {
       return d * Math.PI / 180
     }
 
-    // const cameraAngleRadians = degToRad(0)
+    function radToDeg (r) {
+      return r * 180 / Math.PI
+    }
+
+    const translation = [0, 30, 0]
+    const rotation = [degToRad(190), degToRad(0), degToRad(0)]
+    const scale = [1, 1, 1]
     const fieldOfViewRadians = degToRad(60)
-    // const cameraHeight = 50
+    const rotationSpeed = 1.2
 
-    const uniformsThatAreTheSameForAllObjects = {
-      u_lightWorldPos: [-50, 30, 100],
-      u_viewInverse: mat4.create(),
-      u_lightColor: [1, 1, 1, 1],
-    }
+    let then = 0
 
-    const uniformsThatAreComputedForEachObject = {
-      u_worldViewProjection: mat4.create(),
-      u_world: mat4.create(),
-      u_worldInverseTranspose: mat4.create(),
-    }
-
-    function rand (min, max) {
-      if (max === undefined) {
-        max = min
-        min = 0
-      }
-      return min + Math.random() * (max - min)
-    }
-
-    function randInt (range) {
-      return Math.floor(Math.random() * range)
-    }
-
-    const textures = [
-      makeStripeTexture(gl, { color1: '#FFF', color2: '#CCC', }),
-      makeCheckerTexture(gl, { color1: '#FFF', color2: '#CCC', }),
-      makeCircleTexture(gl, { color1: '#FFF', color2: '#CCC', }),
-    ]
-
-    const objects = []
-    const numObjects = 100
-    const baseColorVal = 240
-
-    for (let ii = 0; ii < numObjects; ++ii) {
-      objects.push({
-        radius: rand(150),
-        xRotation: rand(Math.PI * 2),
-        yRotation: rand(Math.PI),
-        materialUniforms: {
-          u_colorMult: [rand(baseColorVal) / baseColorVal, rand(baseColorVal) / baseColorVal, rand(baseColorVal) / baseColorVal, 1],
-          u_diffuse: textures[randInt(textures.length)],
-          u_specular: [1, 1, 1, 1],
-          u_shininess: rand(500),
-          u_specularFactor: rand(1),
-        }
-      })
-    }
-
-    drawScene(0)
+    requestAnimationFrame(drawScene)
 
     // Draw the scene.
-    function drawScene (time) {
-      time = time * 0.0001 + 5;
+    function drawScene (now) {
+      // Convert to seconds
+      now *= 0.001;
+      // Subtract the previous time from the current time
+      const deltaTime = now - then;
+      // Remember the current time for the next frame.
+      then = now
 
       // Tell WebGL how to convert from clip space to pixels
-      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
+
+      // Every frame increase the rotation a little.
+      rotation[1] += rotationSpeed * deltaTime
+
+      gl.enable(gl.CULL_FACE)
+      gl.enable(gl.DEPTH_TEST)
+      gl.disable(gl.BLEND)
+      gl.depthMask(true)
 
       // Clear the canvas AND the depth buffer.
-      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-      gl.enable(gl.CULL_FACE);
-      gl.enable(gl.DEPTH_TEST);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
       // Compute the projection matrix
       const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight
@@ -184,57 +207,84 @@ export default {
       let projectionMatrix = mat4.create()
       mat4.perspective(projectionMatrix, fieldOfViewRadians, aspect, zNear, zFar)
 
-      // Compute the camera's matrix
-      const cameraPosition = [0, 0, 100]
+      // Compute the camera's matrix using look at.
+      const cameraRadius = 360
+      const cameraPosition = [Math.cos(now) * cameraRadius, 0, Math.sin(now) * cameraRadius]
       const target = [0, 0, 0]
       const up = [0, 1, 0]
-      // 2. Compute the view's matrix using look at directly.
       let viewMatrix = mat4.create()
       mat4.lookAt(viewMatrix, cameraPosition, target, up)
 
-      // Compute a view projection matrix
-      let viewProjectionMatrix = mat4.create()
-      mat4.multiply(viewProjectionMatrix, projectionMatrix, viewMatrix)
+      const textPositions = []
 
-      gl.useProgram(program)
+      // setup to draw the 'F'
+      gl.useProgram(fProgramInfo.program)
 
-      // Setup all the needed attributes.
-      setAttributes(attribSetters, attribs)
+      setBuffersAndAttributes(gl, fProgramInfo, fBufferInfo)
 
-      // Bind the indices.
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices)
+      // draw the Fs.
+      let spread = 170
+      for (let yy = -1; yy <= 1; ++yy) {
+        for (let xx = -2; xx <= 2; ++xx) {
+          const fViewMatrix = mat4.create()
+          mat4.translate(fViewMatrix, fViewMatrix, [translation[0] + xx * spread, translation[1] + yy * spread, translation[2]])
+          mat4.rotateX(fViewMatrix, fViewMatrix, rotation[0])
+          mat4.rotateY(fViewMatrix, fViewMatrix, rotation[1] + yy * xx * 0.2)
+          mat4.rotateZ(fViewMatrix, fViewMatrix, rotation[2] + now + (yy * 3 + xx) * 0.1)
+          mat4.scale(fViewMatrix, fViewMatrix, scale)
+          mat4.translate(fViewMatrix, fViewMatrix, [-50, -75, 0])
+          textPositions.push([fViewMatrix[12], fViewMatrix[13], fViewMatrix[14]])
 
-      // Set the uniforms that are the same for all objects.
-      setUniforms(uniformSetters, uniformsThatAreTheSameForAllObjects)
+          mat4.multiply(fUniforms.u_matrix, projectionMatrix, fViewMatrix)
 
-      // Draw objects
-      objects.forEach(function (object) {
+          setUniforms(fProgramInfo, fUniforms)
 
-        // Compute a position for this object based on the time.
-        let worldMatrix = mat4.create()
-        mat4.rotateX(worldMatrix, worldMatrix, object.xRotation * time)
-        mat4.rotateY(worldMatrix, worldMatrix, object.yRotation * time)
-        mat4.translate(worldMatrix, worldMatrix, [0, 0, object.radius])
-        uniformsThatAreComputedForEachObject.u_world = worldMatrix
+          // Draw the geometry.
+          gl.drawElements(gl.TRIANGLES, fBufferInfo.numElements, gl.UNSIGNED_SHORT, 0);
 
-        // Multiply the matrices.
-        mat4.multiply(uniformsThatAreComputedForEachObject.u_worldViewProjection, viewProjectionMatrix, worldMatrix)
-        // 下面求逆加转置用于求物体各个面的方向向量
-        let worldInverseMatrix = mat4.create()
-        mat4.invert(worldInverseMatrix, worldMatrix) // 求逆
-        mat4.transpose(uniformsThatAreComputedForEachObject.u_worldInverseTranspose, worldInverseMatrix)
+        }
+      }
 
-        // Set the uniforms we just computed
-        setUniforms(uniformSetters, uniformsThatAreComputedForEachObject)
+      gl.enable(gl.BLEND)
+      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
+      gl.depthMask(false)
 
-        // Set the uniforms that are specific to the this object.
-        setUniforms(uniformSetters, object.materialUniforms)
+      // setup to draw the text.
+      gl.useProgram(textProgramInfo.program)
 
-        // Draw the geometry.
-        gl.drawElements(gl.TRIANGLES, buffers.numElements, gl.UNSIGNED_SHORT, 0)
-      })
+      setBuffersAndAttributes(gl, textProgramInfo, textBufferInfo)
 
-      animationID = requestAnimationFrame(drawScene)
+      textPositions.forEach(function (pos, ndx) {
+        // draw the text
+
+        // select a texture
+        const tex = textTextures[ndx]
+
+        // use just the view position of the 'F' for the text
+
+        // because pos is in view space that means it's a vector from the eye to
+        // some position. So translate along that vector back toward the eye some distance
+        var fromEye = m4.normalize(pos);
+        var amountToMoveTowardEye = 150;  // because the F is 150 units long
+        var viewX = pos[0] - fromEye[0] * amountToMoveTowardEye;
+        var viewY = pos[1] - fromEye[1] * amountToMoveTowardEye;
+        var viewZ = pos[2] - fromEye[2] * amountToMoveTowardEye;
+        var desiredTextScale = -1 / gl.canvas.height;  // 1x1 pixels
+        var scale = viewZ * desiredTextScale;
+        var textMatrix = m4.translate(projectionMatrix, viewX, viewY, viewZ);
+        // scale the F to the size we need it.
+        textMatrix = m4.scale(textMatrix, tex.width * scale, tex.height * scale, 1);
+
+        m4.copy(textMatrix, textUniforms.u_matrix);
+        textUniforms.u_texture = tex.texture;
+        textUniforms.u_color = colors[ndx];
+        webglUtils.setUniforms(textProgramInfo, textUniforms);
+
+        // Draw the text.
+        gl.drawElements(gl.TRIANGLES, textBufferInfo.numElements, gl.UNSIGNED_SHORT, 0);
+      });
+
+      requestAnimationFrame(drawScene);
     }
   },
   beforeDestroy () {
