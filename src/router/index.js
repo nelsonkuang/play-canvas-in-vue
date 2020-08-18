@@ -139,6 +139,14 @@ const routes = [
     meta: {
       title: 'Webgl 教程 球坐标系构建球模型'
     }
+  },
+  {
+    path: '/demo-16',
+    name: 'Demo16',
+    component: () => import('@/views/demo-16/index'),
+    meta: {
+      title: 'Webgl 教程 抽象与简化创建三角形的代码'
+    }
   }
 ]
 
