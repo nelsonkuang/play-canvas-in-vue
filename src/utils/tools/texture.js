@@ -28,7 +28,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-var ctx = document.createElement("canvas").getContext("2d")
+var ctx = document.createElement('canvas').getContext('2d')
 export function setCanvasSize (width, height) {
   ctx.canvas.width = width;
   ctx.canvas.height = height;
@@ -48,14 +48,14 @@ export function makeStripeTexture (gl, options) {
   options = options || {};
   var width = options.width || 2;
   var height = options.height || 2;
-  var color1 = options.color1 || "white";
-  var color2 = options.color2 || "black";
+  var color1 = options.color1 || 'white';
+  var color2 = options.color2 || 'black';
 
   setCanvasSize(width, height);
 
-  ctx.fillStyle = color1 || "white";
+  ctx.fillStyle = color1 || 'white';
   ctx.fillRect(0, 0, width, height);
-  ctx.fillStyle = color2 || "black";
+  ctx.fillStyle = color2 || 'black';
   ctx.fillRect(0, 0, width, height / 2);
 
   return makeTexture(gl);
@@ -65,14 +65,14 @@ export function makeCheckerTexture (gl, options) {
   options = options || {};
   var width = options.width || 2;
   var height = options.height || 2;
-  var color1 = options.color1 || "white";
-  var color2 = options.color2 || "black";
+  var color1 = options.color1 || 'white';
+  var color2 = options.color2 || 'black';
 
   setCanvasSize(width, height);
 
-  ctx.fillStyle = color1 || "white";
+  ctx.fillStyle = color1 || 'white';
   ctx.fillRect(0, 0, width, height);
-  ctx.fillStyle = color2 || "black";
+  ctx.fillStyle = color2 || 'black';
   ctx.fillRect(0, 0, width / 2, height / 2);
   ctx.fillRect(width / 2, height / 2, width / 2, height / 2);
 
@@ -83,21 +83,21 @@ export function makeCircleTexture (gl, options) {
   options = options || {};
   var width = options.width || 128;
   var height = options.height || 128;
-  var color1 = options.color1 || "white";
-  var color2 = options.color2 || "black";
+  var color1 = options.color1 || 'white';
+  var color2 = options.color2 || 'black';
 
   setCanvasSize(width, height);
 
   // var size = Math.min(width, height);
-  ctx.fillStyle = color1 || "white";
+  ctx.fillStyle = color1 || 'white';
   ctx.fillRect(0, 0, width, height);
-  ctx.fillStyle = color2 || "black";
+  ctx.fillStyle = color2 || 'black';
   ctx.save();
   ctx.translate(width / 2, height / 2);
   ctx.beginPath();
   ctx.arc(0, 0, width / 2 - 1, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = color1 || "white";
+  ctx.fillStyle = color1 || 'white';
   ctx.beginPath();
   ctx.arc(0, 0, width / 4 - 1, 0, Math.PI * 2);
   ctx.fill();

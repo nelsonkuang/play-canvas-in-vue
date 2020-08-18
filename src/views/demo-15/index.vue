@@ -4,7 +4,7 @@
 
 <script>
 /* eslint-disable no-alert, no-console */
-// Reference from: https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-3d-lighting-spot.html
+// Reference from: https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-less-code-more-fun.html
 import { mat4 } from 'gl-matrix'
 import { createProgram, loadShader, createUniformSetters, createAttributeSetters, setAttributes, setUniforms } from '../../utils/tools/web-gl'
 import { createBufferFunc, createSphereVertices } from '../../utils/tools/primitives'
