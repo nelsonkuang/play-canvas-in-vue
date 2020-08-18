@@ -136,3 +136,20 @@ function rand (min, max) {
   }
   return min + Math.random() * (max - min);
 }
+
+export function makeTextCanvas (gl, options) {
+  options = options || {};
+  var text = options.text || '文字';
+  var width = options.width || 30;
+  var height = options.height || 80;
+  setCanvasSize(width, height);
+  ctx.save();
+  ctx.font = options.font || '400 16px "Hiragino Sans GB W3","Microsoft YaHe","宋体"';
+  ctx.textAlign = options.textAlign || 'center';
+  ctx.textBaseline = options.textBaseline || 'middle';
+  ctx.fillStyle = options.fillStyle || 'black';
+  ctx.clearRect(0, 0, width, height);
+  ctx.fillText(text, width / 2, height / 2);
+  ctx.restore();
+  return makeTexture(gl);
+}
