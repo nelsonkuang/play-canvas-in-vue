@@ -189,10 +189,14 @@ export default {
           // only bind buffers the program uses. So if 2 programs use the same
           // bufferInfo but the 1st one uses only positions the when the
           // we switch to the 2nd one some of the attributes will not be on.
+          // 更换程序后要重新绑定缓冲，因为只需要绑定程序要用的缓冲。
+          // 如果两个程序使用相同的bufferInfo但是第一个只用位置数据，
+          // 当我们从第一个程序切换到第二个时，有些属性就不存在。
           bindBuffers = true
         }
 
         // Setup all the needed attributes.
+        // 如果绘制的形状/几何体/顶点 是之前绘制过的，相同的参数就不必再设置一遍
         if (bindBuffers || bufferInfo !== lastUsedBufferInfo) {
           lastUsedBufferInfo = bufferInfo
           setBuffersAndAttributes(gl, programInfo, bufferInfo)
@@ -203,9 +207,9 @@ export default {
 
         // Draw
         gl.drawArrays(gl.TRIANGLES, 0, bufferInfo.numElements)
-      });
+      })
 
-      requestAnimationFrame(drawScene);
+      requestAnimationFrame(drawScene)
     }
   },
   beforeDestroy () {
