@@ -161,7 +161,7 @@ export function generateTextCanvas (options) {
   var height = options.height || 80;
   setCanvasSize(width, height);
   ctx.save();
-  ctx.font = options.font || '400 16px "Hiragino Sans GB W3","Microsoft YaHe","宋体"';
+  ctx.font = options.font || '700 20px "Hiragino Sans GB W3","Microsoft YaHe","宋体"';
   ctx.textAlign = options.textAlign || 'center';
   ctx.textBaseline = options.textBaseline || 'middle';
   ctx.fillStyle = options.fillStyle || 'black';

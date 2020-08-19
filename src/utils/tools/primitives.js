@@ -36,7 +36,121 @@
  */
 
 import * as webglUtils from './web-gl'
+import { mat4 } from 'gl-matrix'
 
+function allButIndices (name) {
+  return name !== 'indices';
+}
+
+/**
+ * Given indexed vertices creates a new set of vertices unindexed by expanding the indexed vertices.
+ * @param {Object.<string, TypedArray>} vertices The indexed vertices to deindex
+ * @return {Object.<string, TypedArray>} The deindexed vertices
+ * @memberOf module:primitives
+ */
+export function deindexVertices (vertices) {
+  const indices = vertices.indices;
+  const newVertices = {};
+  const numElements = indices.length;
+
+  function expandToUnindexed (channel) {
+    const srcBuffer = vertices[channel];
+    const numComponents = srcBuffer.numComponents;
+    const dstBuffer = webglUtils.createAugmentedTypedArray(numComponents, numElements, srcBuffer.constructor);
+    for (let ii = 0; ii < numElements; ++ii) {
+      const ndx = indices[ii];
+      const offset = ndx * numComponents;
+      for (let jj = 0; jj < numComponents; ++jj) {
+        dstBuffer.push(srcBuffer[offset + jj]);
+      }
+    }
+    newVertices[channel] = dstBuffer;
+  }
+
+  Object.keys(vertices).filter(allButIndices).forEach(expandToUnindexed);
+
+  return newVertices;
+}
+
+/**
+ * flattens the normals of deindexed vertices in place.
+ * @param {Object.<string, TypedArray>} vertices The deindexed vertices who's normals to flatten
+ * @return {Object.<string, TypedArray>} The flattened vertices (same as was passed in)
+ * @memberOf module:primitives
+ */
+export function flattenNormals (vertices) {
+  if (vertices.indices) {
+    throw 'can\'t flatten normals of indexed vertices. deindex them first';
+  }
+
+  const normals = vertices.normal;
+  const numNormals = normals.length;
+  for (let ii = 0; ii < numNormals; ii += 9) {
+    // pull out the 3 normals for this triangle
+    const nax = normals[ii + 0];
+    const nay = normals[ii + 1];
+    const naz = normals[ii + 2];
+
+    const nbx = normals[ii + 3];
+    const nby = normals[ii + 4];
+    const nbz = normals[ii + 5];
+
+    const ncx = normals[ii + 6];
+    const ncy = normals[ii + 7];
+    const ncz = normals[ii + 8];
+
+    // add them
+    let nx = nax + nbx + ncx;
+    let ny = nay + nby + ncy;
+    let nz = naz + nbz + ncz;
+
+    // normalize them
+    const length = Math.sqrt(nx * nx + ny * ny + nz * nz);
+
+    nx /= length;
+    ny /= length;
+    nz /= length;
+
+    // copy them back in
+    normals[ii + 0] = nx;
+    normals[ii + 1] = ny;
+    normals[ii + 2] = nz;
+
+    normals[ii + 3] = nx;
+    normals[ii + 4] = ny;
+    normals[ii + 5] = nz;
+
+    normals[ii + 6] = nx;
+    normals[ii + 7] = ny;
+    normals[ii + 8] = nz;
+  }
+
+  return vertices;
+}
+
+function applyFuncToV3Array (array, matrix, fn) {
+  const len = array.length;
+  const tmp = new Float32Array(3);
+  for (let ii = 0; ii < len; ii += 3) {
+    fn(matrix, [array[ii], array[ii + 1], array[ii + 2]], tmp);
+    array[ii] = tmp[0];
+    array[ii + 1] = tmp[1];
+    array[ii + 2] = tmp[2];
+  }
+}
+
+function transformNormal (mi, v, dst) {
+  dst = dst || new Float32Array(3);
+  const v0 = v[0];
+  const v1 = v[1];
+  const v2 = v[2];
+
+  dst[0] = v0 * mi[0 * 4 + 0] + v1 * mi[0 * 4 + 1] + v2 * mi[0 * 4 + 2];
+  dst[1] = v0 * mi[1 * 4 + 0] + v1 * mi[1 * 4 + 1] + v2 * mi[1 * 4 + 2];
+  dst[2] = v0 * mi[2 * 4 + 0] + v1 * mi[2 * 4 + 1] + v2 * mi[2 * 4 + 2];
+
+  return dst;
+}
 /**
 * creates a function that calls fn to create vertices and then
 * creates a buffers for them
@@ -177,7 +291,7 @@ export function createPlaneVertices (
   depth = depth || 1;
   subdivisionsWidth = subdivisionsWidth || 1;
   subdivisionsDepth = subdivisionsDepth || 1;
-  matrix = matrix || m4.identity();
+  matrix = matrix || mat4.create();
 
   const numVertices = (subdivisionsWidth + 1) * (subdivisionsDepth + 1);
   const positions = webglUtils.createAugmentedTypedArray(3, numVertices);
@@ -631,7 +745,7 @@ export function create3DFVertices () {
 * @memberOf module:primitives
 */
 function reorientDirections (array, matrix) {
-  applyFuncToV3Array(array, matrix, m4.transformDirection);
+  applyFuncToV3Array(array, matrix, transformDirection);
   return array;
 }
 
@@ -644,7 +758,9 @@ function reorientDirections (array, matrix) {
  * @memberOf module:primitives
  */
 function reorientNormals (array, matrix) {
-  applyFuncToV3Array(array, m4.inverse(matrix), transformNormal);
+  const inverseMatrix = mat4.create();
+  mat4.invert(inverseMatrix, matrix);
+  applyFuncToV3Array(array, inverseMatrix, transformNormal);
   return array;
 }
 
@@ -657,7 +773,7 @@ function reorientNormals (array, matrix) {
  * @memberOf module:primitives
  */
 function reorientPositions (array, matrix) {
-  applyFuncToV3Array(array, matrix, m4.transformPoint);
+  applyFuncToV3Array(array, matrix, transformPoint);
   return array;
 }
 
@@ -683,4 +799,55 @@ function reorientVertices (arrays, matrix) {
     }
   });
   return arrays;
+}
+
+/**
+ * Takes a 4-by-4 matrix and a vector with 3 entries, interprets the vector as a
+ * direction, transforms that direction by the matrix, and returns the result;
+ * assumes the transformation of 3-dimensional space represented by the matrix
+ * is parallel-preserving, i.e. any combination of rotation, scaling and
+ * translation, but not a perspective distortion. Returns a vector with 3
+ * entries.
+ * @param {Matrix4} m The matrix.
+ * @param {Vector3} v The direction.
+ * @param {Vector4} dst optional vector4 to store result
+ * @return {Vector4} dst or new Vector4 if not provided
+ * @memberOf module:webgl-3d-math
+ */
+function transformDirection (m, v, dst) {
+  dst = dst || new Float32Array(3);
+
+  var v0 = v[0];
+  var v1 = v[1];
+  var v2 = v[2];
+
+  dst[0] = v0 * m[0 * 4 + 0] + v1 * m[1 * 4 + 0] + v2 * m[2 * 4 + 0];
+  dst[1] = v0 * m[0 * 4 + 1] + v1 * m[1 * 4 + 1] + v2 * m[2 * 4 + 1];
+  dst[2] = v0 * m[0 * 4 + 2] + v1 * m[1 * 4 + 2] + v2 * m[2 * 4 + 2];
+
+  return dst;
+}
+
+/**
+ * Takes a 4-by-4 matrix and a vector with 3 entries,
+ * interprets the vector as a point, transforms that point by the matrix, and
+ * returns the result as a vector with 3 entries.
+ * @param {Matrix4} m The matrix.
+ * @param {Vector3} v The point.
+ * @param {Vector4} dst optional vector4 to store result
+ * @return {Vector4} dst or new Vector4 if not provided
+ * @memberOf module:webgl-3d-math
+ */
+function transformPoint (m, v, dst) {
+  dst = dst || new Float32Array(3);
+  var v0 = v[0];
+  var v1 = v[1];
+  var v2 = v[2];
+  var d = v0 * m[0 * 4 + 3] + v1 * m[1 * 4 + 3] + v2 * m[2 * 4 + 3] + m[3 * 4 + 3];
+
+  dst[0] = (v0 * m[0 * 4 + 0] + v1 * m[1 * 4 + 0] + v2 * m[2 * 4 + 0] + m[3 * 4 + 0]) / d;
+  dst[1] = (v0 * m[0 * 4 + 1] + v1 * m[1 * 4 + 1] + v2 * m[2 * 4 + 1] + m[3 * 4 + 1]) / d;
+  dst[2] = (v0 * m[0 * 4 + 2] + v1 * m[1 * 4 + 2] + v2 * m[2 * 4 + 2] + m[3 * 4 + 2]) / d;
+
+  return dst;
 }
