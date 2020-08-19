@@ -163,6 +163,14 @@ const routes = [
     meta: {
       title: 'Webgl 教程 使用文字作为纹理'
     }
+  },
+  {
+    path: '/demo-19',
+    name: 'Demo19',
+    component: () => import('@/views/demo-19/index'),
+    meta: {
+      title: 'Webgl 教程 绘制多物体'
+    }
   }
 ]
 

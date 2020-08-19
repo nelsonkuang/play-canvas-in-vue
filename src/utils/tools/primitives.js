@@ -174,6 +174,80 @@ export function createBufferInfoFunc (fn) {
 }
 
 
+export function createFlattenedFunc (vertFunc) {
+  return function (gl, ...args) {
+    let vertices = vertFunc(...args);
+    vertices = deindexVertices(vertices);
+    vertices = makeRandomVertexColors(vertices, {
+      vertsPerColor: 6,
+      rand: function (ndx, channel) {
+        return channel < 3 ? ((128 + Math.random() * 128) | 0) : 255;
+      },
+    });
+    return webglUtils.createBufferInfoFromArrays(gl, vertices);
+  };
+}
+/**
+ * creates a random integer between 0 and range - 1 inclusive.
+ * @param {number} range
+ * @return {number} random value between 0 and range - 1 inclusive.
+ */
+function randInt (range) {
+  return Math.random() * range | 0;
+}
+/**
+ * Used to supply random colors
+ * @callback RandomColorFunc
+ * @param {number} ndx index of triangle/quad if unindexed or index of vertex if indexed
+ * @param {number} channel 0 = red, 1 = green, 2 = blue, 3 = alpha
+ * @return {number} a number from 0 to 255
+ * @memberOf module:primitives
+ */
+
+/**
+ * @typedef {Object} RandomVerticesOptions
+ * @property {number} [vertsPerColor] Defaults to 3 for non-indexed vertices
+ * @property {module:primitives.RandomColorFunc} [rand] A function to generate random numbers
+ * @memberOf module:primitives
+ */
+
+/**
+ * Creates an augmentedTypedArray of random vertex colors.
+ * If the vertices are indexed (have an indices array) then will
+ * just make random colors. Otherwise assumes they are triangless
+ * and makes one random color for every 3 vertices.
+ * @param {Object.<string, augmentedTypedArray>} vertices Vertices as returned from one of the createXXXVertices functions.
+ * @param {module:primitives.RandomVerticesOptions} [options] options.
+ * @return {Object.<string, augmentedTypedArray>} same vertices as passed in with `color` added.
+ * @memberOf module:primitives
+ */
+function makeRandomVertexColors (vertices, options) {
+  options = options || {};
+  const numElements = vertices.position.numElements;
+  const vcolors = webglUtils.createAugmentedTypedArray(4, numElements, Uint8Array);
+  const rand = options.rand || function (ndx, channel) {
+    return channel < 3 ? randInt(256) : 255;
+  };
+  vertices.color = vcolors;
+  if (vertices.indices) {
+    // just make random colors if index
+    for (let ii = 0; ii < numElements; ++ii) {
+      vcolors.push(rand(ii, 0), rand(ii, 1), rand(ii, 2), rand(ii, 3));
+    }
+  } else {
+    // make random colors per triangle
+    const numVertsPerColor = options.vertsPerColor || 3;
+    const numSets = numElements / numVertsPerColor;
+    for (let ii = 0; ii < numSets; ++ii) {
+      const color = [rand(ii, 0), rand(ii, 1), rand(ii, 2), rand(ii, 3)];
+      for (let jj = 0; jj < numVertsPerColor; ++jj) {
+        vcolors.push(color);
+      }
+    }
+  }
+  return vertices;
+}
+
 /**
  * Creates sphere vertices.
  * The created sphere has position, normal and uv streams.
@@ -850,4 +924,199 @@ function transformPoint (m, v, dst) {
   dst[2] = (v0 * m[0 * 4 + 2] + v1 * m[1 * 4 + 2] + v2 * m[2 * 4 + 2] + m[3 * 4 + 2]) / d;
 
   return dst;
+}
+/**
+ * Array of the indices of corners of each face of a cube.
+ * @type {Array.<number[]>}
+ */
+const CUBE_FACE_INDICES = [
+  [3, 7, 5, 1], // right
+  [6, 2, 0, 4], // left
+  [6, 7, 3, 2], // top
+  [0, 1, 5, 4], // bottom
+  [7, 6, 4, 5], // front
+  [2, 3, 1, 0], // back
+];
+/**
+ * Creates the vertices and indices for a cube. The
+ * cube will be created around the origin. (-size / 2, size / 2)
+ *
+ * @param {number} size Width, height and depth of the cube.
+ * @return {Object.<string, TypedArray>} The
+ *         created plane vertices.
+ * @memberOf module:primitives
+ */
+export function createCubeVertices (size) {
+  const k = size / 2;
+
+  const cornerVertices = [
+    [-k, -k, -k],
+    [+k, -k, -k],
+    [-k, +k, -k],
+    [+k, +k, -k],
+    [-k, -k, +k],
+    [+k, -k, +k],
+    [-k, +k, +k],
+    [+k, +k, +k],
+  ];
+
+  const faceNormals = [
+    [+1, +0, +0],
+    [-1, +0, +0],
+    [+0, +1, +0],
+    [+0, -1, +0],
+    [+0, +0, +1],
+    [+0, +0, -1],
+  ];
+
+  const uvCoords = [
+    [1, 0],
+    [0, 0],
+    [0, 1],
+    [1, 1],
+  ];
+
+  const numVertices = 6 * 4;
+  const positions = webglUtils.createAugmentedTypedArray(3, numVertices);
+  const normals = webglUtils.createAugmentedTypedArray(3, numVertices);
+  const texCoords = webglUtils.createAugmentedTypedArray(2, numVertices);
+  const indices = webglUtils.createAugmentedTypedArray(3, 6 * 2, Uint16Array);
+
+  for (let f = 0; f < 6; ++f) {
+    const faceIndices = CUBE_FACE_INDICES[f];
+    for (let v = 0; v < 4; ++v) {
+      const position = cornerVertices[faceIndices[v]];
+      const normal = faceNormals[f];
+      const uv = uvCoords[v];
+
+      // Each face needs all four vertices because the normals and texture
+      // coordinates are not all the same.
+      positions.push(position);
+      normals.push(normal);
+      texCoords.push(uv);
+
+    }
+    // Two triangles make a square face.
+    const offset = 4 * f;
+    indices.push(offset + 0, offset + 1, offset + 2);
+    indices.push(offset + 0, offset + 2, offset + 3);
+  }
+
+  return {
+    position: positions,
+    normal: normals,
+    texcoord: texCoords,
+    indices: indices,
+  };
+}
+
+/**
+ * Creates vertices for a truncated cone, which is like a cylinder
+ * except that it has different top and bottom radii. A truncated cone
+ * can also be used to create cylinders and regular cones. The
+ * truncated cone will be created centered about the origin, with the
+ * y axis as its vertical axis. The created cone has position, normal
+ * and uv streams.
+ *
+ * @param {number} bottomRadius Bottom radius of truncated cone.
+ * @param {number} topRadius Top radius of truncated cone.
+ * @param {number} height Height of truncated cone.
+ * @param {number} radialSubdivisions The number of subdivisions around the
+ *     truncated cone.
+ * @param {number} verticalSubdivisions The number of subdivisions down the
+ *     truncated cone.
+ * @param {boolean} [opt_topCap] Create top cap. Default = true.
+ * @param {boolean} [opt_bottomCap] Create bottom cap. Default =
+ *        true.
+ * @return {Object.<string, TypedArray>} The
+ *         created plane vertices.
+ * @memberOf module:primitives
+ */
+export function createTruncatedConeVertices (
+  bottomRadius,
+  topRadius,
+  height,
+  radialSubdivisions,
+  verticalSubdivisions,
+  opt_topCap,
+  opt_bottomCap) {
+  if (radialSubdivisions < 3) {
+    throw Error('radialSubdivisions must be 3 or greater');
+  }
+
+  if (verticalSubdivisions < 1) {
+    throw Error('verticalSubdivisions must be 1 or greater');
+  }
+
+  const topCap = (opt_topCap === undefined) ? true : opt_topCap;
+  const bottomCap = (opt_bottomCap === undefined) ? true : opt_bottomCap;
+
+  const extra = (topCap ? 2 : 0) + (bottomCap ? 2 : 0);
+
+  const numVertices = (radialSubdivisions + 1) * (verticalSubdivisions + 1 + extra);
+  const positions = webglUtils.createAugmentedTypedArray(3, numVertices);
+  const normals = webglUtils.createAugmentedTypedArray(3, numVertices);
+  const texCoords = webglUtils.createAugmentedTypedArray(2, numVertices);
+  const indices = webglUtils.createAugmentedTypedArray(3, radialSubdivisions * (verticalSubdivisions + extra) * 2, Uint16Array);
+
+  const vertsAroundEdge = radialSubdivisions + 1;
+
+  // The slant of the cone is constant across its surface
+  const slant = Math.atan2(bottomRadius - topRadius, height);
+  const cosSlant = Math.cos(slant);
+  const sinSlant = Math.sin(slant);
+
+  const start = topCap ? -2 : 0;
+  const end = verticalSubdivisions + (bottomCap ? 2 : 0);
+
+  for (let yy = start; yy <= end; ++yy) {
+    let v = yy / verticalSubdivisions;
+    let y = height * v;
+    let ringRadius;
+    if (yy < 0) {
+      y = 0;
+      v = 1;
+      ringRadius = bottomRadius;
+    } else if (yy > verticalSubdivisions) {
+      y = height;
+      v = 1;
+      ringRadius = topRadius;
+    } else {
+      ringRadius = bottomRadius +
+        (topRadius - bottomRadius) * (yy / verticalSubdivisions);
+    }
+    if (yy === -2 || yy === verticalSubdivisions + 2) {
+      ringRadius = 0;
+      v = 0;
+    }
+    y -= height / 2;
+    for (let ii = 0; ii < vertsAroundEdge; ++ii) {
+      const sin = Math.sin(ii * Math.PI * 2 / radialSubdivisions);
+      const cos = Math.cos(ii * Math.PI * 2 / radialSubdivisions);
+      positions.push(sin * ringRadius, y, cos * ringRadius);
+      normals.push(
+        (yy < 0 || yy > verticalSubdivisions) ? 0 : (sin * cosSlant),
+        (yy < 0) ? -1 : (yy > verticalSubdivisions ? 1 : sinSlant),
+        (yy < 0 || yy > verticalSubdivisions) ? 0 : (cos * cosSlant));
+      texCoords.push((ii / radialSubdivisions), 1 - v);
+    }
+  }
+
+  for (let yy = 0; yy < verticalSubdivisions + extra; ++yy) {
+    for (let ii = 0; ii < radialSubdivisions; ++ii) {
+      indices.push(vertsAroundEdge * (yy + 0) + 0 + ii,
+        vertsAroundEdge * (yy + 0) + 1 + ii,
+        vertsAroundEdge * (yy + 1) + 1 + ii);
+      indices.push(vertsAroundEdge * (yy + 0) + 0 + ii,
+        vertsAroundEdge * (yy + 1) + 1 + ii,
+        vertsAroundEdge * (yy + 1) + 0 + ii);
+    }
+  }
+
+  return {
+    position: positions,
+    normal: normals,
+    texcoord: texCoords,
+    indices: indices,
+  };
 }
