@@ -4,7 +4,7 @@
 
 <script>
 /* eslint-disable no-alert, no-console */
-// Reference from: https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-less-code-more-fun.html
+// Reference from: https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-drawing-multiple-things.html
 import { mat4 } from 'gl-matrix'
 import { createFlattenedFunc, createSphereVertices, createCubeVertices, createTruncatedConeVertices } from '../../utils/tools/primitives'
 import { createProgramInfo, setBuffersAndAttributes, setUniforms } from '../../utils/tools/web-gl'
@@ -132,16 +132,16 @@ export default {
 
     // Draw the scene.
     function drawScene (time) {
-      time *= 0.0005;
+      time *= 0.0005
 
       // Tell WebGL how to convert from clip space to pixels
-      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
 
-      gl.enable(gl.CULL_FACE);
-      gl.enable(gl.DEPTH_TEST);
+      gl.enable(gl.CULL_FACE)
+      gl.enable(gl.DEPTH_TEST)
 
       // Clear the canvas AND the depth buffer.
-      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
       // Compute the projection matrix
       const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight
