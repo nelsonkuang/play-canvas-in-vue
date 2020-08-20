@@ -187,6 +187,9 @@ export default {
       let out = mat4.create()
       mat4.multiply(earthOrbitNode.localMatrix, mat4.fromYRotation(out, 0.01), earthOrbitNode.localMatrix)
       mat4.multiply(moonOrbitNode.localMatrix, mat4.fromYRotation(out, 0.01), moonOrbitNode.localMatrix)
+      
+      // spin the sun
+      mat4.multiply(sunNode.localMatrix, mat4.fromYRotation(out, 0.001), sunNode.localMatrix)
       // spin the earth
       mat4.multiply(earthNode.localMatrix, mat4.fromYRotation(out, 0.05), earthNode.localMatrix)
       // spin the moon
