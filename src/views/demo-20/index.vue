@@ -25,8 +25,6 @@ export default {
     canvas.setAttribute('height', `${cHeight}px`)
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
 
-    gl.enable(gl.DEPTH_TEST)
-
     const vertexShaderCode = `
       attribute vec4 a_position;
       attribute vec4 a_color;
@@ -51,9 +49,10 @@ export default {
       varying vec4 v_color;
 
       uniform vec4 u_colorMult;
+      uniform vec4 u_colorOffset;
 
       void main() {
-        gl_FragColor = v_color * u_colorMult;
+        gl_FragColor = v_color * u_colorMult + u_colorOffset;
       }
     `
 
@@ -87,44 +86,44 @@ export default {
     const fieldOfViewRadians = degToRad(60)
     // const cameraHeight = 50
 
-    let objectsToDraw = []
-    let objects = []
-
     // Let's make all the nodes
     const solarSystemNode = new VNode()
     const earthOrbitNode = new VNode()
-    mat4.translate(earthOrbitNode.localMatrix, earthOrbitNode.localMatrix, [100, 0, 0])  // earth orbit 100 units from the sun
+    mat4.fromTranslation(earthOrbitNode.localMatrix, [100, 0, 0]) // earth orbit 100 units from the sun
     const moonOrbitNode = new VNode()
-    mat4.translate(moonOrbitNode.localMatrix, moonOrbitNode.localMatrix, [30, 0, 0])  // moon 30 units from the earth
+    mat4.fromTranslation(moonOrbitNode.localMatrix, [30, 0, 0]) // moon 30 units from the earth
 
     const sunNode = new VNode()
-    mat4.scale(sunNode.localMatrix, sunNode.localMatrix, [5, 5, 5])  // sun a the center
+    mat4.fromScaling(sunNode.localMatrix, [5, 5, 5]) // sun a the center
     sunNode.drawInfo = {
       uniforms: {
         u_colorOffset: [0.6, 0.6, 0, 1], // yellow
         u_colorMult: [0.4, 0.4, 0, 1],
+        u_matrix: mat4.create()
       },
       programInfo: mainProgramInfo,
       bufferInfo: sphereBufferInfo,
     }
 
     const earthNode = new VNode()
-    mat4.scale(earthNode.localMatrix, earthNode.localMatrix, [2, 2, 2])   // make the earth twice as large
+    mat4.fromScaling(earthNode.localMatrix, [2, 2, 2])   // make the earth twice as large
     earthNode.drawInfo = {
       uniforms: {
         u_colorOffset: [0.2, 0.5, 0.8, 1],  // blue-green
         u_colorMult: [0.8, 0.5, 0.2, 1],
+        u_matrix: mat4.create()
       },
       programInfo: mainProgramInfo,
       bufferInfo: sphereBufferInfo,
     }
 
     const moonNode = new VNode()
-    mat4.scale(moonNode.localMatrix, moonNode.localMatrix, [0.4, 0.4, 0.4])
+    mat4.fromScaling(moonNode.localMatrix, [0.4, 0.4, 0.4])
     moonNode.drawInfo = {
       uniforms: {
         u_colorOffset: [0.6, 0.6, 0.6, 1],  // gray
         u_colorMult: [0.1, 0.1, 0.1, 1],
+        u_matrix: mat4.create()
       },
       programInfo: mainProgramInfo,
       bufferInfo: sphereBufferInfo,
@@ -137,13 +136,13 @@ export default {
     moonOrbitNode.setParent(earthOrbitNode)
     moonNode.setParent(moonOrbitNode)
 
-    objects = [
+    const objects = [
       sunNode,
       earthNode,
       moonNode,
     ]
 
-    objectsToDraw = [
+    const objectsToDraw = [
       sunNode.drawInfo,
       earthNode.drawInfo,
       moonNode.drawInfo,
@@ -186,19 +185,19 @@ export default {
 
       // update the local matrices for each object.
       let out = mat4.create()
-      mat4.multiply(earthOrbitNode.localMatrix, mat4.rotateY(out, out, 0.01), earthOrbitNode.localMatrix)
-      mat4.multiply(moonOrbitNode.localMatrix, out, moonOrbitNode.localMatrix, )
+      mat4.multiply(earthOrbitNode.localMatrix, mat4.fromYRotation(out, 0.01), earthOrbitNode.localMatrix)
+      mat4.multiply(moonOrbitNode.localMatrix, mat4.fromYRotation(out, 0.01), moonOrbitNode.localMatrix)
       // spin the earth
-      mat4.multiply(earthNode.localMatrix, mat4.rotateY(out, out, 0.05), earthNode.localMatrix)
+      mat4.multiply(earthNode.localMatrix, mat4.fromYRotation(out, 0.05), earthNode.localMatrix)
       // spin the moon
-      mat4.multiply(moonNode.localMatrix, mat4.rotateY(out, out, -0.01), moonNode.localMatrix)
+      mat4.multiply(moonNode.localMatrix, mat4.fromYRotation(out, -0.01), moonNode.localMatrix)
 
       // Update all world matrices in the scene graph
       solarSystemNode.updateWorldMatrix()
 
       // Compute all the matrices for rendering
       objects.forEach((object) => {
-        object.drawInfo.uniforms.u_matrix = mat4.multiply(out, viewProjectionMatrix, object.worldMatrix)
+        mat4.multiply(object.drawInfo.uniforms.u_matrix, viewProjectionMatrix, object.worldMatrix)
       })
 
       // ------ Draw the objects --------
