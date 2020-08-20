@@ -4,7 +4,7 @@
 
 <script>
 /* eslint-disable no-alert, no-console */
-// Reference from: https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-drawing-multiple-things.html
+// Reference from: https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-scene-graph.html
 import { mat4 } from 'gl-matrix'
 import { createFlattenedFunc, createSphereVertices } from '../../utils/tools/primitives'
 import { createProgramInfo, setBuffersAndAttributes, setUniforms } from '../../utils/tools/web-gl'
