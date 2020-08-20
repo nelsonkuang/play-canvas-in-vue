@@ -171,6 +171,14 @@ const routes = [
     meta: {
       title: 'Webgl 教程 绘制多物体'
     }
+  },
+  {
+    path: '/demo-20',
+    name: 'Demo20',
+    component: () => import('@/views/demo-20/index'),
+    meta: {
+      title: 'Webgl 教程 使用场景图制作简单太阳、地球、月亮'
+    }
   }
 ]
 
