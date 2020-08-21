@@ -401,7 +401,7 @@ export default {
         const viewX = pos[0] - fromEye[0] * amountToMoveTowardEye
         const viewY = pos[1] - fromEye[1] * amountToMoveTowardEye
         const viewZ = pos[2] - fromEye[2] * amountToMoveTowardEye
-        const desiredTextScale = -1 / gl.canvas.height  // 1x1 pixels
+        const desiredTextScale = -1 / gl.canvas.height * 2  // 1x1 pixels
         const scale = viewZ * desiredTextScale
         const textMatrix = mat4.create()
         mat4.translate(textMatrix, projectionMatrix, [viewX, viewY, viewZ])
