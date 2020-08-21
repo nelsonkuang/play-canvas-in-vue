@@ -4,7 +4,7 @@
 
 <script>
 /* eslint-disable no-alert, no-console */
-// Reference from: https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-less-code-more-fun.html
+// Reference from: https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-text-glyphs.html
 import { mat4, vec3 } from 'gl-matrix'
 import { createProgramInfo, setUniforms, setBuffersAndAttributes } from '../../utils/tools/web-gl'
 import { createBufferInfoFunc, create3DFVertices } from '../../utils/tools/primitives'
