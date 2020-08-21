@@ -7,8 +7,8 @@
 // Reference from: https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-less-code-more-fun.html
 import { mat4, vec3 } from 'gl-matrix'
 import { createProgramInfo, setUniforms, setBuffersAndAttributes } from '../../utils/tools/web-gl'
-import { createBufferInfoFunc, createPlaneVertices, create3DFVertices } from '../../utils/tools/primitives'
-import { generateTextCanvas } from '../../utils/tools/texture'
+import { createBufferInfoFunc, create3DFVertices } from '../../utils/tools/primitives'
+import fontImg from '../../assets/8x8-font.png'
 let animationID = null
 export default {
   data () {
@@ -75,87 +75,199 @@ export default {
       varying vec2 v_texcoord;
 
       uniform sampler2D u_texture;
-      uniform vec4 u_color;
 
       void main() {
-        gl_FragColor = texture2D(u_texture, v_texcoord) * u_color;
+        gl_FragColor = texture2D(u_texture, v_texcoord);
       }
     `
+    const fontInfo = {
+      letterHeight: 8,
+      spaceWidth: 8,
+      spacing: -1,
+      textureWidth: 64,
+      textureHeight: 40,
+      glyphInfos: {
+        'a': { x: 0, y: 0, width: 8, },
+        'b': { x: 8, y: 0, width: 8, },
+        'c': { x: 16, y: 0, width: 8, },
+        'd': { x: 24, y: 0, width: 8, },
+        'e': { x: 32, y: 0, width: 8, },
+        'f': { x: 40, y: 0, width: 8, },
+        'g': { x: 48, y: 0, width: 8, },
+        'h': { x: 56, y: 0, width: 8, },
+        'i': { x: 0, y: 8, width: 8, },
+        'j': { x: 8, y: 8, width: 8, },
+        'k': { x: 16, y: 8, width: 8, },
+        'l': { x: 24, y: 8, width: 8, },
+        'm': { x: 32, y: 8, width: 8, },
+        'n': { x: 40, y: 8, width: 8, },
+        'o': { x: 48, y: 8, width: 8, },
+        'p': { x: 56, y: 8, width: 8, },
+        'q': { x: 0, y: 16, width: 8, },
+        'r': { x: 8, y: 16, width: 8, },
+        's': { x: 16, y: 16, width: 8, },
+        't': { x: 24, y: 16, width: 8, },
+        'u': { x: 32, y: 16, width: 8, },
+        'v': { x: 40, y: 16, width: 8, },
+        'w': { x: 48, y: 16, width: 8, },
+        'x': { x: 56, y: 16, width: 8, },
+        'y': { x: 0, y: 24, width: 8, },
+        'z': { x: 8, y: 24, width: 8, },
+        '0': { x: 16, y: 24, width: 8, },
+        '1': { x: 24, y: 24, width: 8, },
+        '2': { x: 32, y: 24, width: 8, },
+        '3': { x: 40, y: 24, width: 8, },
+        '4': { x: 48, y: 24, width: 8, },
+        '5': { x: 56, y: 24, width: 8, },
+        '6': { x: 0, y: 32, width: 8, },
+        '7': { x: 8, y: 32, width: 8, },
+        '8': { x: 16, y: 32, width: 8, },
+        '9': { x: 24, y: 32, width: 8, },
+        '-': { x: 32, y: 32, width: 8, },
+        '*': { x: 40, y: 32, width: 8, },
+        '!': { x: 48, y: 32, width: 8, },
+        '?': { x: 56, y: 32, width: 8, },
+      },
+    }
+
+    function makeVerticesForString (fontInfo, s) {
+      const len = s.length
+      const numVertices = len * 6
+      const positions = new Float32Array(numVertices * 2)
+      const texcoords = new Float32Array(numVertices * 2)
+      let offset = 0
+      let x = 0
+      const maxX = fontInfo.textureWidth
+      const maxY = fontInfo.textureHeight
+      for (let ii = 0; ii < len; ++ii) {
+        let letter = s[ii]
+        let glyphInfo = fontInfo.glyphInfos[letter]
+        if (glyphInfo) {
+          let x2 = x + glyphInfo.width
+          let u1 = glyphInfo.x / maxX
+          let v1 = (glyphInfo.y + fontInfo.letterHeight - 1) / maxY
+          let u2 = (glyphInfo.x + glyphInfo.width - 1) / maxX
+          let v2 = glyphInfo.y / maxY
+
+          // 6 vertices per letter
+          positions[offset + 0] = x
+          positions[offset + 1] = 0
+          texcoords[offset + 0] = u1
+          texcoords[offset + 1] = v1
+
+          positions[offset + 2] = x2
+          positions[offset + 3] = 0
+          texcoords[offset + 2] = u2
+          texcoords[offset + 3] = v1
+
+          positions[offset + 4] = x
+          positions[offset + 5] = fontInfo.letterHeight
+          texcoords[offset + 4] = u1
+          texcoords[offset + 5] = v2
+
+          positions[offset + 6] = x
+          positions[offset + 7] = fontInfo.letterHeight
+          texcoords[offset + 6] = u1
+          texcoords[offset + 7] = v2
+
+          positions[offset + 8] = x2
+          positions[offset + 9] = 0
+          texcoords[offset + 8] = u2
+          texcoords[offset + 9] = v1
+
+          positions[offset + 10] = x2
+          positions[offset + 11] = fontInfo.letterHeight
+          texcoords[offset + 10] = u2
+          texcoords[offset + 11] = v2
+
+          x += glyphInfo.width + fontInfo.spacing
+          offset += 12
+        } else {
+          // we don't have this character so just advance
+          x += fontInfo.spaceWidth
+        }
+      }
+
+      // return ArrayBufferViews for the portion of the TypedArrays
+      // that were actually used.
+      return {
+        arrays: {
+          position: new Float32Array(positions.buffer, 0, offset),
+          texcoord: new Float32Array(texcoords.buffer, 0, offset),
+        },
+        numVertices: offset / 2
+      }
+    }
+
     const create3DFBufferInfo = createBufferInfoFunc(create3DFVertices)
-    const createPlaneBufferInfo = createBufferInfoFunc(createPlaneVertices)
     // Create data for 'F'
     const fBufferInfo = create3DFBufferInfo(gl)
-    // Create a unit quad for the 'text'
-    const matrix = mat4.create()
-    mat4.rotateX(matrix, matrix, Math.PI / 2)
-    const textBufferInfo = createPlaneBufferInfo(gl, 1, 1, 1, 1, matrix)
+    // Maunally create a bufferInfo
+    const textBufferInfo = {
+      attribs: {
+        a_position: { buffer: gl.createBuffer(), numComponents: 2, },
+        a_texcoord: { buffer: gl.createBuffer(), numComponents: 2, },
+      },
+      numElements: 0,
+    }
 
     // setup GLSL programs
     const fProgramInfo = createProgramInfo(gl, [vertexShaderCode, fragmentShaderCode])
     const textProgramInfo = createProgramInfo(gl, [textVertexShaderCode, textFragmentShaderCode])
+    // Create a texture.
+    const glyphTex = gl.createTexture()
+    gl.bindTexture(gl.TEXTURE_2D, glyphTex)
+    // Fill the texture with a 1x1 blue pixel.
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+      new Uint8Array([0, 0, 255, 255]))
 
-    // colors, 1 for each F
-    const colors = [
-      [0.0, 0.0, 0.0, 1], // 0
-      [1.0, 0.0, 0.0, 1], // 1
-      [0.0, 1.0, 0.0, 1], // 2
-      [1.0, 1.0, 0.0, 1], // 3
-      [0.0, 0.0, 1.0, 1], // 4
-      [1.0, 0.0, 1.0, 1], // 5
-      [0.0, 1.0, 1.0, 1], // 6
-      [0.5, 0.5, 0.5, 1], // 7
-      [0.5, 0.0, 0.0, 1], // 8
-      [0.0, 0.0, 0.0, 1], // 9
-      [0.5, 5.0, 0.0, 1], // 10
-      [0.0, 5.0, 0.0, 1], // 11
-      [0.5, 0.0, 5.0, 1], // 12,
-      [0.0, 0.0, 5.0, 1], // 13,
-      [0.5, 5.0, 5.0, 1], // 14,
-      [0.0, 5.0, 5.0, 1], // 15,
-    ]
+    function AsynLoadImage (url, cb) {
+      const img = new Image()
+      img.src = url
+      if (img.complete) {
+        cb(img)
+        return
+      }
+      img.onload = function () {
+        img.onload = null
+        cb(img)
+        return
+      }
+      img.onerror = function () {
+        img.onerror = null
+        cb(img)
+      }
+    }
 
-    // create text textures, one for each F
-    const textTextures = [
-      '张伟',   // 0
-      '王伟',  // 1
-      '王芳',  // 2
-      '李伟',  // 3
-      '王秀英',  // 4
-      '李秀英',   // 5
-      '李娜',  // 6
-      '张秀英',    // 7
-      '刘伟',  // 8
-      '张敏',   // 9
-      '李静',   // 10
-      '张丽',   // 11
-      '王静',// 12,
-      '王丽',   // 13,
-      '李强', // 14,
-      '张静',    // 15,
-    ].map((text) => {
-      const textCanvas = generateTextCanvas({
-        text,
-        width: 100,
-        height: 26,
-        fillStyle: `rgb(${randInt(255)},${randInt(255)},${randInt(255)})`,
-        font: '700 28px "Hiragino Sans GB W3","Microsoft YaHe","宋体"'
-      })
-      const textWidth = textCanvas.width
-      const textHeight = textCanvas.height
-      const textTex = gl.createTexture()
-      gl.bindTexture(gl.TEXTURE_2D, textTex)
+    AsynLoadImage(fontImg, (img) => {
+      // Now that the image has loaded make copy it to the texture.
+      gl.bindTexture(gl.TEXTURE_2D, glyphTex)
       gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true)
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textCanvas)
-      // make sure we can render it even if it's not a power of 2
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img)
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-      return {
-        texture: textTex,
-        width: textWidth,
-        height: textHeight
-      }
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
     })
+
+    const names = [
+      'anna',   // 0
+      'colin',  // 1
+      'james',  // 2
+      'danny',  // 3
+      'kalin',  // 4
+      'hiro',   // 5
+      'eddie',  // 6
+      'shu',    // 7
+      'brian',  // 8
+      'tami',   // 9
+      'rick',   // 10
+      'gene',   // 11
+      'natalie',// 12,
+      'evan',   // 13,
+      'sakura', // 14,
+      'kai',    // 15,
+    ]
 
     const fUniforms = {
       u_matrix: mat4.create(),
@@ -163,7 +275,8 @@ export default {
 
     const textUniforms = {
       u_matrix: mat4.create(),
-      u_texture: null,
+      u_texture: glyphTex,
+      u_color: [0, 0, 0, 1]
     }
 
     function degToRad (d) {
@@ -174,9 +287,9 @@ export default {
     //   return r * 180 / Math.PI
     // }
 
-    function randInt (range) {
-      return Math.floor(Math.random() * range)
-    }
+    // function randInt (range) {
+    //   return Math.floor(Math.random() * range)
+    // }
 
     const translation = [0, 30, 0]
     const rotation = [degToRad(190), degToRad(0), degToRad(0)]
@@ -267,9 +380,16 @@ export default {
 
       textPositions.forEach(function (pos, ndx) {
         // draw the text
+        const name = names[ndx]
+        const s = name + ':' + pos[0].toFixed(0) + ',' + pos[1].toFixed(0) + ',' + pos[2].toFixed(0)
+        const vertices = makeVerticesForString(fontInfo, s)
 
-        // select a texture
-        const tex = textTextures[ndx]
+        // update the buffers
+        textBufferInfo.attribs.a_position.numComponents = 2
+        gl.bindBuffer(gl.ARRAY_BUFFER, textBufferInfo.attribs.a_position.buffer)
+        gl.bufferData(gl.ARRAY_BUFFER, vertices.arrays.position, gl.DYNAMIC_DRAW)
+        gl.bindBuffer(gl.ARRAY_BUFFER, textBufferInfo.attribs.a_texcoord.buffer)
+        gl.bufferData(gl.ARRAY_BUFFER, vertices.arrays.texcoord, gl.DYNAMIC_DRAW)
 
         // use just the view position of the 'F' for the text
 
@@ -286,14 +406,12 @@ export default {
         const textMatrix = mat4.create()
         mat4.translate(textMatrix, projectionMatrix, [viewX, viewY, viewZ])
         // scale the F to the size we need it.
-        mat4.scale(textMatrix, textMatrix, [tex.width * scale, tex.height * scale, 1])
+        mat4.scale(textMatrix, textMatrix, [scale, scale, 1])
         mat4.copy(textUniforms.u_matrix, textMatrix)
-        textUniforms.u_texture = tex.texture
-        textUniforms.u_color = colors[ndx]
         setUniforms(textProgramInfo, textUniforms)
 
         // Draw the text.
-        gl.drawElements(gl.TRIANGLES, textBufferInfo.numElements, gl.UNSIGNED_SHORT, 0)
+        gl.drawArrays(gl.TRIANGLES, 0, vertices.numVertices)
       })
 
       animationID = requestAnimationFrame(drawScene)

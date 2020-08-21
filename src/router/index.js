@@ -187,6 +187,14 @@ const routes = [
     meta: {
       title: 'Webgl 教程 简单方块人及关节'
     }
+  }, 
+  {
+    path: '/demo-22',
+    name: 'Demo22',
+    component: () => import('@/views/demo-22/index'),
+    meta: {
+      title: 'Webgl 教程 使用文字作为纹理二 - 图片文字'
+    }
   }
 ]
 

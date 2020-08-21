@@ -209,7 +209,7 @@ export default {
         gl.drawArrays(gl.TRIANGLES, 0, bufferInfo.numElements)
       })
 
-      requestAnimationFrame(drawScene)
+      animationID = requestAnimationFrame(drawScene)
     }
   },
   beforeDestroy () {
