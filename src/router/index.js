@@ -195,6 +195,14 @@ const routes = [
     meta: {
       title: 'Webgl 教程 使用文字作为纹理二 - 图片文字'
     }
+  }, 
+  {
+    path: '/demo-23',
+    name: 'Demo23',
+    component: () => import('@/views/demo-23/index'),
+    meta: {
+      title: 'Webgl 教程 创建及使用纹理图集'
+    }
   }
 ]
 
