@@ -179,6 +179,14 @@ const routes = [
     meta: {
       title: 'Webgl 教程 使用场景图制作简单太阳、地球、月亮'
     }
+  }, 
+  {
+    path: '/demo-21',
+    name: 'Demo21',
+    component: () => import('@/views/demo-21/index'),
+    meta: {
+      title: 'Webgl 教程 简单方块人及关节'
+    }
   }
 ]
 

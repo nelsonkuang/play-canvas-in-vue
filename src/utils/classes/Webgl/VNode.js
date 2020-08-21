@@ -5,10 +5,11 @@ class VNode {
   type = 'VNode'
   children = []
 
-  constructor() {
+  constructor(trs) {
     this.localMatrix = mat4.create()
     this.worldMatrix = mat4.create()
     this.uid = guid()
+    this.trs = trs
   }
 
   setParent (parent) {
@@ -28,6 +29,10 @@ class VNode {
   }
 
   updateWorldMatrix (parentWorldMatrix) {
+    const trs = this.trs
+    if (trs) {
+      trs.getMatrix(this.localMatrix)
+    }
     if (parentWorldMatrix) {
       // a matrix was passed in so do the math
       mat4.multiply(this.worldMatrix, parentWorldMatrix, this.localMatrix)
