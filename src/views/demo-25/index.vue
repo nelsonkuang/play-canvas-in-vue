@@ -239,6 +239,7 @@ export default {
       mat4.perspective(envmapUniforms.u_projection, fieldOfViewRadians, aspect, zNear, zFar)
 
       // Compute the camera's matrix
+      // 相机在以原点为圆心直径2个单位的圆上看向原点
       const cameraPosition = [Math.cos(time * .1) * 2, 0, Math.sin(time * .1) * 2]
       const target = [0, 0, 0]
       const up = [0, 1, 0]
@@ -251,6 +252,7 @@ export default {
       // We only care about direciton so remove the translation
       const viewDirectionMatrix = mat4.create()
       mat4.copy(viewDirectionMatrix, envmapUniforms.u_view)
+      // 我们只关心方向所以清除移动的部分
       viewDirectionMatrix[12] = 0
       viewDirectionMatrix[13] = 0
       viewDirectionMatrix[14] = 0
