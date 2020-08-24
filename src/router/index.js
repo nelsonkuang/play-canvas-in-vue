@@ -203,6 +203,14 @@ const routes = [
     meta: {
       title: 'Webgl 教程 创建及使用纹理图集'
     }
+  }, 
+  {
+    path: '/demo-24',
+    name: 'Demo24',
+    component: () => import('@/views/demo-24/index'),
+    meta: {
+      title: 'Webgl 教程 环境贴图（镜面反射）'
+    }
   }
 ]
 
