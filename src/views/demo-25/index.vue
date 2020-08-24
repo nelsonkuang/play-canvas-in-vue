@@ -4,9 +4,10 @@
 
 <script>
 /* eslint-disable no-alert, no-console */
-// Reference from: https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-environment-maps.html
+// Reference from: https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-skybox.html
 import { mat4 } from 'gl-matrix'
-import { createProgramInfo, setUniforms, setBuffersAndAttributes, createBufferInfoFromArrays } from '../../utils/tools/web-gl'
+import { createProgramInfo, setUniforms, setBuffersAndAttributes, drawBufferInfo } from '../../utils/tools/web-gl'
+import { createBufferInfoFunc, createCubeVertices, createXYQuadVertices } from '../../utils/tools/primitives'
 import negXImg from '../../assets/neg-x.jpg'
 import negYImg from '../../assets/neg-y.jpg'
 import negZImg from '../../assets/neg-z.jpg'
@@ -29,7 +30,7 @@ export default {
     canvas.setAttribute('height', `${cHeight}px`)
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
 
-    const vertexShaderCode = `
+    const envmapVertexShaderCode = `
       attribute vec4 a_position;
       attribute vec3 a_normal;
 
@@ -52,7 +53,7 @@ export default {
       }
     `
     // 为片段着色器设计一个关于颜色的输入
-    const fragmentShaderCode = `
+    const envmapFragmentShaderCode = `
       precision highp float;
 
       // Passed in from the vertex shader.
@@ -73,108 +74,37 @@ export default {
         gl_FragColor = textureCube(u_texture, direction);
       }
     `
-
-    // a single triangle
-    const arrays = {
-      position: {
-        numComponents: 3,
-        data: [
-          -0.5, -0.5, -0.5,
-          -0.5, 0.5, -0.5,
-          0.5, -0.5, -0.5,
-          -0.5, 0.5, -0.5,
-          0.5, 0.5, -0.5,
-          0.5, -0.5, -0.5,
-
-          -0.5, -0.5, 0.5,
-          0.5, -0.5, 0.5,
-          -0.5, 0.5, 0.5,
-          -0.5, 0.5, 0.5,
-          0.5, -0.5, 0.5,
-          0.5, 0.5, 0.5,
-
-          -0.5, 0.5, -0.5,
-          -0.5, 0.5, 0.5,
-          0.5, 0.5, -0.5,
-          -0.5, 0.5, 0.5,
-          0.5, 0.5, 0.5,
-          0.5, 0.5, -0.5,
-
-          -0.5, -0.5, -0.5,
-          0.5, -0.5, -0.5,
-          -0.5, -0.5, 0.5,
-          -0.5, -0.5, 0.5,
-          0.5, -0.5, -0.5,
-          0.5, -0.5, 0.5,
-
-          -0.5, -0.5, -0.5,
-          -0.5, -0.5, 0.5,
-          -0.5, 0.5, -0.5,
-          -0.5, -0.5, 0.5,
-          -0.5, 0.5, 0.5,
-          -0.5, 0.5, -0.5,
-
-          0.5, -0.5, -0.5,
-          0.5, 0.5, -0.5,
-          0.5, -0.5, 0.5,
-          0.5, -0.5, 0.5,
-          0.5, 0.5, -0.5,
-          0.5, 0.5, 0.5
-        ]
-      },
-      normal: {
-        numComponents: 3,
-        data: [
-          // 选择左下图
-          0, 0, -1,
-          0, 0, -1,
-          0, 0, -1,
-          0, 0, -1,
-          0, 0, -1,
-          0, 0, -1,
-
-          0, 0, 1,
-          0, 0, 1,
-          0, 0, 1,
-          0, 0, 1,
-          0, 0, 1,
-          0, 0, 1,
-
-          0, 1, 0,
-          0, 1, 0,
-          0, 1, 0,
-          0, 1, 0,
-          0, 1, 0,
-          0, 1, 0,
-
-          0, -1, 0,
-          0, -1, 0,
-          0, -1, 0,
-          0, -1, 0,
-          0, -1, 0,
-          0, -1, 0,
-
-          -1, 0, 0,
-          -1, 0, 0,
-          -1, 0, 0,
-          -1, 0, 0,
-          -1, 0, 0,
-          -1, 0, 0,
-
-          1, 0, 0,
-          1, 0, 0,
-          1, 0, 0,
-          1, 0, 0,
-          1, 0, 0,
-          1, 0, 0,
-        ]
+    const skyboxVertexShaderCode = `
+      attribute vec4 a_position;
+      varying vec4 v_position;
+      void main() {
+        v_position = a_position;
+        gl_Position = vec4(a_position.xy, 1, 1);
       }
-    }
+    `
+    // 为片段着色器设计一个关于颜色的输入
+    const skyboxFragmentShaderCode = `
+      precision mediump float;
 
-    const bufferInfo = createBufferInfoFromArrays(gl, arrays)
+      uniform samplerCube u_skybox;
+      uniform mat4 u_viewDirectionProjectionInverse;
+
+      varying vec4 v_position;
+      void main() {
+        vec4 t = u_viewDirectionProjectionInverse * v_position;
+        gl_FragColor = textureCube(u_skybox, normalize(t.xyz / t.w));
+      }
+    `
 
     // setup GLSL programs
-    const programInfo = createProgramInfo(gl, [vertexShaderCode, fragmentShaderCode])
+    const envmapProgramInfo = createProgramInfo(gl, [envmapVertexShaderCode, envmapFragmentShaderCode])
+    const skyboxProgramInfo = createProgramInfo(gl, [skyboxVertexShaderCode, skyboxFragmentShaderCode])
+
+    // create buffers and fill with vertex data
+    const createCubeBufferInfo = createBufferInfoFunc(createCubeVertices)
+    const createXYQuadBufferInfo = createBufferInfoFunc(createXYQuadVertices)
+    const cubeBufferInfo = createCubeBufferInfo(gl, 1)
+    const quadBufferInfo = createXYQuadBufferInfo(gl)
 
     // Create a texture.
     const texture = gl.createTexture()
@@ -249,12 +179,17 @@ export default {
       }
     }
 
-    const uniformsThatAreComputedForTheBox = {
+    const envmapUniforms = {
       u_projection: mat4.create(),
       u_view: mat4.create(),
       u_world: mat4.create(),
       u_texture: texture,
       u_worldCameraPosition: [0, 0, 0]
+    }
+
+    const skyboxUniforms = {
+      u_viewDirectionProjectionInverse: mat4.create(),
+      u_skybox: texture
     }
 
     function degToRad (d) {
@@ -272,29 +207,24 @@ export default {
     //   return Math.floor(Math.random() * range)
     // }
 
-    const modelRotation = [degToRad(0), degToRad(0)]
     const fieldOfViewRadians = degToRad(60)
     // const cameraYRotation = degToRad(0)
 
-    let then = 0
+    // let then = 0
 
     drawScene(0)
 
     // Draw the scene.
-    function drawScene (now) {
+    function drawScene (time) {
       // Convert to seconds
-      now *= 0.0005
+      time *= 0.001
       // Subtract the previous time from the current time
-      const deltaTime = now - then
+      // const deltaTime = now - then
       // Remember the current time for the next frame.
-      then = now
+      // then = time
 
       // Tell WebGL how to convert from clip space to pixels
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
-
-      // Every frame increase the rotation a little.
-      modelRotation[1] += -0.7 * deltaTime
-      modelRotation[0] += -0.4 * deltaTime
 
       gl.enable(gl.CULL_FACE)
       gl.enable(gl.DEPTH_TEST)
@@ -306,30 +236,57 @@ export default {
       const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight
       const zNear = 1
       const zFar = 2000
-      mat4.perspective(uniformsThatAreComputedForTheBox.u_projection, fieldOfViewRadians, aspect, zNear, zFar)
+      mat4.perspective(envmapUniforms.u_projection, fieldOfViewRadians, aspect, zNear, zFar)
 
       // Compute the camera's matrix
-      const cameraPosition = [0, 0, 2]
+      const cameraPosition = [Math.cos(time * .1) * 2, 0, Math.sin(time * .1) * 2]
       const target = [0, 0, 0]
       const up = [0, 1, 0]
       // 2. Compute the view's matrix using look at directly.
-      mat4.lookAt(uniformsThatAreComputedForTheBox.u_view, cameraPosition, target, up)
+      mat4.lookAt(envmapUniforms.u_view, cameraPosition, target, up)
 
-      mat4.fromXRotation(uniformsThatAreComputedForTheBox.u_world, modelRotation[0])
-      mat4.rotateY(uniformsThatAreComputedForTheBox.u_world, uniformsThatAreComputedForTheBox.u_world, modelRotation[1])
+      // Rotate the cube around the x axis
+      mat4.fromXRotation(envmapUniforms.u_world, time * 0.11)
 
-      uniformsThatAreComputedForTheBox.u_worldCameraPosition = cameraPosition
+      // We only care about direciton so remove the translation
+      const viewDirectionMatrix = mat4.create()
+      mat4.copy(viewDirectionMatrix, envmapUniforms.u_view)
+      viewDirectionMatrix[12] = 0
+      viewDirectionMatrix[13] = 0
+      viewDirectionMatrix[14] = 0
 
-      gl.useProgram(programInfo.program)
+      const viewDirectionProjectionMatrix = mat4.create()
+      mat4.multiply(viewDirectionProjectionMatrix,
+        envmapUniforms.u_projection, viewDirectionMatrix);
+      mat4.invert(skyboxUniforms.u_viewDirectionProjectionInverse, viewDirectionProjectionMatrix)
+
+      envmapUniforms.u_worldCameraPosition = cameraPosition
+
+      // draw the cube
+      gl.depthFunc(gl.LESS)  // use the default depth test
+
+      gl.useProgram(envmapProgramInfo.program)
 
       // Setup all the needed attributes.
-      setBuffersAndAttributes(gl, programInfo, bufferInfo)
+      setBuffersAndAttributes(gl, envmapProgramInfo, cubeBufferInfo)
 
       // Set the uniforms that are the same for all objects.
-      setUniforms(programInfo, uniformsThatAreComputedForTheBox)
+      setUniforms(envmapProgramInfo, envmapUniforms)
 
-      // Draw the geometry.
-      gl.drawArrays(gl.TRIANGLES, 0, 6 * 6)
+      drawBufferInfo(gl, cubeBufferInfo)
+
+      // draw the skybox
+
+      // let our quad pass the depth test at 1.0
+      gl.depthFunc(gl.LEQUAL)
+
+      gl.useProgram(skyboxProgramInfo.program)
+
+      setBuffersAndAttributes(gl, skyboxProgramInfo, quadBufferInfo)
+
+      setUniforms(skyboxProgramInfo, skyboxUniforms)
+
+      drawBufferInfo(gl, quadBufferInfo)
 
       animationID = requestAnimationFrame(drawScene)
     }
