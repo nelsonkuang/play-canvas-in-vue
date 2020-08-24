@@ -4,7 +4,7 @@
 
 <script>
 /* eslint-disable no-alert, no-console */
-// Reference from: https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-3d-textures.html
+// Reference from: https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-fog.html
 import { mat4 } from 'gl-matrix'
 import { createProgramInfo, setUniforms, setBuffersAndAttributes, createBufferInfoFromArrays } from '../../utils/tools/web-gl'
 import boxTextureImg from '../../assets/box-texture.jpg'
