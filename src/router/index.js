@@ -235,7 +235,15 @@ const routes = [
     meta: {
       title: 'Webgl 教程 在纹理上宣染 3D 内容'
     }
-  }
+  },
+  {
+    path: '/demo-28',
+    name: 'Demo28',
+    component: () => import('@/views/demo-28/index'),
+    meta: {
+      title: 'Webgl 教程 离屏渲染 1 像素近屏透视，实现点选物体'
+    }
+  },
 ]
 
 const router = new VueRouter({
