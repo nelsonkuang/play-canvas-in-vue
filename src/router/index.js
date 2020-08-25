@@ -227,6 +227,14 @@ const routes = [
     meta: {
       title: 'Webgl 教程 雾'
     }
+  }, 
+  {
+    path: '/demo-27',
+    name: 'Demo27',
+    component: () => import('@/views/demo-27/index'),
+    meta: {
+      title: 'Webgl 教程 在纹理上宣染 3D 内容'
+    }
   }
 ]
 
