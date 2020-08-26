@@ -8,11 +8,11 @@ class VNode {
   drawables = []
   parent
 
-  constructor(trs, name) {
+  constructor(source, name) {
     this.localMatrix = mat4.create()
     this.worldMatrix = mat4.create()
     this.uid = guid()
-    this.trs = trs
+    this.source = source
     this.name = name
   }
 
@@ -31,9 +31,9 @@ class VNode {
   }
 
   updateWorldMatrix (parentWorldMatrix) {
-    const trs = this.trs
-    if (trs) {
-      trs.getMatrix(this.localMatrix)
+    const source = this.source
+    if (source) {
+      source.getMatrix(this.localMatrix)
     }
     if (parentWorldMatrix) {
       // a matrix was passed in so do the math
@@ -48,6 +48,13 @@ class VNode {
     this.children.forEach((child) => {
       child.updateWorldMatrix(worldMatrix)
     })
+  }
+
+  traverse (fn) {
+    fn(this)
+    for (const child of this.children) {
+      child.traverse(fn)
+    }
   }
 
   addChild (child) {

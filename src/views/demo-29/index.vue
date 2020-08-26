@@ -82,14 +82,19 @@ export default {
       const fragmentShaderCode = `
         precision mediump float;
 
-        // Passed in from the vertex shader.
-        varying vec4 v_color;
+        varying vec3 v_normal;
 
-        uniform vec4 u_colorMult;
-        uniform vec4 u_colorOffset;
+        uniform vec4 u_diffuse;
+        uniform vec3 u_lightDirection;
 
-        void main() {
-          gl_FragColor = v_color * u_colorMult + u_colorOffset;
+        void main () {
+          vec3 normal = normalize(v_normal);
+          float light = dot(u_lightDirection, normal) * .5 + .5;
+          gl_FragColor = vec4(u_diffuse.rgb * light, u_diffuse.a);
+
+          // for debugging .. see article
+          //gl_FragColor = vec4(1, 0, 0, 1);
+          //gl_FragColor = vec4(v_normal * .5 + .5, 1);
         }
       `
 
@@ -377,7 +382,7 @@ export default {
 
         animSkin(gltf.skins[0], Math.sin(time) * .5)
 
-        const v3 = v3.create()
+        const v3 = vec3.create()
         vec3.normalize(v3, [-1, 3, 5])
         const sharedUniforms = {
           u_lightDirection: v3,
