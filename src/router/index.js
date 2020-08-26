@@ -244,6 +244,14 @@ const routes = [
       title: 'Webgl 教程 离屏渲染 1 像素近屏透视，实现点选物体'
     }
   },
+  {
+    path: '/demo-29',
+    name: 'Demo29',
+    component: () => import('@/views/demo-29/index'),
+    meta: {
+      title: 'Webgl 教程 初步认识蒙皮、蒙皮网格'
+    }
+  },
 ]
 
 const router = new VueRouter({

@@ -1,4 +1,5 @@
 'use strict'
+const CopyWebpackPlugin = require('copy-webpack-plugin')
 module.exports = {
   /**
    * You will need to set publicPath if you plan to deploy your site under a sub path,
@@ -11,4 +12,20 @@ module.exports = {
   outputDir: 'dist',
   assetsDir: 'static',
   productionSourceMap: false,
+  configureWebpack: {
+    plugins: [
+      // 复制到自定义静态源
+      new CopyWebpackPlugin(
+        {
+          patterns: [
+            {
+              // 来自那里(可以是对象，可以是String)
+              from: './static/',
+              // 走向那里(可以是对象，可以是String)
+              to: 'static'
+            }]
+        }
+      )
+    ]
+  }
 }
