@@ -6,7 +6,7 @@
 /* eslint-disable no-alert, no-console */
 // Reference from: https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-scene-graph.html
 import { mat4, vec3 } from 'gl-matrix'
-import { createProgramInfo } from '../../utils/tools/web-gl'
+import { createProgramInfo, /* decompose */ } from '../../utils/tools/web-gl'
 import VNode from '../../utils/classes/Webgl/VNode2'
 import TRS from '../../utils/classes/Webgl/TRS2'
 import SkinRenderer from '../../utils/classes/Webgl/SkinRenderer'
@@ -24,8 +24,8 @@ export default {
     const This = this
     async function main () {
       const canvas = This.$refs.canvas
-      const cWidth = window.innerWidth
-      const cHeight = window.innerHeight
+      const cWidth = 398 // window.innerWidth
+      const cHeight = 298 // window.innerHeight
       canvas.setAttribute('width', `${cWidth}px`)
       canvas.setAttribute('height', `${cHeight}px`)
       const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
@@ -245,8 +245,8 @@ export default {
           })
         })
 
-        const skinNodes = [];
-        const origNodes = gltf.nodes;
+        const skinNodes = []
+        const origNodes = gltf.nodes
         gltf.nodes = gltf.nodes.map((n) => {
           const { name, skin, mesh, translation, rotation, scale } = n
           const trs = new TRS(translation, rotation, scale)
@@ -255,7 +255,7 @@ export default {
           if (skin !== undefined) {
             skinNodes.push({ node, mesh: realMesh, skinNdx: skin })
           } else if (realMesh) {
-            node.drawables.push(new MeshRenderer(gl, meshProgramInfo, realMesh))
+            node.drawables.push(new MeshRenderer(realMesh))
           }
           return node
         })
@@ -269,7 +269,7 @@ export default {
 
         // Add SkinRenderers to nodes with skins
         for (const { node, mesh, skinNdx } of skinNodes) {
-          node.drawables.push(new SkinRenderer(gl, skinProgramInfo, mesh, gltf.skins[skinNdx]))
+          node.drawables.push(new SkinRenderer(mesh, gltf.skins[skinNdx]))
         }
 
         // arrange nodes into graph
@@ -330,9 +330,12 @@ export default {
           mat4.rotateX(m, origMatrix, a)
           // decompose it back into position, rotation, scale
           // into the joint
+          // decompose(m, joint.source.position, joint.source.rotation, joint.source.scale)
           mat4.getTranslation(joint.source.position, m)
           mat4.getRotation(joint.source.rotation, m)
           mat4.getScaling(joint.source.scale, m)
+          // console.log(joint.source)
+          // console.log('joint.source')
         }
       }
 
@@ -348,7 +351,7 @@ export default {
       //   return x >= 0 ? (x % n) : ((n - (-x % n)) % n)
       // }
 
-      drawScene(0)
+      animationID = requestAnimationFrame(drawScene)
 
       // Draw the scene.
       function drawScene (time) {
@@ -373,28 +376,32 @@ export default {
         mat4.perspective(projectionMatrix, fieldOfViewRadians, aspect, zNear, zFar)
 
         // Compute the camera's matrix
-        const cameraPosition = [10, 0, -5]
-        const target = [0, 0, -10]
+        // const cameraPosition = [10, 0, -5]
+        // const target = [0, 0, -10]
         const up = [0, 1, 0]
+        // for debugging .. see article
+        const cameraPosition = [5, 0, 5]
+        const target = [0, 5, 0]
         // 2. Compute the view's matrix using look at directly.
         let viewMatrix = mat4.create()
         mat4.lookAt(viewMatrix, cameraPosition, target, up)
 
         animSkin(gltf.skins[0], Math.sin(time) * .5)
 
-        const v3 = vec3.create()
-        vec3.normalize(v3, [-1, 3, 5])
         const sharedUniforms = {
-          u_lightDirection: v3,
+          u_lightDirection: vec3.create(),
         }
+        vec3.normalize(sharedUniforms.u_lightDirection, [-1, 3, 5])
+        
         function renderDrawables (node) {
           for (const drawable of node.drawables) {
-            drawable.render(node, projectionMatrix, viewMatrix, sharedUniforms);
+            const programInfo = drawable.type === 'SkinRenderer' ? skinProgramInfo : meshProgramInfo
+            drawable.render(gl, programInfo, node, projectionMatrix, viewMatrix, sharedUniforms)
           }
         }
 
         for (const scene of gltf.scenes) {
-          // updatte all world matices in the scene.
+          // update all world matices in the scene.
           scene.root.updateWorldMatrix()
           // walk the scene and render all renderables
           scene.root.traverse(renderDrawables)

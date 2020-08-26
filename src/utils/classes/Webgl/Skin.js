@@ -39,9 +39,9 @@ class Skin {
     // entire result in the texture
     for (let j = 0; j < this.joints.length; ++j) {
       const joint = this.joints[j]
-      const dst = this.jointMatrices[j]
-      mat4.multiply(dst, globalWorldInverse, joint.worldMatrix)
-      mat4.multiply(dst, this.inverseBindMatrices[j], dst)
+      // const dst = this.jointMatrices[j]
+      mat4.multiply(this.jointMatrices[j], globalWorldInverse, joint.worldMatrix)
+      mat4.multiply(this.jointMatrices[j], this.inverseBindMatrices[j], this.jointMatrices[j])
     }
     gl.bindTexture(gl.TEXTURE_2D, this.jointTexture)
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 4, this.joints.length, 0,

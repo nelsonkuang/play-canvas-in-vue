@@ -3,14 +3,12 @@ import { setBuffersAndAttributes, setUniforms, drawBufferInfo } from '../../tool
 import guid from '../../tools/guid'
 class MeshRenderer {
   type = 'MeshRenderer'
-  constructor(gl, meshProgramInfo, mesh) {
+  constructor(mesh) {
     this.mesh = mesh
-    this.gl = gl
-    this.meshProgramInfo = meshProgramInfo
     this.uid = guid()
   }
-  render (node, projection, view, sharedUniforms) {
-    const { gl, meshProgramInfo, mesh } = this
+  render (gl, meshProgramInfo, node, projection, view, sharedUniforms) {
+    const { mesh } = this
     gl.useProgram(meshProgramInfo.program)
     for (const primitive of mesh.primitives) {
       setBuffersAndAttributes(gl, meshProgramInfo, primitive.bufferInfo)

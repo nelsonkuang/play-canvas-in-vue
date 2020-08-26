@@ -3,15 +3,13 @@ import { setBuffersAndAttributes, setUniforms, drawBufferInfo } from '../../tool
 import guid from '../../tools/guid'
 class SkinRenderer {
   type = 'SkinRenderer'
-  constructor(gl, skinProgramInfo, mesh, skin) {
+  constructor(mesh, skin) {
     this.mesh = mesh
     this.skin = skin
-    this.gl = gl
-    this.skinProgramInfo = skinProgramInfo
     this.uid = guid()
   }
-  render(node, projection, view, sharedUniforms) {
-    const {gl, skinProgramInfo, skin, mesh} = this
+  render (gl, skinProgramInfo, node, projection, view, sharedUniforms) {
+    const { skin, mesh } = this
     skin.update(node)
     gl.useProgram(skinProgramInfo.program)
     for (const primitive of mesh.primitives) {
