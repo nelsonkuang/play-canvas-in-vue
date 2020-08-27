@@ -6,7 +6,7 @@
 /* eslint-disable no-alert, no-console */
 // Reference from: https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-skinning.html
 import { mat4, vec3 } from 'gl-matrix'
-import { createProgramInfo, /* compose, */ /* setBuffersAndAttributes, setUniforms, drawBufferInfo */ /* decompose */ } from '../../utils/tools/web-gl'
+import { createProgramInfo } from '../../utils/tools/web-gl'
 import Node from '../../utils/classes/Webgl/VNode2'
 import TRS from '../../utils/classes/Webgl/TRS2'
 import MeshRenderer from '../../utils/classes/Webgl/MeshRenderer'
