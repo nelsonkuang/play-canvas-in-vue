@@ -38,9 +38,9 @@ class Skin {
     // apply the inverse bind matrices and store the
     // entire result in the texture
     for (let j = 0; j < this.joints.length; ++j) {
-      const joint = this.joints[j]
+      // const joint = this.joints[j]
       // const dst = this.jointMatrices[j]
-      mat4.multiply(this.jointMatrices[j], globalWorldInverse, joint.worldMatrix)
+      mat4.multiply(this.jointMatrices[j], globalWorldInverse, this.joints[j].worldMatrix)
       mat4.multiply(this.jointMatrices[j], this.inverseBindMatrices[j], this.jointMatrices[j])
     }
     gl.bindTexture(gl.TEXTURE_2D, this.jointTexture)
