@@ -1,4 +1,4 @@
-# play-canvas-in-vue
+# Play Webgl & Canvas In VueJs
 
 ## Project setup
 ```

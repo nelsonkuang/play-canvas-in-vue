@@ -260,6 +260,14 @@ const routes = [
       title: 'Webgl 教程 初步认识蒙皮、蒙皮网格'
     }
   },
+  {
+    path: '/demo-31',
+    name: 'Demo31',
+    component: () => import('@/views/demo-31/index'),
+    meta: {
+      title: 'Webgl 教程 平面投影匹配'
+    }
+  }
 ]
 
 const router = new VueRouter({

@@ -24,8 +24,8 @@ export default {
     const This = this
     async function main () {
       const canvas = This.$refs.canvas
-      const cWidth = 398 // window.innerWidth
-      const cHeight = 298 // window.innerHeight
+      const cWidth = window.innerWidth
+      const cHeight = window.innerHeight
       canvas.setAttribute('width', `${cWidth}px`)
       canvas.setAttribute('height', `${cHeight}px`)
       const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
