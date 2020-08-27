@@ -4,10 +4,10 @@
 
 <script>
 /* eslint-disable no-alert, no-console */
-// Reference from: https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-scene-graph.html
+// Reference from: https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-skinning.html
 import { mat4, vec3 } from 'gl-matrix'
-import { createProgramInfo, /* decompose */ } from '../../utils/tools/web-gl'
-import VNode from '../../utils/classes/Webgl/VNode2'
+import { createProgramInfo, /* compose, */ /* setBuffersAndAttributes, setUniforms, drawBufferInfo */ /* decompose */ } from '../../utils/tools/web-gl'
+import Node from '../../utils/classes/Webgl/VNode2'
 import TRS from '../../utils/classes/Webgl/TRS2'
 import SkinRenderer from '../../utils/classes/Webgl/SkinRenderer'
 import MeshRenderer from '../../utils/classes/Webgl/MeshRenderer'
@@ -119,6 +119,75 @@ export default {
       const skinProgramInfo = createProgramInfo(gl, [skinVSCode, fragmentShaderCode])
       const meshProgramInfo = createProgramInfo(gl, [meshVSCode, fragmentShaderCode])
 
+      // class Skin {
+      //   constructor(joints, inverseBindMatrixData) {
+      //     this.joints = joints;
+      //     this.inverseBindMatrices = [];
+      //     this.jointMatrices = [];
+      //     // allocate enough space for one matrix per joint
+      //     this.jointData = new Float32Array(joints.length * 16);
+      //     // create views for each joint and inverseBindMatrix
+      //     for (let i = 0; i < joints.length; ++i) {
+      //       this.inverseBindMatrices.push(new Float32Array(
+      //         inverseBindMatrixData.buffer,
+      //         inverseBindMatrixData.byteOffset + Float32Array.BYTES_PER_ELEMENT * 16 * i,
+      //         16));
+      //       this.jointMatrices.push(new Float32Array(
+      //         this.jointData.buffer,
+      //         Float32Array.BYTES_PER_ELEMENT * 16 * i,
+      //         16));
+      //     }
+      //     // create a texture to hold the joint matrices
+      //     this.jointTexture = gl.createTexture();
+      //     gl.bindTexture(gl.TEXTURE_2D, this.jointTexture);
+      //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      //   }
+      //   update (node) {
+      //     const globalWorldInverse = mat4.create();
+      //     mat4.invert(globalWorldInverse, node.worldMatrix);
+      //     // go through each joint and get its current worldMatrix
+      //     // apply the inverse bind matrices and store the
+      //     // entire result in the texture
+      //     for (let j = 0; j < this.joints.length; ++j) {
+      //       const joint = this.joints[j];
+      //       const dst = this.jointMatrices[j];
+      //       mat4.multiply(dst, globalWorldInverse, joint.worldMatrix);
+      //       mat4.multiply(dst, dst, this.inverseBindMatrices[j]);
+      //     }
+      //     gl.bindTexture(gl.TEXTURE_2D, this.jointTexture);
+      //     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 4, this.joints.length, 0,
+      //       gl.RGBA, gl.FLOAT, this.jointData);
+      //   }
+      // }
+
+      // class SkinRenderer {
+      //   constructor(mesh, skin) {
+      //     this.mesh = mesh;
+      //     this.skin = skin;
+      //   }
+      //   render (node, projection, view, sharedUniforms) {
+      //     const { skin, mesh } = this;
+      //     skin.update(node);
+      //     gl.useProgram(skinProgramInfo.program);
+      //     for (const primitive of mesh.primitives) {
+      //       webglUtils.setBuffersAndAttributes(gl, skinProgramInfo, primitive.bufferInfo);
+      //       webglUtils.setUniforms(skinProgramInfo, {
+      //         u_projection: projection,
+      //         u_view: view,
+      //         u_world: node.worldMatrix,
+      //         u_jointTexture: skin.jointTexture,
+      //         u_numJoints: skin.joints.length,
+      //       });
+      //       webglUtils.setUniforms(skinProgramInfo, primitive.material.uniforms);
+      //       webglUtils.setUniforms(skinProgramInfo, sharedUniforms);
+      //       webglUtils.drawBufferInfo(gl, primitive.bufferInfo);
+      //     }
+      //   }
+      // }
+
       function throwNoKey (key) {
         throw new Error(`no key: ${key}`)
       }
@@ -170,7 +239,7 @@ export default {
             bufferView.byteOffset + (accessor.byteOffset || 0),
             accessor.count * accessorTypeToNumComponents(accessor.type)),
           stride: bufferView.byteStride || 0,
-        };
+        }
       }
 
       // Given an accessor index return a WebGLBuffer and a stride
@@ -250,7 +319,7 @@ export default {
         gltf.nodes = gltf.nodes.map((n) => {
           const { name, skin, mesh, translation, rotation, scale } = n
           const trs = new TRS(translation, rotation, scale)
-          const node = new VNode(trs, name)
+          const node = new Node(trs, name)
           const realMesh = gltf.meshes[mesh]
           if (skin !== undefined) {
             skinNodes.push({ node, mesh: realMesh, skinNdx: skin })
@@ -282,7 +351,7 @@ export default {
 
         // setup scenes
         for (const scene of gltf.scenes) {
-          scene.root = new VNode(new TRS(), scene.name)
+          scene.root = new Node(new TRS(), scene.name)
           addChildren(gltf.nodes, scene.root, scene.nodes)
         }
 
@@ -376,12 +445,12 @@ export default {
         mat4.perspective(projectionMatrix, fieldOfViewRadians, aspect, zNear, zFar)
 
         // Compute the camera's matrix
-        // const cameraPosition = [10, 0, -5]
-        // const target = [0, 0, -10]
+        const cameraPosition = [10, 0, -5]
+        const target = [0, 0, -10]
         const up = [0, 1, 0]
         // for debugging .. see article
-        const cameraPosition = [5, 0, 5]
-        const target = [0, 5, 0]
+        // const cameraPosition = [5, 0, 5]
+        // const target = [0, 5, 0]
         // 2. Compute the view's matrix using look at directly.
         let viewMatrix = mat4.create()
         mat4.lookAt(viewMatrix, cameraPosition, target, up)
@@ -392,7 +461,7 @@ export default {
           u_lightDirection: vec3.create(),
         }
         vec3.normalize(sharedUniforms.u_lightDirection, [-1, 3, 5])
-        
+
         function renderDrawables (node) {
           for (const drawable of node.drawables) {
             const programInfo = drawable.type === 'SkinRenderer' ? skinProgramInfo : meshProgramInfo
