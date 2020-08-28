@@ -265,7 +265,15 @@ const routes = [
     name: 'Demo31',
     component: () => import('@/views/demo-31/index'),
     meta: {
-      title: 'Webgl 教程 平面投影匹配'
+      title: 'Webgl 教程 平面/球面等 投影（像使用投影仪）'
+    }
+  },
+  {
+    path: '/demo-32',
+    name: 'Demo32',
+    component: () => import('@/views/demo-32/index'),
+    meta: {
+      title: 'Webgl 教程 点击光源阴影的实现'
     }
   }
 ]

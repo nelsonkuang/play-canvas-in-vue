@@ -5,6 +5,8 @@
 <script>
 /* eslint-disable no-alert, no-console */
 // Reference from: https://webglfundamentals.org/webgl/lessons/webgl-planar-projection-mapping.html
+// 投影匹配（像放电影，但不单单投到平面、可能投影到球面、柱面等）
+// 如果投影机对准屏幕就是长方形，如果投不准、有角度就变成梯形（类似于投影仪的使用）
 import { mat4 } from 'gl-matrix'
 import { createBufferInfoFunc, createSphereVertices, createPlaneVertices } from '../../utils/tools/primitives'
 import { createProgramInfo, setBuffersAndAttributes, setUniforms, createBufferInfoFromArrays, drawBufferInfo } from '../../utils/tools/web-gl'
