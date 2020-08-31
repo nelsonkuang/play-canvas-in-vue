@@ -235,6 +235,8 @@ export default {
         if (imgs.length === 6) {
           gl.generateMipmap(gl.TEXTURE_CUBE_MAP)
           gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
+          rotateCamera(degToRad(0), degToRad(30))
+          updateCamera()
           drawScene()
         }
       })
@@ -281,13 +283,16 @@ export default {
     //   return Math.floor(Math.random() * range)
     // }
 
-    let modelRotation = [degToRad(30), degToRad(0)]
+    let modelRotation = [degToRad(0), degToRad(0)]
+    const originCameraPosition = vec3.fromValues(0, 0, 2)
     let cameraPosition = vec3.fromValues(0, 0, 2)
     const target = vec3.fromValues(0, 0, 0)
     const up = vec3.fromValues(0, 1, 0)
     const fieldOfViewRadians = degToRad(60)
     let theta = 0 // x 方向
     let phi = 0 // y 方向
+    let dX = 0
+    let dY = 0
     let drag = false
     const supportedTouch = window.hasOwnProperty('ontouchstart')
 
@@ -331,8 +336,15 @@ export default {
 
       // animationID = requestAnimationFrame(drawScene)
     }
-    function updateCamera (theta, phi) {
+    function rotateCamera (dx, dy) {
+      const phiMax = Math.PI / 2 - 0.01
+      theta += dx
+      phi += dy
+      phi = Math.min(Math.max(phi, - Math.PI / 2), phiMax)
+    }
+    function updateCamera () {
       // modelRotation = [phi, theta]
+      vec3.copy(cameraPosition, originCameraPosition)
       vec3.rotateX(cameraPosition, cameraPosition, target, -phi)
       vec3.rotateY(cameraPosition, cameraPosition, target, -theta)
 
@@ -358,11 +370,12 @@ export default {
       const mouseMove = function (e) {
         if (!drag) return false
         e.preventDefault()
-        theta = (e.pageX - oldX) * 2 * Math.PI / gl.canvas.clientWidth
-        phi = (e.pageY - oldY) * 2 * Math.PI / gl.canvas.clientHeight
+        dX = (e.pageX - oldX) * 2 * Math.PI / gl.canvas.clientWidth
+        dY = (e.pageY - oldY) * 2 * Math.PI / gl.canvas.clientHeight
         oldX = e.pageX
         oldY = e.pageY
-        updateCamera(theta, phi)
+        rotateCamera(dX, dY)
+        updateCamera()
       }
 
       canvas.addEventListener('mousedown', mouseDown, false)
@@ -389,11 +402,12 @@ export default {
 
       const touchMove = function (e) {
         if (!drag) return false
-        theta = (e.changedTouches[0].pageX - oldX) * 2 * Math.PI / gl.canvas.clientWidth
-        phi = (e.changedTouches[0].pageY - oldY) * 2 * Math.PI / gl.canvas.clientHeight
+        dX = (e.changedTouches[0].pageX - oldX) * 2 * Math.PI / gl.canvas.clientWidth
+        dY = (e.changedTouches[0].pageY - oldY) * 2 * Math.PI / gl.canvas.clientHeight
         oldX = e.changedTouches[0].pageX
         oldY = e.changedTouches[0].pageY
-        updateCamera(theta, phi)
+        rotateCamera(dX, dY)
+        updateCamera()
         e.preventDefault()
       }
 
