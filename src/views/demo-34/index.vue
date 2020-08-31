@@ -7,7 +7,7 @@
 // Reference from: 
 // https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-environment-maps.html
 // https://zhoyq.github.io/panoramic
-import { mat4 } from 'gl-matrix'
+import { mat4, vec3 } from 'gl-matrix'
 import { createProgramInfo, setUniforms, setBuffersAndAttributes, createBufferInfoFromArrays } from '../../utils/tools/web-gl'
 const negXImg = './static/img/skybox/neg-x.jpg'
 const negYImg = './static/img/skybox/neg-y.jpg'
@@ -15,7 +15,7 @@ const negZImg = './static/img/skybox/neg-z.jpg'
 const posXImg = './static/img/skybox/pos-x.jpg'
 const posYImg = './static/img/skybox/pos-y.jpg'
 const posZImg = './static/img/skybox/pos-z.jpg'
-let animationID = null
+// let animationID = null
 export default {
   data () {
     return {
@@ -210,6 +210,8 @@ export default {
       },
     ]
 
+    const imgs = []
+
     faceInfos.forEach((faceInfo) => {
       const { target, url } = faceInfo
 
@@ -226,13 +228,17 @@ export default {
 
       // Asynchronously load an image
       AsynLoadImage(url, (image) => {
+        imgs.push(image)
         gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture)
         gl.texImage2D(target, level, internalFormat, format, type, image)
         gl.generateMipmap(gl.TEXTURE_CUBE_MAP)
+        if (imgs.length === 6) {
+          gl.generateMipmap(gl.TEXTURE_CUBE_MAP)
+          gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
+          drawScene()
+        }
       })
     })
-    gl.generateMipmap(gl.TEXTURE_CUBE_MAP)
-    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
 
     function AsynLoadImage (url, cb) {
       const img = new Image()
@@ -275,29 +281,21 @@ export default {
     //   return Math.floor(Math.random() * range)
     // }
 
-    const modelRotation = [degToRad(0), degToRad(0)]
+    let modelRotation = [degToRad(30), degToRad(0)]
+    let cameraPosition = vec3.fromValues(0, 0, 2)
+    const target = vec3.fromValues(0, 0, 0)
+    const up = vec3.fromValues(0, 1, 0)
     const fieldOfViewRadians = degToRad(60)
-    // const cameraYRotation = degToRad(0)
-
-    let then = 0
-
-    drawScene(0)
+    let theta = 0 // x 方向
+    let phi = 0 // y 方向
+    let drag = false
+    const supportedTouch = window.hasOwnProperty('ontouchstart')
 
     // Draw the scene.
-    function drawScene (now) {
-      // Convert to seconds
-      now *= 0.0005
-      // Subtract the previous time from the current time
-      const deltaTime = now - then
-      // Remember the current time for the next frame.
-      then = now
+    function drawScene () {
 
       // Tell WebGL how to convert from clip space to pixels
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
-
-      // Every frame increase the rotation a little.
-      modelRotation[1] += -0.7 * deltaTime
-      modelRotation[0] += -0.4 * deltaTime
 
       gl.enable(gl.CULL_FACE)
       gl.enable(gl.DEPTH_TEST)
@@ -312,9 +310,6 @@ export default {
       mat4.perspective(uniformsThatAreComputedForTheBox.u_projection, fieldOfViewRadians, aspect, zNear, zFar)
 
       // Compute the camera's matrix
-      const cameraPosition = [0, 0, 2]
-      const target = [0, 0, 0]
-      const up = [0, 1, 0]
       // 2. Compute the view's matrix using look at directly.
       mat4.lookAt(uniformsThatAreComputedForTheBox.u_view, cameraPosition, target, up)
 
@@ -334,11 +329,83 @@ export default {
       // Draw the geometry.
       gl.drawArrays(gl.TRIANGLES, 0, 6 * 6)
 
-      animationID = requestAnimationFrame(drawScene)
+      // animationID = requestAnimationFrame(drawScene)
     }
+    function updateCamera (theta, phi) {
+      // modelRotation = [phi, theta]
+      vec3.rotateX(cameraPosition, cameraPosition, target, -phi)
+      vec3.rotateY(cameraPosition, cameraPosition, target, -theta)
+
+      drawScene()
+    }
+    /* ================= Mouse events ====================== */
+    function bindMouseEvents () {
+      let oldX = 0
+      let oldY = 0
+
+      const mouseDown = function (e) {
+        e.preventDefault()
+        drag = true
+        oldX = e.pageX
+        oldY = e.pageY
+        return false
+      }
+
+      const mouseUp = function () {
+        drag = false
+      }
+
+      const mouseMove = function (e) {
+        if (!drag) return false
+        e.preventDefault()
+        theta = (e.pageX - oldX) * 2 * Math.PI / gl.canvas.clientWidth
+        phi = (e.pageY - oldY) * 2 * Math.PI / gl.canvas.clientHeight
+        oldX = e.pageX
+        oldY = e.pageY
+        updateCamera(theta, phi)
+      }
+
+      canvas.addEventListener('mousedown', mouseDown, false)
+      canvas.addEventListener('mouseup', mouseUp, false)
+      canvas.addEventListener('mouseout', mouseUp, false)
+      canvas.addEventListener('mousemove', mouseMove, false)
+    }
+    /* ================= Touch events ====================== */
+    function bindTouchEvents () {
+      let oldX = 0
+      let oldY = 0
+
+      const touchStart = function (e) {
+        drag = true
+        oldX = e.changedTouches[0].pageX
+        oldY = e.changedTouches[0].pageY
+        e.preventDefault()
+        return false
+      }
+
+      const touchEnd = function () {
+        drag = false
+      }
+
+      const touchMove = function (e) {
+        if (!drag) return false
+        theta = (e.changedTouches[0].pageX - oldX) * 2 * Math.PI / gl.canvas.clientWidth
+        phi = (e.changedTouches[0].pageY - oldY) * 2 * Math.PI / gl.canvas.clientHeight
+        oldX = e.changedTouches[0].pageX
+        oldY = e.changedTouches[0].pageY
+        updateCamera(theta, phi)
+        e.preventDefault()
+      }
+
+      canvas.addEventListener('touchstart', touchStart, false)
+      canvas.addEventListener('touchend', touchEnd, false)
+      canvas.addEventListener('touchmove', touchMove, false)
+    }
+
+    supportedTouch ? bindTouchEvents() : bindMouseEvents()
   },
   beforeDestroy () {
-    animationID && cancelAnimationFrame(animationID)
+    // animationID && cancelAnimationFrame(animationID)
   }
 }
 </script>
