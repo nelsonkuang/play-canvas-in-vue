@@ -16,7 +16,7 @@ const negZImg = './static/img/skybox/neg-z.jpg'
 const posXImg = './static/img/skybox/pos-x.jpg'
 const posYImg = './static/img/skybox/pos-y.jpg'
 const posZImg = './static/img/skybox/pos-z.jpg'
-let animationID = null
+// let animationID = null
 export default {
   data () {
     return {
@@ -92,6 +92,8 @@ export default {
       },
     ]
 
+    const imgs = []
+
     faceInfos.forEach((faceInfo) => {
       const { target, url } = faceInfo
 
@@ -108,13 +110,17 @@ export default {
 
       // Asynchronously load an image
       AsynLoadImage(url, (image) => {
+        imgs.push(image)
         gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture)
         gl.texImage2D(target, level, internalFormat, format, type, image)
         gl.generateMipmap(gl.TEXTURE_CUBE_MAP)
+        if (imgs.length === 6) {
+          gl.generateMipmap(gl.TEXTURE_CUBE_MAP)
+          gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
+          drawScene()
+        }
       })
     })
-    gl.generateMipmap(gl.TEXTURE_CUBE_MAP)
-    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
 
     function AsynLoadImage (url, cb) {
       const img = new Image()
@@ -168,9 +174,6 @@ export default {
     let time = 0
     const supportedTouch = window.hasOwnProperty('ontouchstart')
 
-
-    drawScene()
-
     // Draw the scene.
     function drawScene () {
       // Convert to seconds
@@ -222,7 +225,7 @@ export default {
 
       drawBufferInfo(gl, quadBufferInfo)
 
-      animationID = requestAnimationFrame(drawScene)
+      // animationID = requestAnimationFrame(drawScene)
     }
     function zoomInCamera (delta) {
       if (delta > 0) {
@@ -336,7 +339,7 @@ export default {
     supportedTouch ? bindTouchEvents() : bindMouseEvents()
   },
   beforeDestroy () {
-    animationID && cancelAnimationFrame(animationID)
+    // animationID && cancelAnimationFrame(animationID)
   }
 }
 </script>
