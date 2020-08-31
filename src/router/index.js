@@ -283,7 +283,15 @@ const routes = [
     meta: {
       title: 'Webgl 教程 平行光源阴影的实现'
     }
-  }
+  },
+  {
+    path: '/demo-34',
+    name: 'Demo34',
+    component: () => import('@/views/demo-34/index'),
+    meta: {
+      title: 'Webgl 教程 环境贴图（镜面反射）II'
+    }
+  }, 
 ]
 
 const router = new VueRouter({
