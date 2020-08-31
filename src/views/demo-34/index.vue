@@ -294,6 +294,7 @@ export default {
     let dX = 0
     let dY = 0
     let drag = false
+    let zoom = 1
     const supportedTouch = window.hasOwnProperty('ontouchstart')
 
     // Draw the scene.
@@ -336,6 +337,13 @@ export default {
 
       // animationID = requestAnimationFrame(drawScene)
     }
+    function zoomInCamera (delta) {
+      if (delta > 0) {
+        zoom *= 1.04
+      } else {
+        zoom /= 1.04
+      }
+    }
     function rotateCamera (dx, dy) {
       const phiMax = Math.PI / 2 - 0.01
       theta += dx
@@ -347,6 +355,7 @@ export default {
       vec3.copy(cameraPosition, originCameraPosition)
       vec3.rotateX(cameraPosition, cameraPosition, target, -phi)
       vec3.rotateY(cameraPosition, cameraPosition, target, -theta)
+      vec3.scale(cameraPosition, cameraPosition, zoom)
 
       drawScene()
     }
@@ -368,7 +377,10 @@ export default {
       }
 
       const mouseMove = function (e) {
-        if (!drag) return false
+        if (!drag) {
+          canvas.style.cursor = 'grab'
+          return
+        }
         e.preventDefault()
         dX = (e.pageX - oldX) * 2 * Math.PI / gl.canvas.clientWidth
         dY = (e.pageY - oldY) * 2 * Math.PI / gl.canvas.clientHeight
@@ -377,16 +389,28 @@ export default {
         rotateCamera(dX, dY)
         updateCamera()
       }
+      const mouseWheel = function (e) {
+        if (Math.abs(e.deltaY) < 1.0) {
+          return
+        }
+
+        canvas.style.cursor = 'none'
+        zoomInCamera(e.deltaY)
+        updateCamera()
+      }
 
       canvas.addEventListener('mousedown', mouseDown, false)
       canvas.addEventListener('mouseup', mouseUp, false)
       canvas.addEventListener('mouseout', mouseUp, false)
       canvas.addEventListener('mousemove', mouseMove, false)
+      canvas.addEventListener('wheel', mouseWheel, false)
     }
     /* ================= Touch events ====================== */
     function bindTouchEvents () {
       let oldX = 0
       let oldY = 0
+      let currentDistance = 0
+      let startDistance = 0
 
       const touchStart = function (e) {
         drag = true
@@ -402,13 +426,19 @@ export default {
 
       const touchMove = function (e) {
         if (!drag) return false
-        dX = (e.changedTouches[0].pageX - oldX) * 2 * Math.PI / gl.canvas.clientWidth
-        dY = (e.changedTouches[0].pageY - oldY) * 2 * Math.PI / gl.canvas.clientHeight
-        oldX = e.changedTouches[0].pageX
-        oldY = e.changedTouches[0].pageY
-        rotateCamera(dX, dY)
-        updateCamera()
         e.preventDefault()
+        if (event.changedTouches[1] == undefined) {// 单点触控
+          dX = (e.changedTouches[0].pageX - oldX) * 2 * Math.PI / gl.canvas.clientWidth
+          dY = (e.changedTouches[0].pageY - oldY) * 2 * Math.PI / gl.canvas.clientHeight
+          oldX = e.changedTouches[0].pageX
+          oldY = e.changedTouches[0].pageY
+          rotateCamera(dX, dY)
+          updateCamera()
+        } else {
+          currentDistance = Math.sqrt(Math.pow(e.changedTouches[1].pageX - e.changedTouches[0].pageX, 2) + Math.pow(e.changedTouches[1].pageY - e.changedTouches[0].pageY, 2))
+          zoomInCamera(startDistance - currentDistance)
+          startDistance = currentDistance
+        }
       }
 
       canvas.addEventListener('touchstart', touchStart, false)
