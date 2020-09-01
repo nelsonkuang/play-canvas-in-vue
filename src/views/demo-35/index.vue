@@ -7,9 +7,10 @@
 // Reference from: 
 // https://webglfundamentals.org/webgl/lessons/zh_cn/webgl-skybox.html
 // https://zhoyq.github.io/panoramic
-import { mat4, vec3 } from 'gl-matrix'
+import { mat4 } from 'gl-matrix'
 import { createProgramInfo, setUniforms, setBuffersAndAttributes, drawBufferInfo } from '../../utils/tools/web-gl'
 import { createBufferInfoFunc, createCubeVertices } from '../../utils/tools/primitives'
+import Camera from '../../utils/classes/Webgl/Camera'
 const negXImg = './static/img/skybox/neg-x.jpg'
 const negYImg = './static/img/skybox/neg-y.jpg'
 const negZImg = './static/img/skybox/neg-z.jpg'
@@ -145,32 +146,14 @@ export default {
       u_skybox: texture
     }
 
-    function degToRad (d) {
-      return d * Math.PI / 180
-    }
-    // function isPowerOf2 (value) {
-    //   return (value & (value - 1)) === 0
-    // }
-
-    // function radToDeg (r) {
-    //   return r * 180 / Math.PI
-    // }
-
-    // function randInt (range) {
-    //   return Math.floor(Math.random() * range)
-    // }
-
-    const originCameraPosition = vec3.fromValues(0, 0, 2)
-    let cameraPosition = vec3.fromValues(0, 0, 2)
-    const target = vec3.fromValues(0, 0, 0)
-    const up = vec3.fromValues(0, 1, 0)
-    const fieldOfViewRadians = degToRad(60)
-    let theta = 0 // x 方向
-    let phi = 0 // y 方向
     let dX = 0
     let dY = 0
     let drag = false
-    let zoom = 1
+    // let zoom = 1
+    const camera = new Camera()
+    camera.aspectRatio = gl.canvas.clientWidth / gl.canvas.clientHeight
+    camera.fitViewToScene([-2, -2, -2], [2, 2, 2])
+    camera.updatePosition()
     const supportedTouch = window.hasOwnProperty('ontouchstart')
 
     // Draw the scene.
@@ -187,23 +170,8 @@ export default {
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
       // Compute the projection matrix
-      const projectionMatrix = mat4.create()
-      const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight
-      const zNear = 1
-      const zFar = 2000
-      mat4.perspective(projectionMatrix, fieldOfViewRadians, aspect, zNear, zFar)
-
-      // Compute the camera's matrix
-      // 相机在以原点为圆心直径2个单位的圆上看向原点
-      // const cameraPosition = [Math.cos(time) * 2, 0, Math.sin(time) * 2]
-      // 2. Compute the view's matrix using look at directly.
-      const viewDirectionMatrix = mat4.create()
-      mat4.lookAt(viewDirectionMatrix, cameraPosition, target, up)
-
-      // 我们只关心方向所以清除移动的部分
-      // viewDirectionMatrix[12] = 0
-      // viewDirectionMatrix[13] = 0
-      // viewDirectionMatrix[14] = 0
+      const projectionMatrix = camera.projectionMatrix()
+      const viewDirectionMatrix = camera.viewMatrix()
 
       const viewDirectionProjectionMatrix = mat4.create()
       mat4.multiply(viewDirectionProjectionMatrix, projectionMatrix, viewDirectionMatrix)
@@ -224,25 +192,9 @@ export default {
 
       // animationID = requestAnimationFrame(drawScene)
     }
-    function zoomInCamera (delta) {
-      if (delta > 0) {
-        zoom *= 1.04
-      } else {
-        zoom /= 1.04
-      }
-    }
-    function rotateCamera (dx, dy) {
-      const phiMax = Math.PI / 2 - 0.01
-      theta += dx
-      phi += dy
-      phi = Math.min(Math.max(phi, - Math.PI / 2), phiMax)
-    }
+
     function updateCamera () {
-      // modelRotation = [phi, theta]
-      vec3.copy(cameraPosition, originCameraPosition)
-      vec3.rotateX(cameraPosition, cameraPosition, target, phi)
-      vec3.rotateY(cameraPosition, cameraPosition, target, theta)
-      vec3.scale(cameraPosition, cameraPosition, zoom)
+      camera.updatePosition()
 
       drawScene()
     }
@@ -273,7 +225,7 @@ export default {
         dY = (e.pageY - oldY) * 2 * Math.PI / gl.canvas.clientHeight
         oldX = e.pageX
         oldY = e.pageY
-        rotateCamera(dX, dY)
+        camera.rotate(dX, dY)
         updateCamera()
       }
       const mouseWheel = function (e) {
@@ -282,7 +234,7 @@ export default {
         }
 
         canvas.style.cursor = 'none'
-        zoomInCamera(e.deltaY)
+        camera.zoomIn(e.deltaY)
         updateCamera()
       }
 
@@ -319,12 +271,13 @@ export default {
           dY = (e.changedTouches[0].pageY - oldY) * 2 * Math.PI / gl.canvas.clientHeight
           oldX = e.changedTouches[0].pageX
           oldY = e.changedTouches[0].pageY
-          rotateCamera(dX, dY)
+          camera.rotate(dX, dY)
           updateCamera()
         } else {
           currentDistance = Math.sqrt(Math.pow(e.changedTouches[1].pageX - e.changedTouches[0].pageX, 2) + Math.pow(e.changedTouches[1].pageY - e.changedTouches[0].pageY, 2))
-          zoomInCamera(startDistance - currentDistance)
+          camera.zoomIn(startDistance - currentDistance)
           startDistance = currentDistance
+          updateCamera()
         }
       }
 

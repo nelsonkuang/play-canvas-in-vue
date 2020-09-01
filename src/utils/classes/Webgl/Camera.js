@@ -14,8 +14,8 @@ class Camera {
   zoom = 1
   theta = 0 // 绕 y 轴旋转角度
   phi = 0 // 绕 x 轴旋转角度
-  zNear = 0.1
-  zFar = 100.0
+  zNear = 1
+  zFar = 2000
   yFov = degToRad(45.0)
   aspectRatio = 16.0 / 9.0 // gl.canvas.clientWidth / gl.canvas.clientHeight
 
@@ -24,9 +24,9 @@ class Camera {
   }
 
   projectionMatrix () {
-    const { yfov, aspectRatio, znear, zfar } = this
+    const { yFov, aspectRatio, zNear, zFar } = this
     const projection = mat4.create()
-    mat4.perspective(projection, yfov, aspectRatio, znear, zfar)
+    mat4.perspective(projection, yFov, aspectRatio, zNear, zFar)
     return projection
   }
 
@@ -71,11 +71,11 @@ class Camera {
 
     this.phi = Math.PI / 4.0
 
-    const yfov = this.yfov
-    const xfov = yfov * this.aspectRatio
+    const yFov = this.yFov
+    const xFov = yFov * this.aspectRatio
 
-    const yZoom = maxAxisLength / 2 / Math.tan(yfov / 2)
-    const xZoom = maxAxisLength / 2 / Math.tan(xfov / 2)
+    const yZoom = maxAxisLength / 2 / Math.tan(yFov / 2)
+    const xZoom = maxAxisLength / 2 / Math.tan(xFov / 2)
 
     this.zoom = Math.max(xZoom, yZoom)
   }
