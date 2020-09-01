@@ -171,13 +171,10 @@ export default {
     let dY = 0
     let drag = false
     let zoom = 1
-    let time = 0
     const supportedTouch = window.hasOwnProperty('ontouchstart')
 
     // Draw the scene.
     function drawScene () {
-      // Convert to seconds
-      !drag && (time += 0.0001)
 
       // Tell WebGL how to convert from clip space to pixels
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
@@ -186,6 +183,7 @@ export default {
       gl.enable(gl.DEPTH_TEST)
 
       // Clear the canvas AND the depth buffer.
+      gl.clearColor(0.0, 0.0, 0.0, 1.0)
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
       // Compute the projection matrix
@@ -203,13 +201,12 @@ export default {
       mat4.lookAt(viewDirectionMatrix, cameraPosition, target, up)
 
       // 我们只关心方向所以清除移动的部分
-      viewDirectionMatrix[12] = 0
-      viewDirectionMatrix[13] = 0
-      viewDirectionMatrix[14] = 0
+      // viewDirectionMatrix[12] = 0
+      // viewDirectionMatrix[13] = 0
+      // viewDirectionMatrix[14] = 0
 
       const viewDirectionProjectionMatrix = mat4.create()
-      mat4.multiply(viewDirectionProjectionMatrix,
-        projectionMatrix, viewDirectionMatrix)
+      mat4.multiply(viewDirectionProjectionMatrix, projectionMatrix, viewDirectionMatrix)
       mat4.invert(skyboxUniforms.u_viewDirectionProjectionInverse, viewDirectionProjectionMatrix)
 
       // draw the skybox
