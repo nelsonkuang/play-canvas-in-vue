@@ -146,6 +146,10 @@ export default {
       u_skybox: texture
     }
 
+    function degToRad (d) {
+      return d * Math.PI / 180
+    }
+
     let dX = 0
     let dY = 0
     let drag = false
@@ -153,6 +157,7 @@ export default {
     const camera = new Camera()
     camera.aspectRatio = gl.canvas.clientWidth / gl.canvas.clientHeight
     camera.fitViewToScene([-2, -2, -2], [2, 2, 2])
+    camera.rotate(0, degToRad(-60))
     camera.updatePosition()
     const supportedTouch = window.hasOwnProperty('ontouchstart')
 

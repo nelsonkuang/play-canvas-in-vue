@@ -6,6 +6,8 @@ function degToRad (d) {
   return d * Math.PI / 180
 }
 
+const vecZero = vec3.fromValues(0, 0, 0)
+
 class Camera {
   type = 'Camera'
   position = vec3.fromValues(0, 0, 0)
@@ -14,8 +16,8 @@ class Camera {
   zoom = 1
   theta = 0 // 绕 y 轴旋转角度
   phi = 0 // 绕 x 轴旋转角度
-  zNear = 1
-  zFar = 2000
+  zNear = 0.1
+  zFar = 100.0
   yFov = degToRad(45.0)
   aspectRatio = 16.0 / 9.0 // gl.canvas.clientWidth / gl.canvas.clientHeight
 
@@ -38,7 +40,6 @@ class Camera {
   }
 
   updatePosition () {
-    const vecZero = vec3.fromValues(0, 0, 0)
     const pos = vec3.fromValues(0, 0, 1)
 
     vec3.rotateX(pos, pos, vecZero, -this.phi)
@@ -61,6 +62,25 @@ class Camera {
     } else {
       this.zoom /= 1.04
     }
+  }
+
+  pan (dx, dy) {
+    const moveSpeed = 300
+
+    const left = vec3.fromValues(-1, 0, 0)
+
+    vec3.rotateX(left, left, vecZero, -this.phi)
+    vec3.rotateY(left, left, vecZero, -this.theta)
+    vec3.scale(left, left, dx * moveSpeed)
+
+    const up = vec3.fromValues(0, 0, -1)
+
+    // vec3.rotateX(up, up, vecZero, -this.yRot);
+    vec3.rotateY(up, up, vecZero, -this.theta)
+    vec3.scale(up, up, dy * moveSpeed)
+
+    vec3.add(this.target, this.target, up)
+    vec3.add(this.target, this.target, left)
   }
 
   fitViewToScene (min = [-10000, -10000, -10000], max = [10000, 10000, 10000]) {
