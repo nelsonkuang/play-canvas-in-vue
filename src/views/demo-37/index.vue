@@ -35,10 +35,12 @@ export default {
       attribute vec4 a_position;
       attribute vec2 a_texcoord;
       varying vec2 v_texcoord;
-      uniform mat4 v_matrix;
-      uniform mat4 p_matrix;
+      uniform mat4 u_viewProjection;
+      // uniform mat4 v_matrix;
+      // uniform mat4 p_matrix;
       void main(){
-        gl_Position = p_matrix * v_matrix * a_position;
+        // gl_Position = p_matrix * v_matrix * a_position;
+        gl_Position = u_viewProjection * a_position;
         // Pass the texture coord to the fragment shader.
         v_texcoord = a_texcoord;
       }
@@ -53,7 +55,7 @@ export default {
       }
     `
     const createSphereBufferInfo = createBufferInfoFunc(createSphereVertices)
-    const buffers = createSphereBufferInfo(gl, 6, 24, 24)
+    const buffers = createSphereBufferInfo(gl, 6, 32, 24)
     // setup GLSL programs
     const programInfo = createProgramInfo(gl, [vertexShaderCode, fragmentShaderCode])
     const texture = gl.createTexture()
@@ -105,9 +107,10 @@ export default {
     }
 
     const uniformsThatAreComputedForTheSphere = {
-      m_matrix: mat4.create(),
-      v_matrix: mat4.create(),
-      p_matrix: mat4.create(),
+      // m_matrix: mat4.create(),
+      // v_matrix: mat4.create(),
+      // p_matrix: mat4.create(),
+      u_viewProjection: mat4.create(),
       u_texture: texture
     }
 
@@ -141,10 +144,11 @@ export default {
       gl.depthFunc(gl.LEQUAL)
 
       // Compute the projection matrix
-      uniformsThatAreComputedForTheSphere.p_matrix = camera.projectionMatrix()
-      uniformsThatAreComputedForTheSphere.v_matrix = camera.viewMatrix()
+      // uniformsThatAreComputedForTheSphere.p_matrix = camera.projectionMatrix()
+      // uniformsThatAreComputedForTheSphere.v_matrix = camera.viewMatrix()
 
-      // draw the skyball
+      mat4.multiply(uniformsThatAreComputedForTheSphere.u_viewProjection,
+        camera.projectionMatrix(), camera.viewMatrix())
 
       gl.useProgram(programInfo.program)
       // Setup all the needed attributes.
@@ -158,7 +162,7 @@ export default {
 
       if (!drag) {
         // gl.flush() // 强制刷新缓冲，保证绘图命令将被执行
-        camera.rotate(0.001, 0)
+        camera.rotate(0.0002, 0)
         camera.updatePosition()
         animationID = requestAnimationFrame(drawScene)
       }
@@ -186,6 +190,7 @@ export default {
 
       const mouseUp = function () {
         timeId && clearTimeout()
+        timeId = null
         timeId = setTimeout(() => {
           drag = false
           animationID = requestAnimationFrame(drawScene)
@@ -214,6 +219,7 @@ export default {
         camera.zoomIn(e.deltaY)
         updateCamera()
         timeId && clearTimeout()
+        timeId = null
         timeId = setTimeout(() => {
           drag = false
           animationID = requestAnimationFrame(drawScene)
@@ -241,17 +247,20 @@ export default {
         oldX = e.changedTouches[0].pageX
         oldY = e.changedTouches[0].pageY
         e.preventDefault()
-        return false
       }
 
       const touchEnd = function () {
-        drag = false
+        timeId && clearTimeout()
+        timeId = null
+        timeId = setTimeout(() => {
+          drag = false
+          animationID = requestAnimationFrame(drawScene)
+        }, 1500)
       }
 
       const touchMove = function (e) {
-        if (!drag) return false
         e.preventDefault()
-        if (event.changedTouches[1] == undefined) {// 单点触控
+        if (event.changedTouches[1] == undefined) { // 单点触控
           dX = (e.changedTouches[0].pageX - oldX) * 2 * Math.PI / gl.canvas.clientWidth
           dY = (e.changedTouches[0].pageY - oldY) * 2 * Math.PI / gl.canvas.clientHeight
           oldX = e.changedTouches[0].pageX
@@ -276,6 +285,9 @@ export default {
   },
   beforeDestroy () {
     animationID && cancelAnimationFrame(animationID)
+    animationID = null
+    timeId && clearTimeout()
+    timeId = null
   }
 }
 </script>

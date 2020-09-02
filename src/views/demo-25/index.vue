@@ -259,7 +259,7 @@ export default {
 
       const viewDirectionProjectionMatrix = mat4.create()
       mat4.multiply(viewDirectionProjectionMatrix,
-        envmapUniforms.u_projection, viewDirectionMatrix);
+        envmapUniforms.u_projection, viewDirectionMatrix)
       mat4.invert(skyboxUniforms.u_viewDirectionProjectionInverse, viewDirectionProjectionMatrix)
 
       envmapUniforms.u_worldCameraPosition = cameraPosition
