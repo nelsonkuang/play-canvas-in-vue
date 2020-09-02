@@ -305,7 +305,7 @@ const routes = [
     name: 'Demo36',
     component: () => import('@/views/demo-36/index'),
     meta: {
-      title: 'Webgl 教程 球面贴图'
+      title: 'Webgl 教程 球状环境贴图'
     }
   }, 
 ]

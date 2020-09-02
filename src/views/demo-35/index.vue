@@ -154,10 +154,11 @@ export default {
     let dY = 0
     let drag = false
     // let zoom = 1
+    let pressedButton = null
     const camera = new Camera()
     camera.aspectRatio = gl.canvas.clientWidth / gl.canvas.clientHeight
     camera.fitViewToScene([-2, -2, -2], [2, 2, 2])
-    camera.rotate(0, degToRad(-60))
+    camera.rotate(0, degToRad(-60)) // 修改相机初始角度
     camera.updatePosition()
     const supportedTouch = window.hasOwnProperty('ontouchstart')
 
@@ -213,6 +214,7 @@ export default {
         drag = true
         oldX = e.pageX
         oldY = e.pageY
+        pressedButton = e.button
         return false
       }
 
@@ -230,7 +232,11 @@ export default {
         dY = (e.pageY - oldY) * 2 * Math.PI / gl.canvas.clientHeight
         oldX = e.pageX
         oldY = e.pageY
-        camera.rotate(dX, dY)
+        if (pressedButton === 0) {
+          camera.rotate(dX, dY)
+        } else if (pressedButton === 2) {
+          camera.pan(dX, dY)
+        }
         updateCamera()
       }
       const mouseWheel = function (e) {
@@ -248,6 +254,9 @@ export default {
       canvas.addEventListener('mouseout', mouseUp, false)
       canvas.addEventListener('mousemove', mouseMove, false)
       canvas.addEventListener('wheel', mouseWheel, false)
+      canvas.oncontextmenu = function (event) {
+        event.preventDefault()
+      }
     }
     /* ================= Touch events ====================== */
     function bindTouchEvents () {

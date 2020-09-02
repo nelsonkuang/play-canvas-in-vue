@@ -8,12 +8,13 @@
 // https://github.com/SunQiongqiong/panorama/blob/master/js/ballplay.js
 // https://zhoyq.github.io/panoramic/panoramic.html
 import { mat4 } from 'gl-matrix'
-import { createProgram, loadShader, createUniformSetters, createAttributeSetters, setAttributes, setUniforms } from '../../utils/tools/web-gl'
-import { createBufferFunc, createSphereVertices } from '../../utils/tools/primitives'
+import { createProgramInfo, setBuffersAndAttributes, setUniforms, drawBufferInfo } from '../../utils/tools/web-gl'
+import { createBufferInfoFunc, createSphereVertices } from '../../utils/tools/primitives'
+import Camera from '../../utils/classes/Webgl/Camera'
 // import { makeStripeTexture, makeCheckerTexture, makeCircleTexture } from '../../utils/tools/texture'
-const textureImg = './static/img/'
+const textureImg = './static/img/helipad.jpg'
 
-let animationID = null
+// let animationID = null
 export default {
   data () {
     return {
@@ -33,10 +34,9 @@ export default {
       attribute vec2 a_texcoord;
       varying vec2 v_texcoord;
       uniform mat4 v_matrix;
-      uniform mat4 m_matrix;
       uniform mat4 p_matrix;
       void main(){
-        gl_Position = p_matrix * v_matrix * m_matrix * a_position;
+        gl_Position = p_matrix * v_matrix * a_position;
         // Pass the texture coord to the fragment shader.
         v_texcoord = a_texcoord;
       }
@@ -50,18 +50,13 @@ export default {
         gl_FragColor = texture2D(u_texture, v_texcoord);
       }
     `
-    const createSphereBuffers = createBufferFunc(createSphereVertices)
-    const buffers = createSphereBuffers(gl, 500, 48, 24)
+    const createSphereBufferInfo = createBufferInfoFunc(createSphereVertices)
+    const buffers = createSphereBufferInfo(gl, 1, 32, 24)
     // setup GLSL programs
     const programInfo = createProgramInfo(gl, [vertexShaderCode, fragmentShaderCode])
 
     const texture = gl.createTexture()
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true) // 将纹理图片反转
-
-    gl.bindTexture(gl.TEXTURE_2D, texture)
-    // Fill the texture with a 1x1 blue pixel.
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
-      new Uint8Array([0, 0, 255, 255]))
+    // gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true) // 将纹理图片反转
 
     function AsynLoadImage (url, cb) {
       const img = new Image()
@@ -94,117 +89,171 @@ export default {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
       }
+
+      drawScene()
     })
 
     function degToRad (d) {
       return d * Math.PI / 180
     }
+
     function isPowerOf2 (value) {
       return (value & (value - 1)) === 0
     }
 
-    // const cameraAngleRadians = degToRad(0)
-    const fieldOfViewRadians = degToRad(60)
-    // const cameraHeight = 50
-    const sphereUniforms = {
-      m_matrix: mat4.create(),
+    const uniformsThatAreComputedForTheSphere = {
       v_matrix: mat4.create(),
       p_matrix: mat4.create(),
       u_texture: texture
     }
 
-    function rand (min, max) {
-      if (max === undefined) {
-        max = min
-        min = 0
-      }
-      return min + Math.random() * (max - min)
-    }
-    function randInt (range) {
-      return Math.floor(Math.random() * range)
-    }
-    const textures = [
-      makeStripeTexture(gl, { color1: '#FFF', color2: '#CCC', }),
-      makeCheckerTexture(gl, { color1: '#FFF', color2: '#CCC', }),
-      makeCircleTexture(gl, { color1: '#FFF', color2: '#CCC', }),
-    ]
-    const objects = []
-    const numObjects = 100
-    const baseColorVal = 240
-    for (let ii = 0; ii < numObjects; ++ii) {
-      objects.push({
-        radius: rand(150),
-        xRotation: rand(Math.PI * 2),
-        yRotation: rand(Math.PI),
-        materialUniforms: {
-          u_colorMult: [rand(baseColorVal) / baseColorVal, rand(baseColorVal) / baseColorVal, rand(baseColorVal) / baseColorVal, 1],
-          u_diffuse: textures[randInt(textures.length)],
-          u_specular: [1, 1, 1, 1],
-          u_shininess: rand(500),
-          u_specularFactor: rand(1),
-        }
-      })
-    }
-    drawScene(0)
+    let dX = 0
+    let dY = 0
+    let drag = false
+    // let zoom = 1
+    let pressedButton = null
+    const camera = new Camera()
+    camera.aspectRatio = gl.canvas.clientWidth / gl.canvas.clientHeight
+    camera.fitViewToScene([-2, -2, -2], [2, 2, 2])
+    camera.rotate(0, degToRad(-60)) // 修改相机初始角度
+    camera.updatePosition()
+    const supportedTouch = window.hasOwnProperty('ontouchstart')
+
     // Draw the scene.
-    function drawScene (time) {
-      time = time * 0.0001 + 5;
+    function drawScene () {
+      // time = time * 0.0001 + 5;
       // Tell WebGL how to convert from clip space to pixels
-      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
       // Clear the canvas AND the depth buffer.
-      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-      gl.enable(gl.CULL_FACE);
-      gl.enable(gl.DEPTH_TEST);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+      gl.enable(gl.CULL_FACE)
+      gl.enable(gl.DEPTH_TEST)
+
       // Compute the projection matrix
-      const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight
-      const zNear = 1
-      const zFar = 2000
-      let projectionMatrix = mat4.create()
-      mat4.perspective(projectionMatrix, fieldOfViewRadians, aspect, zNear, zFar)
-      // Compute the camera's matrix
-      const cameraPosition = [0, 0, 100]
-      const target = [0, 0, 0]
-      const up = [0, 1, 0]
-      // 2. Compute the view's matrix using look at directly.
-      let viewMatrix = mat4.create()
-      mat4.lookAt(viewMatrix, cameraPosition, target, up)
-      // Compute a view projection matrix
-      let viewProjectionMatrix = mat4.create()
-      mat4.multiply(viewProjectionMatrix, projectionMatrix, viewMatrix)
-      gl.useProgram(program)
+      uniformsThatAreComputedForTheSphere.p_matrix = camera.projectionMatrix()
+      uniformsThatAreComputedForTheSphere.v_matrix = camera.viewMatrix()
+
+      gl.useProgram(programInfo.program)
       // Setup all the needed attributes.
-      setAttributes(attribSetters, attribs)
-      // Bind the indices.
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices)
+      setBuffersAndAttributes(gl, programInfo, buffers)
+
       // Set the uniforms that are the same for all objects.
-      setUniforms(uniformSetters, uniformsThatAreTheSameForAllObjects)
-      // Draw objects
-      objects.forEach(function (object) {
-        // Compute a position for this object based on the time.
-        let worldMatrix = mat4.create()
-        mat4.rotateX(worldMatrix, worldMatrix, object.xRotation * time)
-        mat4.rotateY(worldMatrix, worldMatrix, object.yRotation * time)
-        mat4.translate(worldMatrix, worldMatrix, [0, 0, object.radius])
-        uniformsThatAreComputedForEachObject.u_world = worldMatrix
-        // Multiply the matrices.
-        mat4.multiply(uniformsThatAreComputedForEachObject.u_worldViewProjection, viewProjectionMatrix, worldMatrix)
-        // 下面求逆加转置用于求物体各个面的方向向量
-        let worldInverseMatrix = mat4.create()
-        mat4.invert(worldInverseMatrix, worldMatrix) // 求逆
-        mat4.transpose(uniformsThatAreComputedForEachObject.u_worldInverseTranspose, worldInverseMatrix)
-        // Set the uniforms we just computed
-        setUniforms(uniformSetters, uniformsThatAreComputedForEachObject)
-        // Set the uniforms that are specific to the this object.
-        setUniforms(uniformSetters, object.materialUniforms)
-        // Draw the geometry.
-        gl.drawElements(gl.TRIANGLES, buffers.numElements, gl.UNSIGNED_SHORT, 0)
-      })
-      animationID = requestAnimationFrame(drawScene)
+      setUniforms(programInfo, uniformsThatAreComputedForTheSphere)
+
+      // calls gl.drawArrays or gl.drawElements
+      drawBufferInfo(gl, buffers)
+
+      // animationID = requestAnimationFrame(drawScene)
     }
+
+
+    function updateCamera () {
+      camera.updatePosition()
+
+      drawScene()
+    }
+    /* ================= Mouse events ====================== */
+    function bindMouseEvents () {
+      let oldX = 0
+      let oldY = 0
+
+      const mouseDown = function (e) {
+        e.preventDefault()
+        drag = true
+        oldX = e.pageX
+        oldY = e.pageY
+        pressedButton = e.button
+        return false
+      }
+
+      const mouseUp = function () {
+        drag = false
+      }
+
+      const mouseMove = function (e) {
+        if (!drag) {
+          canvas.style.cursor = 'grab'
+          return
+        }
+        e.preventDefault()
+        dX = (e.pageX - oldX) * 2 * Math.PI / gl.canvas.clientWidth
+        dY = (e.pageY - oldY) * 2 * Math.PI / gl.canvas.clientHeight
+        oldX = e.pageX
+        oldY = e.pageY
+        if (pressedButton === 0) {
+          camera.rotate(dX, dY)
+        } else if (pressedButton === 2) {
+          camera.pan(dX, dY)
+        }
+        updateCamera()
+      }
+      const mouseWheel = function (e) {
+        if (Math.abs(e.deltaY) < 1.0) {
+          return
+        }
+
+        canvas.style.cursor = 'none'
+        camera.zoomIn(e.deltaY)
+        updateCamera()
+      }
+
+      canvas.addEventListener('mousedown', mouseDown, false)
+      canvas.addEventListener('mouseup', mouseUp, false)
+      canvas.addEventListener('mouseout', mouseUp, false)
+      canvas.addEventListener('mousemove', mouseMove, false)
+      canvas.addEventListener('wheel', mouseWheel, false)
+      canvas.oncontextmenu = function (event) {
+        event.preventDefault()
+      }
+    }
+    /* ================= Touch events ====================== */
+    function bindTouchEvents () {
+      let oldX = 0
+      let oldY = 0
+      let currentDistance = 0
+      let startDistance = 0
+
+      const touchStart = function (e) {
+        drag = true
+        oldX = e.changedTouches[0].pageX
+        oldY = e.changedTouches[0].pageY
+        e.preventDefault()
+        return false
+      }
+
+      const touchEnd = function () {
+        drag = false
+      }
+
+      const touchMove = function (e) {
+        if (!drag) return false
+        e.preventDefault()
+        if (event.changedTouches[1] == undefined) {// 单点触控
+          dX = (e.changedTouches[0].pageX - oldX) * 2 * Math.PI / gl.canvas.clientWidth
+          dY = (e.changedTouches[0].pageY - oldY) * 2 * Math.PI / gl.canvas.clientHeight
+          oldX = e.changedTouches[0].pageX
+          oldY = e.changedTouches[0].pageY
+          camera.rotate(dX, dY)
+          updateCamera()
+        } else {
+          currentDistance = Math.sqrt(Math.pow(e.changedTouches[1].pageX - e.changedTouches[0].pageX, 2) + Math.pow(e.changedTouches[1].pageY - e.changedTouches[0].pageY, 2))
+          camera.zoomIn(startDistance - currentDistance)
+          startDistance = currentDistance
+          updateCamera()
+        }
+      }
+
+      canvas.addEventListener('touchstart', touchStart, false)
+      canvas.addEventListener('touchend', touchEnd, false)
+      canvas.addEventListener('touchmove', touchMove, false)
+    }
+
+    supportedTouch ? bindTouchEvents() : bindMouseEvents()
   },
   beforeDestroy () {
-    animationID && cancelAnimationFrame(animationID)
+    // animationID && cancelAnimationFrame(animationID)
   }
 }
 </script>

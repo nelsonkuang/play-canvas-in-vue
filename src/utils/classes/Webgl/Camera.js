@@ -10,7 +10,7 @@ const vecZero = vec3.fromValues(0, 0, 0)
 
 class Camera {
   type = 'Camera'
-  position = vec3.fromValues(0, 0, 0)
+  position = vec3.fromValues(0, 0, 1)
   target = vec3.fromValues(0, 1, 0)
   up = vec3.fromValues(0, 1, 0)
   zoom = 1
