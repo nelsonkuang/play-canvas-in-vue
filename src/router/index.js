@@ -308,6 +308,14 @@ const routes = [
       title: 'Webgl 教程 球状环境贴图'
     }
   }, 
+  {
+    path: '/demo-37',
+    name: 'Demo37',
+    component: () => import('@/views/demo-37/index'),
+    meta: {
+      title: 'Webgl 教程 天空球（全景图）'
+    }
+  }, 
 ]
 
 const router = new VueRouter({
