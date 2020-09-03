@@ -77,7 +77,7 @@ export default {
       }
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img)
 
-      animationID = requestAnimationFrame(drawScene)
+      drawScene()
     })
 
     function AsynLoadImage (url, cb) {
@@ -136,8 +136,8 @@ export default {
 
       // https://www.cnblogs.com/mfrbuaa/p/5244094.html
       // gl.frontFace(gl.CCW)
-      gl.frontFace(gl.CW)
-      gl.enable(gl.CULL_FACE) // 把球面剔除提升性能
+      // gl.frontFace(gl.CW)
+      // gl.enable(gl.CULL_FACE) // 把球面剔除提升性能
       gl.enable(gl.DEPTH_TEST)
       // let our quad pass the depth test at 1.0
       // 这里指定了内置常量 gl.LEQUAL 的话。就会把里则的东西隐藏
@@ -162,7 +162,7 @@ export default {
 
       if (!drag) {
         // gl.flush() // 强制刷新缓冲，保证绘图命令将被执行
-        camera.rotate(0.0002, 0)
+        camera.rotate(0.0005, 0)
         camera.updatePosition()
         animationID = requestAnimationFrame(drawScene)
       }
@@ -171,7 +171,7 @@ export default {
 
     function updateCamera () {
       camera.updatePosition()
-      animationID = requestAnimationFrame(drawScene)
+      drawScene()
     }
 
     /* ================= Mouse events ====================== */
@@ -193,7 +193,7 @@ export default {
         timeId = null
         timeId = setTimeout(() => {
           drag = false
-          animationID = requestAnimationFrame(drawScene)
+          drawScene()
         }, 1500)
         canvas.removeEventListener('mousemove', mouseMove)
       }
@@ -222,7 +222,7 @@ export default {
         timeId = null
         timeId = setTimeout(() => {
           drag = false
-          animationID = requestAnimationFrame(drawScene)
+          // drawScene()
         }, 1500)
       }
 
@@ -254,7 +254,7 @@ export default {
         timeId = null
         timeId = setTimeout(() => {
           drag = false
-          animationID = requestAnimationFrame(drawScene)
+          drawScene()
         }, 1500)
       }
 
