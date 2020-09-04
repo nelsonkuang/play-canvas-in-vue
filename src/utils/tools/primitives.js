@@ -389,13 +389,13 @@ export function createSphereVertices (
 export function createPlaneVertices (
   width,
   depth,
-  subdivisionsWidth,
-  subdivisionsDepth,
+  subdivisionsWidth, // x 轴方向分成多少份
+  subdivisionsDepth, // z 轴方向分成多少份
   matrix) {
-  width = width || 1;
-  depth = depth || 1;
-  subdivisionsWidth = subdivisionsWidth || 1;
-  subdivisionsDepth = subdivisionsDepth || 1;
+  width = width || 1; // 默认 x 方向宽度归一化为 1
+  depth = depth || 1; // 默认 z 方向宽度归一化为 1
+  subdivisionsWidth = subdivisionsWidth || 1; // 默认分成一份
+  subdivisionsDepth = subdivisionsDepth || 1; // 默认分成一份
   matrix = matrix || mat4.create();
 
   const numVertices = (subdivisionsWidth + 1) * (subdivisionsDepth + 1);
@@ -408,21 +408,21 @@ export function createPlaneVertices (
       const u = x / subdivisionsWidth;
       const v = z / subdivisionsDepth;
       positions.push(
-        width * u - width * 0.5,
+        width * u - width * 0.5, // 减宽度的一半是让平台往 x 轴反方向移动 width 的一半。这样刚好就是（0, 0, 0）为平台的中心
         0,
-        depth * v - depth * 0.5);
+        depth * v - depth * 0.5); // 减宽度的一半是让平台往 z 轴反方向移动 depth 的一半。这样刚好就是（0, 0, 0）为平台的中心
       normals.push(0, 1, 0);
-      texcoords.push(u, v);
+      texcoords.push(u, v); // 贴图是二维的（把不移动的平台坐标归一化处理得到的值）
     }
   }
 
-  const numVertsAcross = subdivisionsWidth + 1;
+  const numVertsAcross = subdivisionsWidth + 1; // x 轴方向上每条线总共有 subdivisionsWidth + 1 个点
   const indices = webglUtils.createAugmentedTypedArray(
-    3, subdivisionsWidth * subdivisionsDepth * 2, Uint16Array);
+    3, subdivisionsWidth * subdivisionsDepth * 2, Uint16Array); // 总共顶点索引数
 
   for (let z = 0; z < subdivisionsDepth; z++) {
     for (let x = 0; x < subdivisionsWidth; x++) {
-      // Make triangle 1 of quad.
+      // Make triangle 1 of quad. // 使用 numVertsAcross 进行换行，每个小面由两个三角形组成
       indices.push(
         (z + 0) * numVertsAcross + x,
         (z + 1) * numVertsAcross + x,

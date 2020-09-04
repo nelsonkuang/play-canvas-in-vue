@@ -316,6 +316,14 @@ const routes = [
       title: 'Webgl 教程 天空球（全景图）'
     }
   }, 
+  {
+    path: '/demo-38',
+    name: 'Demo38',
+    component: () => import('@/views/demo-38/index'),
+    meta: {
+      title: 'Webgl 教程 画各种线框'
+    }
+  }, 
 ]
 
 const router = new VueRouter({
