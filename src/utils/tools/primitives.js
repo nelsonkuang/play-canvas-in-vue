@@ -248,7 +248,7 @@ function makeRandomVertexColors (vertices, options) {
   return vertices;
 }
 
-export function createXYQuadVertices(size, xOffset, yOffset) {
+export function createXYQuadVertices (size, xOffset, yOffset) {
   size = size || 2;
   xOffset = xOffset || 0;
   yOffset = yOffset || 0;
@@ -258,9 +258,9 @@ export function createXYQuadVertices(size, xOffset, yOffset) {
       numComponents: 2,
       data: [
         xOffset + -1 * size, yOffset + -1 * size,
-        xOffset +  1 * size, yOffset + -1 * size,
-        xOffset + -1 * size, yOffset +  1 * size,
-        xOffset +  1 * size, yOffset +  1 * size,
+        xOffset + 1 * size, yOffset + -1 * size,
+        xOffset + -1 * size, yOffset + 1 * size,
+        xOffset + 1 * size, yOffset + 1 * size,
       ],
     },
     normal: [
@@ -275,7 +275,7 @@ export function createXYQuadVertices(size, xOffset, yOffset) {
       0, 1,
       1, 1,
     ],
-    indices: [ 0, 1, 2, 2, 1, 3 ],
+    indices: [0, 1, 2, 2, 1, 3],
   };
 }
 
@@ -441,6 +441,67 @@ export function createPlaneVertices (
     normal: normals,
     texcoord: texcoords,
     indices: indices,
+  }, matrix);
+  return arrays;
+}
+
+/**
+ * Creates XZ grid vertices.
+ * The created grid has position, normal.
+ *
+ * @param {number} [width] Width of the grid. Default = 1
+ * @param {number} [depth] Depth of the grid. Default = 1
+ * @param {number} [subdivisionsWidth] Number of steps across the grid. Default = 1
+ * @param {number} [subdivisionsDepth] Number of steps down the grid. Default = 1
+ * @param {Matrix4} [matrix] A matrix by which to multiply all the vertices.
+ * @return {Object.<string, TypedArray>} The
+ *         created grid vertices.
+ * @memberOf module:primitives
+ */
+export function createGridVertices (
+  width,
+  depth,
+  subdivisionsWidth, // x 轴方向分成多少份
+  subdivisionsDepth, // z 轴方向分成多少份
+  matrix) {
+  width = width || 1; // 默认 x 方向宽度归一化为 1
+  depth = depth || 1; // 默认 z 方向宽度归一化为 1
+  subdivisionsWidth = subdivisionsWidth || 1; // 默认分成一份
+  subdivisionsDepth = subdivisionsDepth || 1; // 默认分成一份
+  matrix = matrix || mat4.create();
+
+  const numVertices = (subdivisionsWidth + 1) * 2 + (subdivisionsDepth + 1) * 2;
+  const positions = webglUtils.createAugmentedTypedArray(3, numVertices);
+  const normals = webglUtils.createAugmentedTypedArray(3, numVertices);
+
+  for (let z = 0; z <= subdivisionsDepth; z++) {
+    for (let x = 0; x <= subdivisionsWidth; x += subdivisionsWidth) {
+      const u = x / subdivisionsWidth;
+      const v = z / subdivisionsDepth;
+      positions.push(
+        width * u - width * 0.5, // 减宽度的一半是让平台往 x 轴反方向移动 width 的一半。这样刚好就是（0, 0, 0）为平台的中心
+        0,
+        depth * v - depth * 0.5); // 减宽度的一半是让平台往 z 轴反方向移动 depth 的一半。这样刚好就是（0, 0, 0）为平台的中心
+      normals.push(0, 1, 0);
+    }
+  }
+
+
+  for (let x = 0; x <= subdivisionsWidth; x++) {
+    for (let z = 0; z <= subdivisionsDepth; z += subdivisionsDepth) {
+      const u = x / subdivisionsWidth;
+      const v = z / subdivisionsDepth;
+      positions.push(
+        width * u - width * 0.5, // 减宽度的一半是让平台往 x 轴反方向移动 width 的一半。这样刚好就是（0, 0, 0）为平台的中心
+        0,
+        depth * v - depth * 0.5); // 减宽度的一半是让平台往 z 轴反方向移动 depth 的一半。这样刚好就是（0, 0, 0）为平台的中心
+      normals.push(0, 1, 0);
+    }
+  }
+
+  const arrays = reorientVertices({
+    position: positions,
+    normal: normals,
   }, matrix);
   return arrays;
 }

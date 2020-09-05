@@ -9,7 +9,7 @@
 // https://zhoyq.github.io/panoramic/panoramic.html
 import { mat4 } from 'gl-matrix'
 import { createProgramInfo, setBuffersAndAttributes, setUniforms, drawBufferInfo } from '../../utils/tools/web-gl'
-import { createBufferInfoFunc, createSphereVertices, createPlaneVertices, createCubeVertices } from '../../utils/tools/primitives'
+import { createBufferInfoFunc, createSphereVertices, createGridVertices, createCubeVertices } from '../../utils/tools/primitives'
 import Camera from '../../utils/classes/Webgl/Camera'
 
 // let animationID = null
@@ -49,15 +49,15 @@ export default {
       }
     `
     const createSphereBufferInfo = createBufferInfoFunc(createSphereVertices)
-    const createPlaneBufferInfo = createBufferInfoFunc(createPlaneVertices)
+    const createPlaneBufferInfo = createBufferInfoFunc(createGridVertices)
     const createCubeBufferInfo = createBufferInfoFunc(createCubeVertices)
     const sphereBufferInfo = createSphereBufferInfo(gl, 1, 32, 24)
     const planeBufferInfo = createPlaneBufferInfo(
       gl,
-      10,  // width
-      10,  // height
-      20,   // subdivisions across
-      20,   // subdivisions down
+      50,  // width
+      50,  // height
+      100,   // subdivisions across
+      100,   // subdivisions down
     )
     const cubeBufferInfo = createCubeBufferInfo(
       gl,
@@ -109,7 +109,7 @@ export default {
       // draw the plane
 
       uniformsThatAreComputedForAll.u_world = mat4.create()
-      uniformsThatAreComputedForAll.u_color = [1, 1, 1, 1]
+      uniformsThatAreComputedForAll.u_color = [0.8, 0.8, 0.8, 1]
       gl.useProgram(programInfo.program)
       // Setup all the needed attributes.
       setBuffersAndAttributes(gl, programInfo, planeBufferInfo)
