@@ -9,7 +9,7 @@
 // https://zhoyq.github.io/panoramic/panoramic.html
 import { mat4 } from 'gl-matrix'
 import { createProgramInfo, setBuffersAndAttributes, setUniforms, drawBufferInfo } from '../../utils/tools/web-gl'
-import { createBufferInfoFunc, createSphereVertices, createGridVertices, createCubeVertices } from '../../utils/tools/primitives'
+import { createBufferInfoFunc, createSphereVertices, createGridVertices, createCubewireframeVertices } from '../../utils/tools/primitives'
 import Camera from '../../utils/classes/Webgl/Camera'
 
 // let animationID = null
@@ -50,14 +50,14 @@ export default {
     `
     const createSphereBufferInfo = createBufferInfoFunc(createSphereVertices)
     const createPlaneBufferInfo = createBufferInfoFunc(createGridVertices)
-    const createCubeBufferInfo = createBufferInfoFunc(createCubeVertices)
+    const createCubeBufferInfo = createBufferInfoFunc(createCubewireframeVertices)
     const sphereBufferInfo = createSphereBufferInfo(gl, 1, 32, 24)
     const planeBufferInfo = createPlaneBufferInfo(
       gl,
-      50,  // width
-      50,  // height
-      100,   // subdivisions across
-      100,   // subdivisions down
+      10,  // width
+      10,  // height
+      20,   // subdivisions across
+      20,   // subdivisions down
     )
     const cubeBufferInfo = createCubeBufferInfo(
       gl,
@@ -85,7 +85,7 @@ export default {
     const camera = new Camera()
     camera.aspectRatio = gl.canvas.clientWidth / gl.canvas.clientHeight
     camera.fitViewToScene([-2, -2, -2], [2, 2, 2])
-    // camera.rotate(0, degToRad(-60)) // 修改相机初始角度
+    camera.rotate(0, degToRad(-20)) // 修改相机初始角度
     camera.target = [0, 1, 0]
     camera.position = [0, 2, 2]
     camera.updatePosition()
@@ -140,7 +140,7 @@ export default {
       uniformsThatAreComputedForAll.u_world = mat4.create()
       mat4.translate(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, [1.5, 1, 0])
       mat4.rotateY(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, degToRad(45))
-      uniformsThatAreComputedForAll.u_color = [0, 0, 1, 1]
+      uniformsThatAreComputedForAll.u_color = [1, 0.5, 0.5, 1]
       gl.useProgram(programInfo.program)
       // Setup all the needed attributes.
       setBuffersAndAttributes(gl, programInfo, cubeBufferInfo)
