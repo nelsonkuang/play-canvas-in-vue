@@ -4,9 +4,6 @@
 
 <script>
 /* eslint-disable no-alert, no-console */
-// Reference from: 
-// https://github.com/SunQiongqiong/panorama/blob/master/js/ballplay.js
-// https://zhoyq.github.io/panoramic/panoramic.html
 import { mat4 } from 'gl-matrix'
 import { createProgramInfo, setBuffersAndAttributes, setUniforms, drawBufferInfo } from '../../utils/tools/web-gl'
 import { createBufferInfoFunc, createSphereVertices, createGridVertices, createCubewireframeVertices } from '../../utils/tools/primitives'

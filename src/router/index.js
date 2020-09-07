@@ -324,6 +324,14 @@ const routes = [
       title: 'Webgl 教程 画各种线框'
     }
   }, 
+  {
+    path: '/demo-39',
+    name: 'Demo39',
+    component: () => import('@/views/demo-39/index'),
+    meta: {
+      title: 'Webgl 教程 斜面纹理（面部正常阴影渲染）'
+    }
+  }, 
 ]
 
 const router = new VueRouter({
