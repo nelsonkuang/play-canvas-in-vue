@@ -332,6 +332,14 @@ const routes = [
       title: 'Webgl 教程 斜面纹理（面部正常阴影渲染）'
     }
   }, 
+  {
+    path: '/demo-40',
+    name: 'Demo40',
+    component: () => import('@/views/demo-40/index'),
+    meta: {
+      title: 'Webgl 教程 实现 Web VR'
+    }
+  }
 ]
 
 const router = new VueRouter({
