@@ -6,10 +6,10 @@
 /* eslint-disable no-alert, no-console */
 import { mat4 } from 'gl-matrix'
 import { createProgramInfo, setBuffersAndAttributes, setUniforms, drawBufferInfo } from '../../utils/tools/web-gl'
-import { createBufferInfoFunc, createSphereVertices, createGridVertices, createCubeVertices } from '../../utils/tools/primitives'
+import { createFlattenedFunc, createSphereVertices, createPlaneVertices, createCubeVertices } from '../../utils/tools/primitives'
 import Camera from '../../utils/classes/Webgl/Camera'
 
-// let animationID = null
+let animationID = null
 export default {
   data () {
     return {
@@ -45,13 +45,15 @@ export default {
       precision mediump float;
 
       varying vec4 v_color;
+
+      uniform vec4 u_colorMult;
       void main() {
-        gl_FragColor = v_color;
+        gl_FragColor = v_color * u_colorMult;
       }
     `
-    const createSphereBufferInfo = createBufferInfoFunc(createSphereVertices)
-    const createPlaneBufferInfo = createBufferInfoFunc(createGridVertices)
-    const createCubeBufferInfo = createBufferInfoFunc(createCubeVertices)
+    const createSphereBufferInfo = createFlattenedFunc(createSphereVertices)
+    const createPlaneBufferInfo = createFlattenedFunc(createPlaneVertices)
+    const createCubeBufferInfo = createFlattenedFunc(createCubeVertices)
     const sphereBufferInfo = createSphereBufferInfo(gl, 1, 32, 24)
     const planeBufferInfo = createPlaneBufferInfo(
       gl,
@@ -71,11 +73,26 @@ export default {
       return d * Math.PI / 180
     }
 
+    function rand (min, max) {
+      if (max === undefined) {
+        max = min
+        min = 0
+      }
+      return min + Math.random() * (max - min)
+    }
+
     const uniformsThatAreComputedForAll = {
       u_view: null,
       u_projection: null,
-      u_world: null
+      u_world: null,
+      u_colorMult: null
     }
+    const baseColorVal = 255
+    const colors = [
+      [rand(baseColorVal) / baseColorVal, rand(baseColorVal) / baseColorVal, rand(baseColorVal) / baseColorVal, 1],
+      [rand(baseColorVal) / baseColorVal, rand(baseColorVal) / baseColorVal, rand(baseColorVal) / baseColorVal, 1],
+      [rand(baseColorVal) / baseColorVal, rand(baseColorVal) / baseColorVal, rand(baseColorVal) / baseColorVal, 1]
+    ]
 
     let dX = 0
     let dY = 0
@@ -92,14 +109,14 @@ export default {
     const supportedTouch = window.hasOwnProperty('ontouchstart')
 
     // Draw the scene.
-    function drawScene () {
-      // time = time * 0.0001 + 5;
+    function drawScene (time) {
+      time = time * 0.0001 + 5;
       // Tell WebGL how to convert from clip space to pixels
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
       // Clear the canvas AND the depth buffer.
       gl.clearColor(0, 0, 0, 1)
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-      gl.enable(gl.CULL_FACE)
+      // gl.enable(gl.CULL_FACE)
       gl.enable(gl.DEPTH_TEST)
 
       // Compute the projection matrix
@@ -109,6 +126,7 @@ export default {
       // draw the plane
 
       uniformsThatAreComputedForAll.u_world = mat4.create()
+      uniformsThatAreComputedForAll.u_colorMult = colors[0]
       gl.useProgram(programInfo.program)
       // Setup all the needed attributes.
       setBuffersAndAttributes(gl, programInfo, planeBufferInfo)
@@ -122,7 +140,9 @@ export default {
       // draw the sphere
 
       uniformsThatAreComputedForAll.u_world = mat4.create()
-      mat4.translate(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, [-1.5, 1, 0])
+      uniformsThatAreComputedForAll.u_colorMult = colors[1]
+      mat4.translate(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, [-1.5, 1.01, 0])
+      mat4.rotateY(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, -time)
       gl.useProgram(programInfo.program)
       // Setup all the needed attributes.
       setBuffersAndAttributes(gl, programInfo, sphereBufferInfo)
@@ -136,8 +156,9 @@ export default {
       // draw the cube
 
       uniformsThatAreComputedForAll.u_world = mat4.create()
-      mat4.translate(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, [1.5, 1, 0])
-      mat4.rotateY(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, degToRad(45))
+      uniformsThatAreComputedForAll.u_colorMult = colors[2]
+      mat4.translate(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, [1.5, 1.1, 0])
+      mat4.rotateY(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, time)
       gl.useProgram(programInfo.program)
       // Setup all the needed attributes.
       setBuffersAndAttributes(gl, programInfo, cubeBufferInfo)
@@ -148,7 +169,7 @@ export default {
       // calls gl.drawArrays or gl.drawElements
       drawBufferInfo(gl, cubeBufferInfo)
 
-      // animationID = requestAnimationFrame(drawScene)
+      animationID = requestAnimationFrame(drawScene)
     }
 
 
@@ -254,10 +275,10 @@ export default {
     }
 
     supportedTouch ? bindTouchEvents() : bindMouseEvents()
-    drawScene()
+    drawScene(0)
   },
   beforeDestroy () {
-    // animationID && cancelAnimationFrame(animationID)
+    animationID && cancelAnimationFrame(animationID)
   }
 }
 </script>
