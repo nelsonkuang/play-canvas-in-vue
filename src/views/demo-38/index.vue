@@ -6,7 +6,7 @@
 /* eslint-disable no-alert, no-console */
 import { mat4 } from 'gl-matrix'
 import { createProgramInfo, setBuffersAndAttributes, setUniforms, drawBufferInfo } from '../../utils/tools/web-gl'
-import { createBufferInfoFunc, createSphereVertices, createGridVertices, createCubewireframeVertices } from '../../utils/tools/primitives'
+import { createBufferInfoFunc, createSphereVertices, createGridVertices, createCubewireframeVertices, createTruncatedConeVertices } from '../../utils/tools/primitives'
 import Camera from '../../utils/classes/Webgl/Camera'
 
 // let animationID = null
@@ -48,6 +48,7 @@ export default {
     const createSphereBufferInfo = createBufferInfoFunc(createSphereVertices)
     const createPlaneBufferInfo = createBufferInfoFunc(createGridVertices)
     const createCubeBufferInfo = createBufferInfoFunc(createCubewireframeVertices)
+    const createConeBufferInfo = createBufferInfoFunc(createTruncatedConeVertices)
     const sphereBufferInfo = createSphereBufferInfo(gl, 1, 32, 24)
     const planeBufferInfo = createPlaneBufferInfo(
       gl,
@@ -60,6 +61,8 @@ export default {
       gl,
       2,  // size
     )
+    const truncatedConeBufferInfo = createConeBufferInfo(gl, 1, 0, 2, 12, 1, true, false)
+    const coneBufferInfo = createConeBufferInfo(gl, 1, 1, 3, 12, 1, true, true)
     // setup GLSL programs
     const programInfo = createProgramInfo(gl, [colorVertexShaderCode, colorFragmentShaderCode])
 
@@ -120,7 +123,7 @@ export default {
       // draw the sphere
 
       uniformsThatAreComputedForAll.u_world = mat4.create()
-      mat4.translate(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, [-1.5, 1, 0])
+      mat4.translate(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, [-1.5, 1, 0.5])
       uniformsThatAreComputedForAll.u_color = [0, 1, 0, 1]
       gl.useProgram(programInfo.program)
       // Setup all the needed attributes.
@@ -135,7 +138,7 @@ export default {
       // draw the cube
 
       uniformsThatAreComputedForAll.u_world = mat4.create()
-      mat4.translate(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, [1.5, 1, 0])
+      mat4.translate(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, [1.5, 1, 0.5])
       mat4.rotateY(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, degToRad(45))
       uniformsThatAreComputedForAll.u_color = [1, 0.5, 0.5, 1]
       gl.useProgram(programInfo.program)
@@ -147,6 +150,36 @@ export default {
 
       // calls gl.drawArrays or gl.drawElements
       drawBufferInfo(gl, cubeBufferInfo, gl.LINES)
+
+      // draw the truncated cone
+      uniformsThatAreComputedForAll.u_world = mat4.create()
+      mat4.translate(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, [1.5, 1, -2])
+      mat4.rotateY(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, degToRad(45))
+      uniformsThatAreComputedForAll.u_color = [0.2, 0.8, 1, 1]
+      gl.useProgram(programInfo.program)
+      // Setup all the needed attributes.
+      setBuffersAndAttributes(gl, programInfo, truncatedConeBufferInfo)
+
+      // Set the uniforms that are the same for all objects.
+      setUniforms(programInfo, uniformsThatAreComputedForAll)
+
+      // calls gl.drawArrays or gl.drawElements
+      drawBufferInfo(gl, truncatedConeBufferInfo, gl.LINES)
+
+      // draw the cone
+      uniformsThatAreComputedForAll.u_world = mat4.create()
+      mat4.translate(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, [-1.5, 1, -2])
+      mat4.rotateY(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, degToRad(45))
+      uniformsThatAreComputedForAll.u_color = [0.2, 0.2, 1, 1]
+      gl.useProgram(programInfo.program)
+      // Setup all the needed attributes.
+      setBuffersAndAttributes(gl, programInfo, coneBufferInfo)
+
+      // Set the uniforms that are the same for all objects.
+      setUniforms(programInfo, uniformsThatAreComputedForAll)
+
+      // calls gl.drawArrays or gl.drawElements
+      drawBufferInfo(gl, coneBufferInfo, gl.LINES)
 
       // animationID = requestAnimationFrame(drawScene)
     }
