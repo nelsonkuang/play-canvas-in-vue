@@ -89,9 +89,9 @@ export default {
     }
     const baseColorVal = 255
     const colors = [
-      [rand(baseColorVal) / baseColorVal, rand(baseColorVal) / baseColorVal, rand(baseColorVal) / baseColorVal, 1],
-      [rand(baseColorVal) / baseColorVal, rand(baseColorVal) / baseColorVal, rand(baseColorVal) / baseColorVal, 1],
-      [rand(baseColorVal) / baseColorVal, rand(baseColorVal) / baseColorVal, rand(baseColorVal) / baseColorVal, 1]
+      [rand(baseColorVal) / baseColorVal, rand(baseColorVal) / baseColorVal, rand(baseColorVal) / baseColorVal, 0.9],
+      [rand(baseColorVal) / baseColorVal, rand(baseColorVal) / baseColorVal, rand(baseColorVal) / baseColorVal, 0.9],
+      [rand(baseColorVal) / baseColorVal, rand(baseColorVal) / baseColorVal, rand(baseColorVal) / baseColorVal, 0.9]
     ]
 
     let dX = 0
@@ -100,83 +100,155 @@ export default {
     // let zoom = 1
     let pressedButton = null
     const camera = new Camera()
-    camera.aspectRatio = gl.canvas.clientWidth / gl.canvas.clientHeight
-    camera.fitViewToScene([-2, -2, -2], [2, 2, 2])
+    // camera.aspectRatio = gl.canvas.clientWidth / gl.canvas.clientHeight
+    camera.fitViewToScene([-3, -3, -3], [3, 3, 3])
     camera.rotate(0, degToRad(-20)) // 修改相机初始角度
     camera.target = [0, 1, 0]
-    camera.position = [0, 2, 2]
-    camera.updatePosition()
+    camera.position = [0, 2, 10]
+    const camera2 = new Camera()
+    // camera.aspectRatio = gl.canvas.clientWidth / gl.canvas.clientHeight
+    camera2.fitViewToScene([-3, -3, -3], [3, 3, 3])
+    camera2.rotate(0, degToRad(-20)) // 修改相机初始角度
+    camera2.target = [0, 1, 0]
+    camera2.position = [0, 2, 10]
+    // camera.updatePosition()
     const supportedTouch = window.hasOwnProperty('ontouchstart')
 
     // Draw the scene.
     function drawScene (time) {
-      time = time * 0.0001 + 5;
-      // Tell WebGL how to convert from clip space to pixels
-      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
-      // Clear the canvas AND the depth buffer.
-      gl.clearColor(0, 0, 0, 1)
-      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-      // gl.enable(gl.CULL_FACE)
-      gl.enable(gl.DEPTH_TEST)
+      time = time * 0.0001 + 5
+      {
+        camera.aspectRatio = gl.canvas.clientWidth / 2 / gl.canvas.clientHeight
+        camera.updatePosition()
+        // Tell WebGL how to convert from clip space to pixels
+        gl.viewport(0, 0, gl.canvas.width / 2, gl.canvas.height)
+        // Clear the canvas AND the depth buffer.
+        // gl.clearColor(0, 0, 0, 1)
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+        gl.enable(gl.CULL_FACE)
+        gl.enable(gl.DEPTH_TEST)
+        gl.enable(gl.BLEND)
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
-      // Compute the projection matrix
-      uniformsThatAreComputedForAll.u_projection = camera.projectionMatrix()
-      uniformsThatAreComputedForAll.u_view = camera.viewMatrix()
-      
-      // draw the plane
+        // Compute the projection matrix
+        uniformsThatAreComputedForAll.u_projection = camera.projectionMatrix()
+        uniformsThatAreComputedForAll.u_view = camera.viewMatrix()
 
-      uniformsThatAreComputedForAll.u_world = mat4.create()
-      uniformsThatAreComputedForAll.u_colorMult = colors[0]
-      gl.useProgram(programInfo.program)
-      // Setup all the needed attributes.
-      setBuffersAndAttributes(gl, programInfo, planeBufferInfo)
+        // draw the plane
 
-      // Set the uniforms that are the same for all objects.
-      setUniforms(programInfo, uniformsThatAreComputedForAll)
+        uniformsThatAreComputedForAll.u_world = mat4.create()
+        uniformsThatAreComputedForAll.u_colorMult = colors[0]
+        gl.useProgram(programInfo.program)
+        // Setup all the needed attributes.
+        setBuffersAndAttributes(gl, programInfo, planeBufferInfo)
 
-      // calls gl.drawArrays or gl.drawElements
-      drawBufferInfo(gl, planeBufferInfo)
+        // Set the uniforms that are the same for all objects.
+        setUniforms(programInfo, uniformsThatAreComputedForAll)
 
-      // draw the sphere
+        // calls gl.drawArrays or gl.drawElements
+        drawBufferInfo(gl, planeBufferInfo)
 
-      uniformsThatAreComputedForAll.u_world = mat4.create()
-      uniformsThatAreComputedForAll.u_colorMult = colors[1]
-      mat4.translate(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, [-1.5, 1.01, 0])
-      mat4.rotateY(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, -time)
-      gl.useProgram(programInfo.program)
-      // Setup all the needed attributes.
-      setBuffersAndAttributes(gl, programInfo, sphereBufferInfo)
+        // draw the sphere
 
-      // Set the uniforms that are the same for all objects.
-      setUniforms(programInfo, uniformsThatAreComputedForAll)
+        uniformsThatAreComputedForAll.u_world = mat4.create()
+        uniformsThatAreComputedForAll.u_colorMult = colors[1]
+        mat4.translate(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, [-1.3, 1.01, 0])
+        mat4.rotateY(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, -time)
+        gl.useProgram(programInfo.program)
+        // Setup all the needed attributes.
+        setBuffersAndAttributes(gl, programInfo, sphereBufferInfo)
 
-      // calls gl.drawArrays or gl.drawElements
-      drawBufferInfo(gl, sphereBufferInfo)
-      
-      // draw the cube
+        // Set the uniforms that are the same for all objects.
+        setUniforms(programInfo, uniformsThatAreComputedForAll)
 
-      uniformsThatAreComputedForAll.u_world = mat4.create()
-      uniformsThatAreComputedForAll.u_colorMult = colors[2]
-      mat4.translate(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, [1.5, 1.1, 0])
-      mat4.rotateY(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, time)
-      gl.useProgram(programInfo.program)
-      // Setup all the needed attributes.
-      setBuffersAndAttributes(gl, programInfo, cubeBufferInfo)
+        // calls gl.drawArrays or gl.drawElements
+        drawBufferInfo(gl, sphereBufferInfo)
 
-      // Set the uniforms that are the same for all objects.
-      setUniforms(programInfo, uniformsThatAreComputedForAll)
+        // draw the cube
 
-      // calls gl.drawArrays or gl.drawElements
-      drawBufferInfo(gl, cubeBufferInfo)
+        uniformsThatAreComputedForAll.u_world = mat4.create()
+        uniformsThatAreComputedForAll.u_colorMult = colors[2]
+        mat4.translate(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, [1.3, 1.1, 0])
+        mat4.rotateY(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, time)
+        gl.useProgram(programInfo.program)
+        // Setup all the needed attributes.
+        setBuffersAndAttributes(gl, programInfo, cubeBufferInfo)
 
+        // Set the uniforms that are the same for all objects.
+        setUniforms(programInfo, uniformsThatAreComputedForAll)
+
+        // calls gl.drawArrays or gl.drawElements
+        drawBufferInfo(gl, cubeBufferInfo)
+      }
+      {
+        camera2.aspectRatio = gl.canvas.clientWidth / 2 / gl.canvas.clientHeight
+        camera2.updatePosition()
+        // Tell WebGL how to convert from clip space to pixels
+        gl.viewport(gl.canvas.width / 2, 0, gl.canvas.width / 2, gl.canvas.height)
+        // Clear the canvas AND the depth buffer.
+        // gl.clearColor(0, 0, 0, 1)
+        // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+        // gl.enable(gl.CULL_FACE)
+        // gl.enable(gl.DEPTH_TEST)
+
+        // Compute the projection matrix
+        uniformsThatAreComputedForAll.u_projection = camera2.projectionMatrix()
+        uniformsThatAreComputedForAll.u_view = camera2.viewMatrix()
+
+        // draw the plane
+
+        uniformsThatAreComputedForAll.u_world = mat4.create()
+        uniformsThatAreComputedForAll.u_colorMult = colors[0]
+        gl.useProgram(programInfo.program)
+        // Setup all the needed attributes.
+        setBuffersAndAttributes(gl, programInfo, planeBufferInfo)
+
+        // Set the uniforms that are the same for all objects.
+        setUniforms(programInfo, uniformsThatAreComputedForAll)
+
+        // calls gl.drawArrays or gl.drawElements
+        drawBufferInfo(gl, planeBufferInfo)
+
+        // draw the sphere
+
+        uniformsThatAreComputedForAll.u_world = mat4.create()
+        uniformsThatAreComputedForAll.u_colorMult = colors[1]
+        mat4.translate(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, [-1.3, 1.01, 0])
+        mat4.rotateY(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, -time)
+        gl.useProgram(programInfo.program)
+        // Setup all the needed attributes.
+        setBuffersAndAttributes(gl, programInfo, sphereBufferInfo)
+
+        // Set the uniforms that are the same for all objects.
+        setUniforms(programInfo, uniformsThatAreComputedForAll)
+
+        // calls gl.drawArrays or gl.drawElements
+        drawBufferInfo(gl, sphereBufferInfo)
+
+        // draw the cube
+
+        uniformsThatAreComputedForAll.u_world = mat4.create()
+        uniformsThatAreComputedForAll.u_colorMult = colors[2]
+        mat4.translate(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, [1.3, 1.1, 0])
+        mat4.rotateY(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, time)
+        gl.useProgram(programInfo.program)
+        // Setup all the needed attributes.
+        setBuffersAndAttributes(gl, programInfo, cubeBufferInfo)
+
+        // Set the uniforms that are the same for all objects.
+        setUniforms(programInfo, uniformsThatAreComputedForAll)
+
+        // calls gl.drawArrays or gl.drawElements
+        drawBufferInfo(gl, cubeBufferInfo)
+      }
       animationID = requestAnimationFrame(drawScene)
     }
 
 
     function updateCamera () {
       camera.updatePosition()
-
-      drawScene()
+      camera2.updatePosition()
+      // drawScene()
     }
     /* ================= Mouse events ====================== */
     function bindMouseEvents () {
@@ -208,8 +280,10 @@ export default {
         oldY = e.pageY
         if (pressedButton === 0) {
           camera.rotate(dX, dY)
+          camera2.rotate(dX, dY)
         } else if (pressedButton === 2) {
           camera.pan(dX, dY)
+          camera2.pan(dX, dY)
         }
         updateCamera()
       }
@@ -220,6 +294,7 @@ export default {
 
         canvas.style.cursor = 'none'
         camera.zoomIn(e.deltaY)
+        camera2.zoomIn(e.deltaY)
         updateCamera()
       }
 
