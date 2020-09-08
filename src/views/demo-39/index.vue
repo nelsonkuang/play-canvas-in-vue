@@ -11,7 +11,7 @@ import { createProgramInfo, setBuffersAndAttributes, setUniforms, drawBufferInfo
 import Camera from '../../utils/classes/Webgl/Camera'
 import headData from '../../../static/models/headdata/headdata'
 
-// let animationID = null
+let animationID = null
 export default {
   data () {
     return {
@@ -196,7 +196,7 @@ export default {
       u_reverseLightDirection: null
     }
 
-    const yRotation = degToRad(10)
+    let yRotation = degToRad(10)
     const rampIndex = 2 // 有 10 种阴影模式，0 开始，第 2 种为正常阴影
 
     let dX = 0
@@ -216,8 +216,8 @@ export default {
     const supportedTouch = window.hasOwnProperty('ontouchstart')
 
     // Draw the scene.
-    function drawScene () {
-      // time = time * 0.0001 + 5;
+    function drawScene (time) {
+      time = time * 0.0001 + 5;
       // Tell WebGL how to convert from clip space to pixels
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
       // Clear the canvas AND the depth buffer.
@@ -234,6 +234,7 @@ export default {
       mat4.multiply(viewProjection, projection, view)
 
       const world = mat4.create()
+      yRotation = time
       mat4.fromYRotation(world, yRotation)
 
       mat4.multiply(uniformsThatAreComputed.u_worldViewProjection, viewProjection, world)
@@ -263,14 +264,14 @@ export default {
 
       // calls gl.drawArrays or gl.drawElements
       drawBufferInfo(gl, bufferInfo)
-      // animationID = requestAnimationFrame(drawScene)
+      animationID = requestAnimationFrame(drawScene)
     }
 
 
     function updateCamera () {
       camera.updatePosition()
 
-      drawScene()
+      // drawScene()
     }
     /* ================= Mouse events ====================== */
     function bindMouseEvents () {
@@ -369,10 +370,10 @@ export default {
     }
 
     supportedTouch ? bindTouchEvents() : bindMouseEvents()
-    drawScene()
+    requestAnimationFrame(drawScene)
   },
   beforeDestroy () {
-    // animationID && cancelAnimationFrame(animationID)
+    animationID && cancelAnimationFrame(animationID)
   }
 }
 </script>
