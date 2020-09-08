@@ -11,12 +11,10 @@ import { mat4, vec3 } from 'gl-matrix'
 import { createProgramInfo, setBuffersAndAttributes, setUniforms, drawBufferInfo } from '../../utils/tools/web-gl'
 import { createBufferInfoFunc, createSphereVertices } from '../../utils/tools/primitives'
 import Camera from '../../utils/classes/Webgl/Camera'
-import { setTimeout, clearTimeout } from 'timers';
 // import { makeStripeTexture, makeCheckerTexture, makeCircleTexture } from '../../utils/tools/texture'
 const textureImg = './static/img/helipad.jpg'
 
 let animationID = null
-let timeId = null
 export default {
   data () {
     return {
@@ -160,18 +158,18 @@ export default {
       // calls gl.drawArrays or gl.drawElements
       drawBufferInfo(gl, buffers)
 
-      if (!drag) {
-        // gl.flush() // 强制刷新缓冲，保证绘图命令将被执行
-        camera.rotate(0.0005, 0)
-        camera.updatePosition()
-        animationID = requestAnimationFrame(drawScene)
-      }
+      // if (!drag) {
+      // gl.flush() // 强制刷新缓冲，保证绘图命令将被执行
+      camera.rotate(0.0005, 0)
+      camera.updatePosition()
+      animationID = requestAnimationFrame(drawScene)
+      // }
     }
 
 
     function updateCamera () {
       camera.updatePosition()
-      drawScene()
+      // drawScene()
     }
 
     /* ================= Mouse events ====================== */
@@ -189,41 +187,31 @@ export default {
       }
 
       const mouseUp = function () {
-        timeId && clearTimeout()
-        timeId = null
-        timeId = setTimeout(() => {
-          drag = false
-          drawScene()
-        }, 1500)
+        drag = false
         canvas.removeEventListener('mousemove', mouseMove)
       }
 
       const mouseMove = function (e) {
-        e.preventDefault()
-        dX = (e.pageX - oldX) * 2 * Math.PI / gl.canvas.clientWidth
-        dY = (e.pageY - oldY) * 2 * Math.PI / gl.canvas.clientHeight
-        oldX = e.pageX
-        oldY = e.pageY
-        if (pressedButton === 0) {
-          camera.rotate(-dX, -dY)
-        } else if (pressedButton === 2) {
-          camera.pan(-dX, -dY)
+        if (drag) {
+          e.preventDefault()
+          dX = (e.pageX - oldX) * 2 * Math.PI / gl.canvas.clientWidth
+          dY = (e.pageY - oldY) * 2 * Math.PI / gl.canvas.clientHeight
+          oldX = e.pageX
+          oldY = e.pageY
+          if (pressedButton === 0) {
+            camera.rotate(-dX, -dY)
+          } else if (pressedButton === 2) {
+            camera.pan(-dX, -dY)
+          }
+          updateCamera()
         }
-        updateCamera()
       }
       const mouseWheel = function (e) {
         if (Math.abs(e.deltaY) < 1.0) {
           return
         }
-        drag = true
         camera.zoomIn(e.deltaY)
         updateCamera()
-        timeId && clearTimeout()
-        timeId = null
-        timeId = setTimeout(() => {
-          drag = false
-          // drawScene()
-        }, 1500)
       }
 
       canvas.addEventListener('mousedown', mouseDown, false)
@@ -250,12 +238,7 @@ export default {
       }
 
       const touchEnd = function () {
-        timeId && clearTimeout()
-        timeId = null
-        timeId = setTimeout(() => {
-          drag = false
-          drawScene()
-        }, 1500)
+        drag = false
       }
 
       const touchMove = function (e) {
@@ -282,12 +265,11 @@ export default {
 
     const supportedTouch = window.hasOwnProperty('ontouchstart')
     supportedTouch ? bindTouchEvents() : bindMouseEvents()
+    requestAnimationFrame(drawScene)
   },
   beforeDestroy () {
     animationID && cancelAnimationFrame(animationID)
     animationID = null
-    timeId && clearTimeout()
-    timeId = null
   }
 }
 </script>
