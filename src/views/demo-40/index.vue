@@ -105,12 +105,14 @@ export default {
     camera.rotate(0, degToRad(-20)) // 修改相机初始角度
     camera.target = [0, 1, 0]
     camera.position = [0, 2, 10]
+    camera.aspectRatio = gl.canvas.clientWidth / 2 / gl.canvas.clientHeight
     const camera2 = new Camera()
     // camera.aspectRatio = gl.canvas.clientWidth / gl.canvas.clientHeight
     camera2.fitViewToScene([-3, -3, -3], [3, 3, 3])
     camera2.rotate(0, degToRad(-20)) // 修改相机初始角度
     camera2.target = [0, 1, 0]
     camera2.position = [0, 2, 10]
+    camera2.aspectRatio = gl.canvas.clientWidth / 2 / gl.canvas.clientHeight
     // camera.updatePosition()
     const supportedTouch = window.hasOwnProperty('ontouchstart')
 
@@ -118,7 +120,6 @@ export default {
     function drawScene (time) {
       time = time * 0.0001 + 5
       {
-        camera.aspectRatio = gl.canvas.clientWidth / 2 / gl.canvas.clientHeight
         camera.updatePosition()
         // Tell WebGL how to convert from clip space to pixels
         gl.viewport(0, 0, gl.canvas.width / 2, gl.canvas.height)
@@ -181,9 +182,9 @@ export default {
         drawBufferInfo(gl, cubeBufferInfo)
       }
       {
-        camera2.aspectRatio = gl.canvas.clientWidth / 2 / gl.canvas.clientHeight
         camera2.updatePosition()
         // Tell WebGL how to convert from clip space to pixels
+        // 参考引用: http://www.jiazhengblog.com/blog/2017/05/05/3142/#comments
         gl.viewport(gl.canvas.width / 2, 0, gl.canvas.width / 2, gl.canvas.height)
         // Clear the canvas AND the depth buffer.
         // gl.clearColor(0, 0, 0, 1)
