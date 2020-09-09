@@ -168,7 +168,7 @@ export default {
 
       // draw the cone
       uniformsThatAreComputedForAll.u_world = mat4.create()
-      mat4.translate(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, [-1.5, 1, -2])
+      mat4.translate(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, [-1.5, 1.5, -2])
       mat4.rotateY(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, degToRad(45))
       uniformsThatAreComputedForAll.u_color = [0.2, 0.2, 1, 1]
       gl.useProgram(programInfo.program)
