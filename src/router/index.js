@@ -339,6 +339,14 @@ const routes = [
     meta: {
       title: 'Webgl 教程 实现 Web VR'
     }
+  }, 
+  {
+    path: '/demo-41',
+    name: 'Demo41',
+    component: () => import('@/views/demo-41/index'),
+    meta: {
+      title: 'Webgl 教程 实现多视图'
+    }
   }
 ]
 
