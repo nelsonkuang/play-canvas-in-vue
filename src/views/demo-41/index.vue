@@ -210,7 +210,7 @@ export default {
         // rotate the item
         const rTime = time * 0.2
         const worldMatrix = mat4.create()
-        mat4.fromYRotation(worldMatrix, worldMatrix, rTime)
+        mat4.fromYRotation(worldMatrix, rTime)
         mat4.rotateX(worldMatrix, worldMatrix, rTime)
 
         drawScene(projectionMatrix, cameraMatrix, worldMatrix, bufferInfo)
