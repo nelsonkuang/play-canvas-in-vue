@@ -347,6 +347,14 @@ const routes = [
     meta: {
       title: 'Webgl 教程 实现多视图'
     }
+  }, 
+  {
+    path: '/demo-42',
+    name: 'Demo42',
+    component: () => import('@/views/demo-42/index'),
+    meta: {
+      title: 'Webgl 教程 Camera 可视化'
+    }
   }
 ]
 
