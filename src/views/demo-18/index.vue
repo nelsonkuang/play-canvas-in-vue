@@ -138,7 +138,7 @@ export default {
         width: 100,
         height: 26,
         fillStyle: `rgb(${randInt(255)},${randInt(255)},${randInt(255)})`,
-        font: '700 28px "Hiragino Sans GB W3","Microsoft YaHe","宋体"'
+        font: '700 28px "Hiragino Sans GB W3","Microsoft YaHe","宋体","sans-serif"'
       })
       const textWidth = textCanvas.width
       const textHeight = textCanvas.height

@@ -9,7 +9,9 @@
 // https://zhoyq.github.io/panoramic/panoramic.html
 import { mat4 } from 'gl-matrix'
 import { createProgramInfo, setBuffersAndAttributes, setUniforms, drawBufferInfo, resizeCanvasToDisplaySize } from '../../utils/tools/web-gl'
-import { createBufferInfoFunc, createSphereVertices } from '../../utils/tools/primitives'
+import { createBufferInfoFunc, createSphereVertices, createPlaneVertices } from '../../utils/tools/primitives'
+import { countries } from '../../../static/js/world-data'
+import { generateTextCanvas } from '../../utils/tools/texture'
 import Camera from '../../utils/classes/Webgl/Camera'
 // import { makeStripeTexture, makeCheckerTexture, makeCircleTexture } from '../../utils/tools/texture'
 const textureImg = './static/img/earth.jpg'
@@ -49,10 +51,16 @@ export default {
     `
     const createSphereBufferInfo = createBufferInfoFunc(createSphereVertices)
     const buffers = createSphereBufferInfo(gl, 1, 32, 24)
+
+    // Create a unit quad for the 'text'
+    const createPlaneBufferInfo = createBufferInfoFunc(createPlaneVertices)
+    const matrix = mat4.create()
+    mat4.rotateX(matrix, matrix, Math.PI / 2)
+    const textBufferInfo = createPlaneBufferInfo(gl, 1, 1, 1, 1, matrix)
     // setup GLSL programs
     const programInfo = createProgramInfo(gl, [vertexShaderCode, fragmentShaderCode])
 
-    const texture = gl.createTexture()
+    const mapTexture = gl.createTexture()
     // gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true) // 将纹理图片反转
 
     function AsynLoadImage (url, cb) {
@@ -75,7 +83,7 @@ export default {
 
     AsynLoadImage(textureImg, (img) => {
       // Now that the image has loaded make copy it to the texture.
-      gl.bindTexture(gl.TEXTURE_2D, texture)
+      gl.bindTexture(gl.TEXTURE_2D, mapTexture)
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img)
       // Check if the image is a power of 2 in both dimensions.
       if (isPowerOf2(img.width) && isPowerOf2(img.height)) {
@@ -92,6 +100,34 @@ export default {
       drawScene()
     })
 
+    // create text textures
+    const textTextures = Object.keys(countries).map((text) => {
+      const textCanvas = generateTextCanvas({
+        text,
+        width: 300,
+        height: 26,
+        fillStyle: '#ffffff',
+        font: '700 16px "Hiragino Sans GB W3","Microsoft YaHe","宋体","sans-serif"'
+      })
+      const textWidth = textCanvas.width
+      const textHeight = textCanvas.height
+      const textTex = gl.createTexture()
+      gl.bindTexture(gl.TEXTURE_2D, textTex)
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true)
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textCanvas)
+      // make sure we can render it even if it's not a power of 2
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+      return {
+        texture: textTex,
+        width: textWidth,
+        height: textHeight,
+        latitude: countries[text][0],
+        longitude: countries[text][1]
+      }
+    })
+
     function degToRad (d) {
       return d * Math.PI / 180
     }
@@ -100,11 +136,11 @@ export default {
       return (value & (value - 1)) === 0
     }
 
-    const uniformsThatAreComputedForTheSphere = {
+    const uniformsThatAreComputedForAll = {
       v_matrix: mat4.create(),
       p_matrix: mat4.create(),
-      m_matrix: mat4.create(),
-      u_texture: texture
+      m_matrix: null,
+      u_texture: null
     }
 
     let dX = 0
@@ -130,20 +166,43 @@ export default {
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
       gl.enable(gl.CULL_FACE)
       gl.enable(gl.DEPTH_TEST)
+      gl.disable(gl.BLEND)
+      gl.depthMask(true)
 
       // Compute the projection matrix
-      uniformsThatAreComputedForTheSphere.p_matrix = camera.projectionMatrix()
-      uniformsThatAreComputedForTheSphere.v_matrix = camera.viewMatrix()
+      uniformsThatAreComputedForAll.p_matrix = camera.projectionMatrix()
+      uniformsThatAreComputedForAll.v_matrix = camera.viewMatrix()
+      uniformsThatAreComputedForAll.m_matrix = mat4.create()
+      uniformsThatAreComputedForAll.u_texture = mapTexture
 
       gl.useProgram(programInfo.program)
       // Setup all the needed attributes.
       setBuffersAndAttributes(gl, programInfo, buffers)
 
       // Set the uniforms that are the same for all objects.
-      setUniforms(programInfo, uniformsThatAreComputedForTheSphere)
+      setUniforms(programInfo, uniformsThatAreComputedForAll)
 
       // calls gl.drawArrays or gl.drawElements
       drawBufferInfo(gl, buffers)
+
+      gl.enable(gl.BLEND)
+      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
+      gl.depthMask(false)
+
+      // setup to draw the text.
+      gl.useProgram(programInfo.program)
+
+      setBuffersAndAttributes(gl, programInfo, textBufferInfo)
+
+      textTextures.forEach((textTexture) => {
+        const { texture, width, height, latitude, longitude } = textTexture
+        const radius = 1
+        uniformsThatAreComputedForAll.m_matrix = mat4.create()
+        uniformsThatAreComputedForAll.u_texture = texture
+        // Set the uniforms that are the same for all objects.
+        setUniforms(programInfo, uniformsThatAreComputedForAll)
+        drawBufferInfo(gl, textBufferInfo)
+      })
 
       // animationID = requestAnimationFrame(drawScene)
     }
