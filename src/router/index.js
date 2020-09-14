@@ -371,6 +371,14 @@ const routes = [
     meta: {
       title: '使用 Canvas 2D 作图，画旋转立方体'
     }
+  }, 
+  {
+    path: '/demo-45',
+    name: 'Demo45',
+    component: () => import('@/views/demo-45/index'),
+    meta: {
+      title: 'Webgl 教程 球状贴图 - 地球'
+    }
   }
 ]
 
