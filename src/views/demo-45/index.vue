@@ -50,7 +50,7 @@ export default {
       }
     `
     const createSphereBufferInfo = createBufferInfoFunc(createSphereVertices)
-    const buffers = createSphereBufferInfo(gl, 1, 32, 24)
+    const buffers = createSphereBufferInfo(gl, 1, 48, 32)
 
     // Create a unit quad for the 'text'
     const createPlaneBufferInfo = createBufferInfoFunc(createPlaneVertices)
@@ -195,9 +195,12 @@ export default {
       setBuffersAndAttributes(gl, programInfo, textBufferInfo)
 
       textTextures.forEach((textTexture) => {
-        const { texture, width, height, latitude, longitude } = textTexture
-        const radius = 1
-        uniformsThatAreComputedForAll.m_matrix = mat4.create()
+        const { texture, /* width, height,  */latitude, /* longitude */ } = textTexture
+        const radius = 1.001
+        const modelMatrix = mat4.create()
+        mat4.rotateY(modelMatrix, modelMatrix, degToRad(latitude))
+        mat4.translate(modelMatrix, modelMatrix, [0, 0, radius])
+        uniformsThatAreComputedForAll.m_matrix = modelMatrix
         uniformsThatAreComputedForAll.u_texture = texture
         // Set the uniforms that are the same for all objects.
         setUniforms(programInfo, uniformsThatAreComputedForAll)
