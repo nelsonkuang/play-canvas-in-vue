@@ -363,6 +363,14 @@ const routes = [
     meta: {
       title: 'Webgl 教程 Camera 可视化II 正交透视'
     }
+  }, 
+  {
+    path: '/demo-44',
+    name: 'Demo44',
+    component: () => import('@/views/demo-44/index'),
+    meta: {
+      title: '使用 Canvas 2D 作图，画旋转立方体'
+    }
   }
 ]
 
