@@ -107,7 +107,8 @@ export default {
         width: 300,
         height: 26,
         fillStyle: '#ffffff',
-        font: '700 16px "Hiragino Sans GB W3","Microsoft YaHe","宋体","sans-serif"'
+        textAlign: 'left',
+        font: '700 28px "Hiragino Sans GB W3","Microsoft YaHe","宋体","sans-serif"'
       })
       const textWidth = textCanvas.width
       const textHeight = textCanvas.height
@@ -151,7 +152,7 @@ export default {
     const camera = new Camera()
     camera.aspectRatio = gl.canvas.clientWidth / gl.canvas.clientHeight
     camera.fitViewToScene([-1.2, -1.2, -1.2], [1.2, 1.2, 1.2])
-    camera.rotate(0, degToRad(-10)) // 修改相机初始角度
+    camera.rotate(0, degToRad(0)) // 修改相机初始角度
     camera.updatePosition()
     const supportedTouch = window.hasOwnProperty('ontouchstart')
 
@@ -195,11 +196,23 @@ export default {
       setBuffersAndAttributes(gl, programInfo, textBufferInfo)
 
       textTextures.forEach((textTexture) => {
-        const { texture, /* width, height,  */latitude, /* longitude */ } = textTexture
-        const radius = 1.001
+        const { texture, width, height, latitude, longitude } = textTexture
+        const radius = 1
         const modelMatrix = mat4.create()
-        mat4.rotateY(modelMatrix, modelMatrix, degToRad(latitude))
+        let zRotation = 180
+        mat4.rotateX(modelMatrix, modelMatrix, degToRad(-longitude))
+        mat4.rotateY(modelMatrix, modelMatrix, degToRad(latitude - 90))
+        mat4.rotateZ(modelMatrix, modelMatrix, degToRad(zRotation))
         mat4.translate(modelMatrix, modelMatrix, [0, 0, radius])
+        // Get the text's position from the matrix we computed
+        const textPosition = [
+          modelMatrix[12],
+          modelMatrix[13],
+          modelMatrix[14],
+        ]
+        const desiredTextScale = -1 / gl.canvas.height
+        const scale = textPosition[2] * desiredTextScale
+        mat4.scale(modelMatrix, modelMatrix, [width * scale, height * scale, 1])
         uniformsThatAreComputedForAll.m_matrix = modelMatrix
         uniformsThatAreComputedForAll.u_texture = texture
         // Set the uniforms that are the same for all objects.

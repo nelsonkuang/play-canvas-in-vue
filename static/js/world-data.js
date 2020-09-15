@@ -97,7 +97,6 @@ export const countries = {
   'Liechtenstein': [9.56, 47.17],
   'Lithuania': [23.88, 55.17],
   'Luxembourg': [6.13, 49.82],
-  'Macao': [113.54, 22.20],
   'Madagascar': [46.87, -18.77],
   'Malawi': [34.30, -13.25],
   'Malaysia': [101.98, 4.21],
