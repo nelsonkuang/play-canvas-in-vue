@@ -4,9 +4,6 @@
 
 <script>
 /* eslint-disable no-alert, no-console */
-// Reference from: 
-// https://github.com/SunQiongqiong/panorama/blob/master/js/ballplay.js
-// https://zhoyq.github.io/panoramic/panoramic.html
 import { mat4 } from 'gl-matrix'
 import { createProgramInfo, setBuffersAndAttributes, setUniforms, drawBufferInfo, resizeCanvasToDisplaySize } from '../../utils/tools/web-gl'
 import { createBufferInfoFunc, createSphereVertices, createPlaneVertices } from '../../utils/tools/primitives'
@@ -107,7 +104,7 @@ export default {
         width: 450,
         height: 50,
         fillStyle: '#ffffff',
-        textAlign: 'left',
+        // textAlign: 'left',
         font: '700 28px "Hiragino Sans GB W3","Microsoft YaHe","宋体","sans-serif"'
       })
       const textWidth = textCanvas.width
@@ -124,8 +121,8 @@ export default {
         texture: textTex,
         width: textWidth,
         height: textHeight,
-        latitude: countries[text][0],
-        longitude: countries[text][1]
+        longitude: countries[text][0],
+        latitude: countries[text][1]
       }
     })
 
@@ -200,8 +197,8 @@ export default {
         const radius = 1
         const modelMatrix = mat4.create()
         let zRotation = latitude > 0 ? 180 : 0
-        mat4.rotateX(modelMatrix, modelMatrix, degToRad(latitude > 0 ? -longitude : longitude))
-        mat4.rotateY(modelMatrix, modelMatrix, degToRad(latitude - 90))
+        mat4.rotateY(modelMatrix, modelMatrix, degToRad(longitude - 90))
+        mat4.rotateX(modelMatrix, modelMatrix, degToRad(-latitude))
         mat4.rotateZ(modelMatrix, modelMatrix, degToRad(zRotation))
         mat4.translate(modelMatrix, modelMatrix, [0, 0, radius])
         // Get the text's position from the matrix we computed
