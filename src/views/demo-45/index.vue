@@ -201,6 +201,9 @@ export default {
         const radius = 1
         const modelMatrix = mat4.create()
         let zRotation = longitude > 0 ? 180 : 0
+        // webgl 的思维有点不一样，要反着来[关键点]：
+        // 正常想法是１、文字移动到 [0, 0, radius] -> ２、绕 x 轴转纬度 -> ３、绕 y 轴转经度
+        // 实际写法是３、绕 y 轴转经度 -> ２、绕 x 轴转纬度 -> １、文字移动到 [0, 0, radius]
         mat4.rotateY(modelMatrix, modelMatrix, degToRad(longitude - 90)) // 初始时文字是放在 90 度的位置（法向量 0, 0, 1），要转回 0 （本初子午线，英国附近）开始处，所以要减 90
         mat4.rotateX(modelMatrix, modelMatrix, degToRad(-latitude)) // 绕 x 轴，往里转为要减相应的 latitude，因此要加 “-” 号
         mat4.rotateZ(modelMatrix, modelMatrix, degToRad(zRotation)) // 经度为负的话内容看上去上反面倒过来了，要旋 180 度看上去才是正面
