@@ -201,12 +201,12 @@ export default {
         const radius = 1
         const modelMatrix = mat4.create()
         let zRotation = longitude > 0 ? 180 : 0
-        mat4.rotateY(modelMatrix, modelMatrix, degToRad(longitude - 90))
-        mat4.rotateX(modelMatrix, modelMatrix, degToRad(-latitude))
-        mat4.rotateZ(modelMatrix, modelMatrix, degToRad(zRotation))
+        mat4.rotateY(modelMatrix, modelMatrix, degToRad(longitude - 90)) // 初始时文字是放在 90 度的位置（法向量 0, 0, 1），要转回 0 （本初子午线，英国附近）开始处，所以要减 90
+        mat4.rotateX(modelMatrix, modelMatrix, degToRad(-latitude)) // 绕 x 轴，往里转为要减相应的 latitude，因此要加 “-” 号
+        mat4.rotateZ(modelMatrix, modelMatrix, degToRad(zRotation)) // 经度为负的话内容看上去上反面倒过来了，要旋 180 度看上去才是正面
         mat4.translate(modelMatrix, modelMatrix, [0, 0, radius])
         // Get the text's position from the matrix we computed
-        const desiredTextScale = modelMatrix[14] < 0 ? 1 / gl.canvas.height : -1 / gl.canvas.height
+        const desiredTextScale = modelMatrix[14] < 0 ? 1 / gl.canvas.height : -1 / gl.canvas.height // 使用坐标 z 的值来判断比例，实现 1 像素最优文字显示
         mat4.scale(modelMatrix, modelMatrix, [width * desiredTextScale, height * desiredTextScale, 1])
         uniformsThatAreComputedForAll.m_matrix = modelMatrix
         uniformsThatAreComputedForAll.u_texture = texture
