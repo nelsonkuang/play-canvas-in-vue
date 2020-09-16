@@ -154,19 +154,24 @@ export function makeTextCanvas (gl, options) {
   return makeTexture(gl);
 }
 
-export function generateTextCanvas (options) {
-  options = options || {};
-  var text = options.text || '文字';
-  var width = options.width || 30;
-  var height = options.height || 80;
-  setCanvasSize(width, height);
-  ctx.save();
-  ctx.font = options.font || '700 20px "Hiragino Sans GB W3","Microsoft YaHe","宋体"';
-  ctx.textAlign = options.textAlign || 'center';
-  ctx.textBaseline = options.textBaseline || 'middle';
-  ctx.fillStyle = options.fillStyle || 'black';
-  ctx.clearRect(0, 0, width, height);
-  ctx.fillText(text, width / 2, height / 2);
-  ctx.restore();
-  return ctx.canvas;
+export function generateTextCanvas (options = {
+  font: '700 20px "Hiragino Sans GB W3","Microsoft YaHe","宋体"',
+  text: '文字',
+  width: 30,
+  height: 80,
+  textAlign: 'center',
+  fillStyle: 'black'
+}, mergeOptions = {}) {
+  const { width, height, text, font, textAlign, textBaseline, fillStyle } = options
+  setCanvasSize(width, height)
+  ctx.save()
+  ctx.font = font
+  ctx.textAlign = textAlign
+  ctx.textBaseline = textBaseline
+  ctx.fillStyle = fillStyle
+  Object.assign(ctx, mergeOptions)
+  ctx.clearRect(0, 0, width, height)
+  ctx.fillText(text, width / 2, height / 2)
+  ctx.restore()
+  return ctx.canvas
 }

@@ -101,11 +101,15 @@ export default {
     const textTextures = Object.keys(countries).map((text) => {
       const textCanvas = generateTextCanvas({
         text,
-        width: 450,
+        width: 500,
         height: 50,
         fillStyle: '#ffffff',
-        // textAlign: 'left',
-        font: '700 28px "Hiragino Sans GB W3","Microsoft YaHe","宋体","sans-serif"'
+        font: '700 22px "Hiragino Sans GB W3","Microsoft YaHe","宋体","sans-serif"'
+      }, {
+        shadowBlur: 5,
+        shadowOffsetX: 2,
+        shadowOffsetY: 2,
+        shadowColor: '#333',
       })
       const textWidth = textCanvas.width
       const textHeight = textCanvas.height
@@ -196,7 +200,7 @@ export default {
         const { texture, width, height, latitude, longitude } = textTexture
         const radius = 1
         const modelMatrix = mat4.create()
-        let zRotation = latitude > 0 ? 180 : 0
+        let zRotation = longitude > 0 ? 180 : 0
         mat4.rotateY(modelMatrix, modelMatrix, degToRad(longitude - 90))
         mat4.rotateX(modelMatrix, modelMatrix, degToRad(-latitude))
         mat4.rotateZ(modelMatrix, modelMatrix, degToRad(zRotation))

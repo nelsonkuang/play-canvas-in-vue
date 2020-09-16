@@ -32,7 +32,7 @@ export const countries = {
   'Central African Republic': [20.94, 6.61],
   'Chad': [18.73, 15.45],
   'Chile': [-71.54, -35.68],
-  'China': [104.20, 35.86],
+  '中华人民共和国': [104.20, 35.86],
   'Colombia': [-74.30, 4.57],
   'Congo': [15.83, -0.23],
   'Costa Rica': [-83.75, 9.75],
