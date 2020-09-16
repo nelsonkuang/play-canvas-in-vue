@@ -377,7 +377,7 @@ const routes = [
     name: 'Demo45',
     component: () => import('@/views/demo-45/index'),
     meta: {
-      title: 'Webgl 教程 球状贴图 - 地球'
+      title: 'Webgl 教程 地球贴图 及 按国家经纬度贴名'
     }
   }
 ]
