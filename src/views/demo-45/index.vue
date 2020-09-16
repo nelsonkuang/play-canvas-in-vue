@@ -205,14 +205,8 @@ export default {
         mat4.rotateZ(modelMatrix, modelMatrix, degToRad(zRotation))
         mat4.translate(modelMatrix, modelMatrix, [0, 0, radius])
         // Get the text's position from the matrix we computed
-        const textPosition = [
-          modelMatrix[12],
-          modelMatrix[13],
-          modelMatrix[14],
-        ]
-        const desiredTextScale = -1 / gl.canvas.height
-        const scale = textPosition[2] * desiredTextScale
-        mat4.scale(modelMatrix, modelMatrix, [width * scale, height * scale, 1])
+        const desiredTextScale = modelMatrix[14] < 0 ? 1 / gl.canvas.height : -1 / gl.canvas.height
+        mat4.scale(modelMatrix, modelMatrix, [width * desiredTextScale, height * desiredTextScale, 1])
         uniformsThatAreComputedForAll.m_matrix = modelMatrix
         uniformsThatAreComputedForAll.u_texture = texture
         // Set the uniforms that are the same for all objects.
