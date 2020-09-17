@@ -13,7 +13,7 @@ import Camera from '../../utils/classes/Webgl/Camera'
 // import { makeStripeTexture, makeCheckerTexture, makeCircleTexture } from '../../utils/tools/texture'
 const textureImg = './static/img/earth.jpg'
 
-// let animationID = null
+let animationID = null
 export default {
   data () {
     return {
@@ -218,14 +218,14 @@ export default {
         drawBufferInfo(gl, textBufferInfo)
       })
 
-      // animationID = requestAnimationFrame(drawScene)
+      animationID = requestAnimationFrame(drawScene)
     }
 
 
     function updateCamera () {
       camera.updatePosition()
 
-      drawScene()
+      // drawScene()
     }
     /* ================= Mouse events ====================== */
     function bindMouseEvents () {
@@ -290,8 +290,8 @@ export default {
 
       const touchStart = function (e) {
         drag = true
-        oldX = e.changedTouches[0].pageX
-        oldY = e.changedTouches[0].pageY
+        oldX = e.touches[0].pageX
+        oldY = e.touches[0].pageY
         e.preventDefault()
         return false
       }
@@ -303,15 +303,15 @@ export default {
       const touchMove = function (e) {
         if (!drag) return false
         e.preventDefault()
-        if (event.changedTouches[1] == undefined) {// 单点触控
-          dX = (e.changedTouches[0].pageX - oldX) * 2 * Math.PI / gl.canvas.clientWidth
-          dY = (e.changedTouches[0].pageY - oldY) * 2 * Math.PI / gl.canvas.clientHeight
-          oldX = e.changedTouches[0].pageX
-          oldY = e.changedTouches[0].pageY
+        if (event.touches[1] == undefined) { // 单点触控
+          dX = (e.touches[0].pageX - oldX) * 2 * Math.PI / gl.canvas.clientWidth
+          dY = (e.touches[0].pageY - oldY) * 2 * Math.PI / gl.canvas.clientHeight
+          oldX = e.touches[0].pageX
+          oldY = e.touches[0].pageY
           camera.rotate(dX, dY)
           updateCamera()
         } else {
-          currentDistance = Math.sqrt(Math.pow(e.changedTouches[1].pageX - e.changedTouches[0].pageX, 2) + Math.pow(e.changedTouches[1].pageY - e.changedTouches[0].pageY, 2))
+          currentDistance = Math.sqrt(Math.pow(e.touches[1].pageX - e.touches[0].pageX, 2) + Math.pow(e.touches[1].pageY - e.touches[0].pageY, 2))
           camera.zoomIn(startDistance - currentDistance)
           startDistance = currentDistance
           updateCamera()
@@ -326,7 +326,7 @@ export default {
     supportedTouch ? bindTouchEvents() : bindMouseEvents()
   },
   beforeDestroy () {
-    // animationID && cancelAnimationFrame(animationID)
+    animationID && cancelAnimationFrame(animationID)
   }
 }
 </script>

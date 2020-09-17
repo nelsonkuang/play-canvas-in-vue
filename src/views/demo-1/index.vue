@@ -95,7 +95,7 @@ export default {
         let dragingName = ''
         if (supportedTouch) {
           This.canvas.ontouchstart = function (event) {
-            This.currentPos = { x: event.changedTouches[0].pageX - offset.left, y: event.changedTouches[0].pageY - offset.top }
+            This.currentPos = { x: event.touches[0].pageX - offset.left, y: event.touches[0].pageY - offset.top }
             const hoverDisplayObject = getHoverDisplayObject()
             if (hoverDisplayObject) {
               let p = []
@@ -108,7 +108,7 @@ export default {
           }
           This.canvas.ontouchmove = function (event) {
             event.preventDefault()
-            This.currentPos = { x: event.changedTouches[0].pageX - offset.left, y: event.changedTouches[0].pageY - offset.top }
+            This.currentPos = { x: event.touches[0].pageX - offset.left, y: event.touches[0].pageY - offset.top }
             if (isDraging && dragingName) {
               let p = []
               p[0] = This.currentPos.x

@@ -50,8 +50,8 @@ export default {
       if (supportedTouch) {
         canvas.ontouchstart = function (event) {
           tapPos = {
-            x: event.changedTouches[0].pageX - offset.left,
-            y: event.changedTouches[0].pageY - offset.top
+            x: event.touches[0].pageX - offset.left,
+            y: event.touches[0].pageY - offset.top
           }
           const hoverDisplayObject = getHoverDisplayObject()
           if (hoverDisplayObject) {
@@ -64,8 +64,8 @@ export default {
         canvas.ontouchmove = function (event) {
           event.preventDefault()
           tapPos = {
-            x: event.changedTouches[0].pageX - offset.left,
-            y: event.changedTouches[0].pageY - offset.top
+            x: event.touches[0].pageX - offset.left,
+            y: event.touches[0].pageY - offset.top
           }
           if (isDraging && dragingObject) {
             dragingObject.onDragMove && dragingObject.onDragMove(event, { ...tapPos }, offset)

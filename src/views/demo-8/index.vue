@@ -543,8 +543,8 @@ export default {
 
       const touchStart = function (e) {
         drag = true
-        oldX = e.changedTouches[0].pageX
-        oldY = e.changedTouches[0].pageY
+        oldX = e.touches[0].pageX
+        oldY = e.touches[0].pageY
         e.preventDefault()
         return false
       }
@@ -555,12 +555,12 @@ export default {
 
       const touchMove = function (e) {
         if (!drag) return false
-        dX = (e.changedTouches[0].pageX - oldX) * 2 * Math.PI / cWidth
-        dY = (e.changedTouches[0].pageY - oldY) * 2 * Math.PI / cHeight
+        dX = (e.touches[0].pageX - oldX) * 2 * Math.PI / cWidth
+        dY = (e.touches[0].pageY - oldY) * 2 * Math.PI / cHeight
         theta += dX
         phi += dY
-        oldX = e.changedTouches[0].pageX
-        oldY = e.changedTouches[0].pageY
+        oldX = e.touches[0].pageX
+        oldY = e.touches[0].pageY
         updateCameraAngle(theta, phi)
         e.preventDefault()
       }
