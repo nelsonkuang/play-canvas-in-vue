@@ -161,6 +161,8 @@ export default {
       }
     })
 
+    // console.log(textTextures)
+
     // Create a texture to render to
     const targetTexture = gl.createTexture()
     gl.bindTexture(gl.TEXTURE_2D, targetTexture)
@@ -284,6 +286,7 @@ export default {
       gl.enable(gl.DEPTH_TEST)
 
       // Clear the canvas AND the depth buffer.
+      gl.clearColor(0, 0, 0, 0) // 如果使用 1 像素离屏渲染，最好把颜色及透明度全部清 0 以免遗留透明度值导致计算 id 出错
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
       // setup to draw the text.
@@ -328,7 +331,7 @@ export default {
       // restore the object's color
       if (oldPickNdx >= 0) {
         const object = textTextures[oldPickNdx]
-        object.mouseOver = false
+        object && (object.mouseOver = false)
         oldPickNdx = -1
       }
 
@@ -337,11 +340,11 @@ export default {
         const pickNdx = id - 1
         oldPickNdx = pickNdx
         const object = textTextures[pickNdx]
-        object.mouseOver = true
+        object && (object.mouseOver = true)
       }
 
       // ------ Draw the objects to the canvas
-
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null)
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
       // Clear the canvas AND the depth buffer.
       gl.clearColor(0, 0, 0, 1)
@@ -390,7 +393,7 @@ export default {
         mat4.translate(modelMatrix, modelMatrix, [0, 0, radius])
         // Get the text's position from the matrix we computed
         let desiredTextScale = modelMatrix[14] < 0 ? 1 / gl.canvas.height : -1 / gl.canvas.height // 使用坐标 z 的值来判断比例，实现 1 像素最优文字显示
-        desiredTextScale = mouseOver ? desiredTextScale * 1.5 : desiredTextScale
+        desiredTextScale = mouseOver ? desiredTextScale * 2 : desiredTextScale
         mat4.scale(modelMatrix, modelMatrix, [width * desiredTextScale, height * desiredTextScale, 1])
         uniformsThatAreComputedForAll.m_matrix = modelMatrix
         uniformsThatAreComputedForAll.u_texture = texture
