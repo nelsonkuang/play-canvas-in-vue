@@ -53,6 +53,30 @@ const routes = [
     }
   },
   {
+    path: '/demo-5-a',
+    name: 'Points',
+    component: () => import('@/views/demo-5/points'),
+    meta: {
+      title: 'Webgl 教程 绘出一圈的点'
+    }
+  },
+  {
+    path: '/demo-5-b',
+    name: 'RainEffect',
+    component: () => import('@/views/demo-5/rain-effect'),
+    meta: {
+      title: 'Webgl 教程 简单雨点效果'
+    }
+  },
+  {
+    path: '/demo-5-c',
+    name: 'RandomRainEffect',
+    component: () => import('@/views/demo-5/random-rain-effect'),
+    meta: {
+      title: 'Webgl 教程 随机雨点效果'
+    }
+  },
+  {
     path: '/demo-5',
     name: 'Demo5',
     component: () => import('@/views/demo-5/index'),
