@@ -85,6 +85,22 @@ const routes = [
     }
   },
   {
+    path: '/demo-5-e',
+    name: 'CircleRainEffect',
+    component: () => import('@/views/demo-5/circle-rain-effect'),
+    meta: {
+      title: 'Webgl 教程 简单圆雨点效果'
+    }
+  },
+  {
+    path: '/demo-5-f',
+    name: 'CircleRandomRainEffect',
+    component: () => import('@/views/demo-5/circle-random-rain-effect'),
+    meta: {
+      title: 'Webgl 教程 随机圆雨点效果'
+    }
+  },
+  {
     path: '/demo-5',
     name: 'Demo5',
     component: () => import('@/views/demo-5/index'),
