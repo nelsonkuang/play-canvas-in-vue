@@ -77,6 +77,14 @@ const routes = [
     }
   },
   {
+    path: '/demo-5-d',
+    name: 'CirclePoints',
+    component: () => import('@/views/demo-5/circle-points'),
+    meta: {
+      title: 'Webgl 教程 绘出一圈的 圆 点'
+    }
+  },
+  {
     path: '/demo-5',
     name: 'Demo5',
     component: () => import('@/views/demo-5/index'),
