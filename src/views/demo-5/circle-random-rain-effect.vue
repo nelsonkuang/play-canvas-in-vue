@@ -5,7 +5,7 @@
 <script>
 /* eslint-disable no-alert, no-console */
 // Reference from: https://webglfundamentals.org/webgl/lessons/webgl-drawing-without-data.html
-import { createProgram, loadShader, resizeCanvasToDisplaySize } from '../../utils/tools/web-gl'
+import { createProgramInfo, resizeCanvasToDisplaySize, createUniformSetters, createAttributeSetters, setAttributes, setUniforms } from '../../utils/tools/web-gl'
 let animationID = null
 export default {
   data () {
@@ -16,10 +16,6 @@ export default {
   },
   mounted () {
     const canvas = this.$refs.canvas
-    const cWidth = window.innerWidth
-    const cHeight = window.innerHeight
-    canvas.setAttribute('width', `${cWidth}px`)
-    canvas.setAttribute('height', `${cHeight}px`)
     // Get A WebGL context
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
     const vs = `
@@ -50,10 +46,10 @@ export default {
         float edge = triVertexNdx + triangleId;
         float angleU = edge / numTrianglesPerCircle;  // 0.0 to 1.0
         float angle = angleU * PI * 2.0; // 当前的角度
-        float radius = step(triVertexNdx, 1.5); // 三角形顶点 0, 1, 2，顶点索引如果是 0, 1 半径为 0，顶点索引 2 为 1
+        float radius = step(triVertexNdx, 1.5); // 三角形顶点 0, 1, 2，顶点索引如果是 0, 1 半径为 1，顶点索引 2 为 0
         // => 
         // function step(a, b) {
-        //   return a < b ? 0 : 1;
+        //   return a < b ? 1 : 0;
         // }
         return vec2(cos(angle), sin(angle)) * radius; 
         // vertexIndex 0, 1, ?2, 1, 2, ?3, 2, 3, ?4, ...
@@ -86,13 +82,8 @@ export default {
       }
     `
     // setup a GLSL program
-    const program = createProgram(gl, [loadShader(gl, vs, gl.VERTEX_SHADER), loadShader(gl, fs, gl.FRAGMENT_SHADER)])
-    const vertexIdLoc = gl.getAttribLocation(program, 'vertexId')
-    const numVertsLoc = gl.getUniformLocation(program, 'numVerts')
-    const resolutionLoc = gl.getUniformLocation(program, 'resolution')
-    const timeLoc = gl.getUniformLocation(program, 'time')
-
-    // Make a buffer with just a count in it.
+    const programInfo = createProgramInfo(gl, [vs, fs])
+    const program = programInfo.program
 
     const numVerts = 8 * 3 * 100;
     const vertexIds = new Float32Array(numVerts)
@@ -104,6 +95,18 @@ export default {
     gl.bindBuffer(gl.ARRAY_BUFFER, idBuffer)
     gl.bufferData(gl.ARRAY_BUFFER, vertexIds, gl.STATIC_DRAW)
 
+    const uniformSetters = createUniformSetters(gl, program)
+    const attribSetters = createAttributeSetters(gl, program)
+    const attribs = {
+      vertexId: { buffer: idBuffer, numComponents: 1, }
+    }
+
+    const uniforms = {
+      numVerts: numVerts,
+      resolution: [gl.canvas.width, gl.canvas.height],
+      time: 0
+    }
+
     // draw
     function render (time) {
       time *= 0.001;  // convert to seconds
@@ -111,29 +114,10 @@ export default {
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
       gl.useProgram(program)
 
-      {
-        // Turn on the attribute
-        gl.enableVertexAttribArray(vertexIdLoc)
+      setAttributes(attribSetters, attribs)
 
-        // Bind the id buffer.
-        gl.bindBuffer(gl.ARRAY_BUFFER, idBuffer)
-
-        // Tell the attribute how to get data out of idBuffer (ARRAY_BUFFER)
-        const size = 1          // 1 components per iteration
-        const type = gl.FLOAT   // the data is 32bit floats
-        const normalize = false // don't normalize the data
-        const stride = 0        // 0 = move forward size * sizeof(type) each iteration to get the next position
-        const offset = 0        // start at the beginning of the buffer
-        gl.vertexAttribPointer(
-          vertexIdLoc, size, type, normalize, stride, offset)
-      }
-
-      // tell the shader the number of verts
-      gl.uniform1f(numVertsLoc, numVerts)
-      // tell the shader the resolution
-      gl.uniform2f(resolutionLoc, gl.canvas.width, gl.canvas.height)
-      // tell the shader the time
-      gl.uniform1f(timeLoc, time)
+      uniforms.time = time
+      setUniforms(uniformSetters, uniforms)
 
       const offset = 0
       gl.drawArrays(gl.TRIANGLES, offset, numVerts)
@@ -147,3 +131,10 @@ export default {
   }
 }
 </script>
+<style scoped>
+.canvas {
+  width: 100%;
+  height: 100%;
+  min-height: 99.99vh;
+}
+</style>
