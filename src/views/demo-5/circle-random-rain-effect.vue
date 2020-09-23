@@ -16,6 +16,10 @@ export default {
   },
   mounted () {
     const canvas = this.$refs.canvas
+    const cWidth = window.innerWidth
+    const cHeight = window.innerHeight
+    canvas.setAttribute('width', `${cWidth}px`)
+    canvas.setAttribute('height', `${cHeight}px`)
     // Get A WebGL context
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
     const vs = `
@@ -69,7 +73,7 @@ export default {
 
         vec2 triPos = computeCircleTriangleVertex(vertexId) * 0.01;
         
-        float aspect = resolution.x / resolution.y;
+        float aspect = resolution.y / resolution.x;
         vec2 scale = vec2(aspect, 1);
         
         gl_Position = vec4((pos + triPos) * scale, 0, 1);
@@ -132,10 +136,3 @@ export default {
   }
 }
 </script>
-<style scoped>
-.canvas {
-  width: 100%;
-  height: 100%;
-  min-height: 99.99vh;
-}
-</style>
