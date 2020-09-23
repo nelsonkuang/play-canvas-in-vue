@@ -24,7 +24,7 @@ export default {
       uniform vec2 resolution; // 分辨率 [x, y] 代表 [width, height]
       uniform float time;
 
-      #define PI radians(180.0) // 用宏定义常量
+      #define PI radians(180.0) // 用预编译指令定义常量
 
       const float numTrianglesPerCircle = 8.0; // 每个圈分成 8 份，即 8 个三角形
       const float numVertsPerCircle = numTrianglesPerCircle * 3.0; // 每个圈总共有 24 个点构成
@@ -43,8 +43,9 @@ export default {
         // 但每个圈总共有 8 个三角形，即 24 个点构成，因此，float angleU = edge / numTrianglesPerCircle;  // 0.0 to 1.0
         float triangleId = floor(vertexId / 3.0); // 第几个三角形 0 ~ 8 * 20 - 1
         float triVertexNdx = mod(vertexId, 3.0); // 三角形的第几个顶点 0 1 2 0 1 2 ...
+        // float edge = mod(triVertexNdx + triangleId, numTrianglesPerCircle); // 这样才能保证下面是 0.0 to 1.0，但没关系，不求余也可以，因为角度超过 360 度也会周期性计算，无所谓
         float edge = triVertexNdx + triangleId;
-        float angleU = edge / numTrianglesPerCircle;  // 0.0 to 1.0
+        float angleU = edge / numTrianglesPerCircle;  // 0.0 to 超过 1.0
         float angle = angleU * PI * 2.0; // 当前的角度
         float radius = step(triVertexNdx, 1.5); // 三角形顶点 0, 1, 2，顶点索引如果是 0, 1 半径为 1，顶点索引 2 为 0
         // => 
@@ -53,7 +54,7 @@ export default {
         // }
         return vec2(cos(angle), sin(angle)) * radius; 
         // vertexIndex 0, 1, ?2, 1, 2, ?3, 2, 3, ?4, ...
-        // vertexId    0, 1, 2,  3, 4,  5, 6, 7, 8
+        // vertexId    0, 1, 2,  3, 4,  5, 6, 7, 8, 9, 10, 11
       }
 
       void main() {

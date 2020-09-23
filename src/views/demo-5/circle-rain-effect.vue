@@ -28,7 +28,7 @@ export default {
       uniform vec2 resolution; // 分辨率 [x, y] 代表 [width, height]
       uniform float time;
 
-      #define PI radians(180.0) // 用宏定义常量
+      #define PI radians(180.0) // 用预编译指令定义常量
 
       const float numTrianglesPerCircle = 8.0; // 每个圈分成 8 份，即 8 个三角形
       const float numVertsPerCircle = numTrianglesPerCircle * 3.0; // 每个圈总共有 24 个点构成
