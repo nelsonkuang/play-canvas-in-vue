@@ -67,7 +67,7 @@ export default {
 
         float u = circleId / numCircles;    // goes from 0 to 1 // 20 分之 n，因为总共有 20 个圆
         float off = floor(time + u) / 1000.0;   // changes once per second per vertex
-        float x = hash(u + off) * 2.0 - 1.0;    // random position
+        float x = hash(u + off) * 4.0 - 2.0;    // random position
         float y = fract(time + u) * -2.0 + 1.0; // 1.0 ->  -1.0
         vec2 pos = vec2(x, y);
 
@@ -90,7 +90,7 @@ export default {
     const programInfo = createProgramInfo(gl, [vs, fs])
     const program = programInfo.program
 
-    const numVerts = 8 * 3 * 100;
+    const numVerts = 8 * 3 * 400;
     const vertexIds = new Float32Array(numVerts)
     vertexIds.forEach((v, i) => {
       vertexIds[i] = i
