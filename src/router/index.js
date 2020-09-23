@@ -435,6 +435,14 @@ const routes = [
     meta: {
       title: 'Webgl 教程 地图国家贴名增加 mouse over 效果'
     }
+  }, 
+  {
+    path: '/demo-47',
+    name: 'Demo47',
+    component: () => import('@/views/demo-47/index'),
+    meta: {
+      title: 'Webgl 教程 移动模型'
+    }
   }
 ]
 

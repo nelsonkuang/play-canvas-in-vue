@@ -16,18 +16,18 @@ export default {
   },
   mounted () {
     const canvas = this.$refs.canvas
-    const cWidth = window.innerWidth
-    const cHeight = window.innerHeight
-    canvas.setAttribute('width', `${cWidth}px`)
-    canvas.setAttribute('height', `${cHeight}px`)
+    // const cWidth = window.innerWidth
+    // const cHeight = window.innerHeight
+    // canvas.setAttribute('width', `${cWidth}px`)
+    // canvas.setAttribute('height', `${cHeight}px`)
     // Get A WebGL context
-    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl2') || canvas.getContext('experimental-webgl')
     const vs = `
       attribute float vertexId; // 顶点 id 0 ~ 8 * 3 * 20 - 1
       uniform float numVerts; // 顶点数 8 * 3 * 20
       uniform vec2 resolution; // 分辨率 [x, y] 代表 [width, height]
 
-      #define PI radians(180.0) // 用预编译指令定义常量
+      const float PI = radians(180.0); // 原本用预编译指令定义常量，但手机不支持
 
       const float numTrianglesPerCircle = 8.0; // 每个圈分成 8 份，即 8 个三角形
       const float numVertsPerCircle = numTrianglesPerCircle * 3.0; // 每个圈总共有 24 个点构成
@@ -133,3 +133,10 @@ export default {
   }
 }
 </script>
+<style scoped>
+.canvas {
+  width: 100%;
+  height: 100%;
+  min-height: 99.99vh;
+}
+</style>

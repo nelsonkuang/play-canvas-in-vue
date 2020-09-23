@@ -28,7 +28,7 @@ export default {
       uniform vec2 resolution; // 分辨率 [x, y] 代表 [width, height]
       uniform float time;
 
-      #define PI radians(180.0) // 用预编译指令定义常量
+      const float PI = radians(180.0); // 原本用预编译指令定义常量，但手机不支持
 
       const float numTrianglesPerCircle = 8.0; // 每个圈分成 8 份，即 8 个三角形
       const float numVertsPerCircle = numTrianglesPerCircle * 3.0; // 每个圈总共有 24 个点构成
@@ -62,8 +62,8 @@ export default {
 
         vec2 triPos = computeCircleTriangleVertex(vertexId) * 0.01;
         
-        float aspect = resolution.x / resolution.y;
-        vec2 scale = vec2(1, aspect);
+        float aspect = resolution.y / resolution.x;
+        vec2 scale = vec2(aspect, 1);
         
         gl_Position = vec4((pos + triPos) * scale, 0, 1);
       }
