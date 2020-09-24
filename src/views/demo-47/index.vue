@@ -122,7 +122,7 @@ export default {
       return d * Math.PI / 180
     }
 
-    const uniformsThatAreComputedForPlane = {
+    const uniformsThatAreComputedForLines = {
       u_view: null,
       u_projection: null,
       u_world: null,
@@ -190,10 +190,10 @@ export default {
           u_projection: mat4.create(),
           u_view: mat4.create(),
           u_id: [
-            ((3 >> 0) & 0xFF) / 0xFF,
-            ((3 >> 8) & 0xFF) / 0xFF,
-            ((3 >> 16) & 0xFF) / 0xFF,
-            ((3 >> 24) & 0xFF) / 0xFF
+            ((4 >> 0) & 0xFF) / 0xFF,
+            ((4 >> 8) & 0xFF) / 0xFF,
+            ((4 >> 16) & 0xFF) / 0xFF,
+            ((4 >> 24) & 0xFF) / 0xFF
           ],
         },
         selected: false,
@@ -207,6 +207,8 @@ export default {
     let mouseY = -1
     let drag = false
     let oldPickNdx = -1
+    let pickNdx = -1
+    let lastSelectedNdx = -1
     // let zoom = 1
     let pressedButton = null
     const camera = new Camera()
@@ -295,7 +297,7 @@ export default {
 
       // highlight object under mouse
       if (id > 0) {
-        const pickNdx = id - 1
+        pickNdx = id - 1
         oldPickNdx = pickNdx
         const object = geometries[pickNdx]
         object && (object.hover = true)
@@ -318,19 +320,19 @@ export default {
       gl.enable(gl.DEPTH_TEST)
 
       // Compute the projection matrix
-      uniformsThatAreComputedForPlane.u_projection = camera.projectionMatrix()
-      uniformsThatAreComputedForPlane.u_view = camera.viewMatrix()
+      uniformsThatAreComputedForLines.u_projection = camera.projectionMatrix()
+      uniformsThatAreComputedForLines.u_view = camera.viewMatrix()
 
       // draw the plane
 
-      uniformsThatAreComputedForPlane.u_world = mat4.create()
-      uniformsThatAreComputedForPlane.u_color = [0.8, 0.8, 0.8, 1]
+      uniformsThatAreComputedForLines.u_world = mat4.create()
+      uniformsThatAreComputedForLines.u_color = [0.8, 0.8, 0.8, 1]
       gl.useProgram(programInfo.program)
       // Setup all the needed attributes.
       setBuffersAndAttributes(gl, programInfo, planeBufferInfo)
 
       // Set the uniforms that are the same for all objects.
-      setUniforms(programInfo, uniformsThatAreComputedForPlane)
+      setUniforms(programInfo, uniformsThatAreComputedForLines)
 
       // calls gl.drawArrays or gl.drawElements
       drawBufferInfo(gl, planeBufferInfo, gl.LINES)
@@ -338,12 +340,24 @@ export default {
 
       // draw the geometries
       geometries.forEach((item) => {
-        mat4.copy(item.uniforms.u_projection, uniformsThatAreComputedForPlane.u_projection)
-        mat4.copy(item.uniforms.u_view, uniformsThatAreComputedForPlane.u_view)
+        mat4.copy(item.uniforms.u_projection, uniformsThatAreComputedForLines.u_projection)
+        mat4.copy(item.uniforms.u_view, uniformsThatAreComputedForLines.u_view)
         gl.useProgram(programInfo.program)
         setBuffersAndAttributes(gl, programInfo, item.bufferInfo)
         setUniforms(programInfo, item.uniforms)
         drawBufferInfo(gl, item.bufferInfo)
+        if (item.selected) {
+          let oldColor = [...item.uniforms.u_color]
+          let oldWorld = [...item.uniforms.u_world]
+          item.uniforms.u_color = [1, 1, 1, 1]
+          mat4.scale(item.uniforms.u_world, item.uniforms.u_world, [1.005, 1.005, 1.005])
+          gl.useProgram(programInfo.program)
+          setBuffersAndAttributes(gl, programInfo, item.bufferInfo)
+          setUniforms(programInfo, item.uniforms)
+          drawBufferInfo(gl, item.bufferInfo, gl.LINES)
+          item.uniforms.u_color = oldColor
+          item.uniforms.u_world = oldWorld
+        }
       })
 
       animationID = requestAnimationFrame(drawScene)
@@ -354,11 +368,15 @@ export default {
       camera.updatePosition()
     }
     /* ================= Mouse events ====================== */
+    let startTime = 0
+    let endTime = 0
+    let havedClicked = false
     function bindMouseEvents () {
       let oldX = 0
       let oldY = 0
 
       const mouseDown = function (e) {
+        startTime = (new Date()).getTime()
         e.preventDefault()
         drag = true
         oldX = e.pageX
@@ -368,6 +386,10 @@ export default {
       }
 
       const mouseUp = function () {
+        endTime = (new Date()).getTime()
+        if (endTime - startTime < 20) {
+          havedClicked = true
+        }
         drag = false
       }
 
@@ -402,7 +424,7 @@ export default {
 
       canvas.addEventListener('mousedown', mouseDown, false)
       canvas.addEventListener('mouseup', mouseUp, false)
-      canvas.addEventListener('mouseout', mouseUp, false)
+      canvas.addEventListener('mouseleave', mouseUp, false)
       canvas.addEventListener('mousemove', mouseMove, false)
       canvas.addEventListener('wheel', mouseWheel, false)
       canvas.oncontextmenu = function (event) {
@@ -417,6 +439,7 @@ export default {
       let startDistance = 0
 
       const touchStart = function (e) {
+        startTime = (new Date()).getTime()
         drag = true
         oldX = e.touches[0].pageX
         oldY = e.touches[0].pageY
@@ -425,6 +448,10 @@ export default {
       }
 
       const touchEnd = function () {
+        endTime = (new Date()).getTime()
+        if (endTime - startTime < 20) {
+          havedClicked = true
+        }
         drag = false
       }
 
@@ -450,6 +477,16 @@ export default {
       canvas.addEventListener('touchend', touchEnd, false)
       canvas.addEventListener('touchmove', touchMove, false)
     }
+    canvas.addEventListener('click', () => {
+      if (havedClicked) {
+        geometries[lastSelectedNdx] && (geometries[lastSelectedNdx].selected = false)
+        if (geometries[pickNdx] && geometries[pickNdx].hover) {
+          geometries[pickNdx].selected = true
+          lastSelectedNdx = pickNdx
+        }
+        havedClicked = false
+      }
+    }, false)
 
     supportedTouch ? bindTouchEvents() : bindMouseEvents()
     drawScene()
