@@ -5,11 +5,11 @@
 <script>
 /* eslint-disable no-alert, no-console */
 import { mat4 } from 'gl-matrix'
-import { createProgramInfo, setBuffersAndAttributes, setUniforms, drawBufferInfo } from '../../utils/tools/web-gl'
+import { createProgramInfo, setBuffersAndAttributes, setUniforms, drawBufferInfo, resizeCanvasToDisplaySize } from '../../utils/tools/web-gl'
 import { createBufferInfoFunc, createSphereVertices, createGridVertices, createCubeVertices, createTruncatedConeVertices } from '../../utils/tools/primitives'
 import Camera from '../../utils/classes/Webgl/Camera'
 
-// let animationID = null
+let animationID = null
 export default {
   data () {
     return {
@@ -19,10 +19,6 @@ export default {
   },
   mounted () {
     const canvas = this.$refs.canvas
-    const cWidth = window.innerWidth
-    const cHeight = window.innerHeight
-    canvas.setAttribute('width', `${cWidth}px`)
-    canvas.setAttribute('height', `${cHeight}px`)
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
     const colorVertexShaderCode = `
       attribute vec4 a_position;
@@ -45,6 +41,26 @@ export default {
         gl_FragColor = u_color;
       }
     `
+    const pickVertexShaderCode = `
+      attribute vec4 a_position;
+      
+      uniform mat4 v_matrix;
+      uniform mat4 p_matrix;
+      uniform mat4 m_matrix;
+      
+      void main() {
+        gl_Position = p_matrix * v_matrix * m_matrix * a_position;
+      }
+    `
+    const pickFragmentShaderCode = `
+      precision mediump float;
+      
+      uniform vec4 u_id;
+      
+      void main() {
+        gl_FragColor = u_id;
+      }
+    `
     const createSphereBufferInfo = createBufferInfoFunc(createSphereVertices)
     const createPlaneBufferInfo = createBufferInfoFunc(createGridVertices)
     const createCubeBufferInfo = createBufferInfoFunc(createCubeVertices)
@@ -65,21 +81,138 @@ export default {
     const coneBufferInfo = createConeBufferInfo(gl, 1, 1, 3, 12, 1, true, true)
     // setup GLSL programs
     const programInfo = createProgramInfo(gl, [colorVertexShaderCode, colorFragmentShaderCode])
+    const pickingProgramInfo = createProgramInfo(gl, [pickVertexShaderCode, pickFragmentShaderCode])
+
+    // Create a texture to render to
+    const targetTexture = gl.createTexture()
+    gl.bindTexture(gl.TEXTURE_2D, targetTexture)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+
+    // create a depth renderbuffer
+    const depthBuffer = gl.createRenderbuffer()
+    gl.bindRenderbuffer(gl.RENDERBUFFER, depthBuffer)
+
+    function setFramebufferAttachmentSizes (width, height) {
+      gl.bindTexture(gl.TEXTURE_2D, targetTexture)
+      // define size and format of level 0
+      const level = 0
+      const internalFormat = gl.RGBA
+      const border = 0
+      const format = gl.RGBA
+      const type = gl.UNSIGNED_BYTE
+      const data = null
+      gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+        width, height, border,
+        format, type, data)
+
+      gl.bindRenderbuffer(gl.RENDERBUFFER, depthBuffer)
+      gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, width, height)
+    }
+    setFramebufferAttachmentSizes(1, 1)
+
+    // Create and bind the framebuffer
+    const fb = gl.createFramebuffer()
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
+
+    // attach the texture as the first color attachment
+    const attachmentPoint = gl.COLOR_ATTACHMENT0
+    const level = 0
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, targetTexture, level)
+
+    // make a depth buffer and the same size as the targetTexture
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depthBuffer)
 
     function degToRad (d) {
       return d * Math.PI / 180
     }
 
-    const uniformsThatAreComputedForAll = {
+    const uniformsThatAreComputedForPlane = {
       u_view: null,
       u_projection: null,
       u_world: null,
       u_color: null
     }
 
+    let tempMatrix = mat4.create()
+    const geometries = [
+      {
+        bufferInfo: cubeBufferInfo,
+        uniforms: {
+          u_world: [...mat4.rotateY(tempMatrix, mat4.fromTranslation(tempMatrix, [1.5, 1, 0.5]), degToRad(45))],
+          u_color: [1, 0.5, 0.5, 1],
+          u_projection: mat4.create(),
+          u_view: mat4.create(),
+          u_id: [
+            ((1 >> 0) & 0xFF) / 0xFF,
+            ((1 >> 8) & 0xFF) / 0xFF,
+            ((1 >> 16) & 0xFF) / 0xFF,
+            ((1 >> 24) & 0xFF) / 0xFF
+          ],
+        },
+        selected: false,
+        hover: false
+      },
+      {
+        bufferInfo: truncatedConeBufferInfo,
+        uniforms: {
+          u_world: [...mat4.rotateY(tempMatrix, mat4.fromTranslation(tempMatrix, [1.5, 1, -2]), degToRad(45))],
+          u_color: [0.2, 0.8, 1, 1],
+          u_projection: mat4.create(),
+          u_view: mat4.create(),
+          u_id: [
+            ((2 >> 0) & 0xFF) / 0xFF,
+            ((2 >> 8) & 0xFF) / 0xFF,
+            ((2 >> 16) & 0xFF) / 0xFF,
+            ((2 >> 24) & 0xFF) / 0xFF
+          ],
+        },
+        selected: false,
+        hover: false
+      },
+      {
+        bufferInfo: coneBufferInfo,
+        uniforms: {
+          u_world: [...mat4.rotateY(tempMatrix, mat4.fromTranslation(tempMatrix, [-1.5, 1.5, -2]), degToRad(45))],
+          u_color: [0.2, 0.2, 1, 1],
+          u_projection: mat4.create(),
+          u_view: mat4.create(),
+          u_id: [
+            ((3 >> 0) & 0xFF) / 0xFF,
+            ((3 >> 8) & 0xFF) / 0xFF,
+            ((3 >> 16) & 0xFF) / 0xFF,
+            ((3 >> 24) & 0xFF) / 0xFF
+          ],
+        },
+        selected: false,
+        hover: false
+      },
+      {
+        bufferInfo: sphereBufferInfo,
+        uniforms: {
+          u_world: [...mat4.fromTranslation(tempMatrix, [-1.5, 1, 0.5])],
+          u_color: [0, 1, 0, 1],
+          u_projection: mat4.create(),
+          u_view: mat4.create(),
+          u_id: [
+            ((3 >> 0) & 0xFF) / 0xFF,
+            ((3 >> 8) & 0xFF) / 0xFF,
+            ((3 >> 16) & 0xFF) / 0xFF,
+            ((3 >> 24) & 0xFF) / 0xFF
+          ],
+        },
+        selected: false,
+        hover: false
+      }
+    ]
+
     let dX = 0
     let dY = 0
+    let mouseX = -1
+    let mouseY = -1
     let drag = false
+    let oldPickNdx = -1
     // let zoom = 1
     let pressedButton = null
     const camera = new Camera()
@@ -91,10 +224,97 @@ export default {
     camera.updatePosition()
     const supportedTouch = window.hasOwnProperty('ontouchstart')
 
+    function setupPicker () {
+      // Figure out what pixel is under the mouse and setup
+      // a frustum to render just that pixel
+
+      // compute the rectangle the near plane of our frustum covers
+      const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight
+      const top = Math.tan(camera.yFov * 0.5) * camera.zNear
+      const bottom = -top
+      const left = aspect * bottom
+      const right = aspect * top
+      const width = Math.abs(right - left)
+      const height = Math.abs(top - bottom)
+
+      // compute the portion of the near plane covers the 1 pixel
+      // under the mouse.
+      const pixelX = mouseX * gl.canvas.width / gl.canvas.clientWidth
+      const pixelY = gl.canvas.height - mouseY * gl.canvas.height / gl.canvas.clientHeight - 1
+
+      const subLeft = left + pixelX * width / gl.canvas.width
+      const subBottom = bottom + pixelY * height / gl.canvas.height
+      const subWidth = 1 / gl.canvas.width
+      const subHeight = 1 / gl.canvas.height
+
+      // make a frustum for that 1 pixel
+      const projectionMatrix = mat4.create()
+      const viewMatrix = camera.viewMatrix()
+      mat4.frustum(
+        projectionMatrix,
+        subLeft,
+        subLeft + subWidth,
+        subBottom,
+        subBottom + subHeight,
+        camera.zNear,
+        camera.zFar)
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
+      gl.viewport(0, 0, 1, 1) // 1 像素离屏渲染，关键优化点
+
+
+      gl.enable(gl.CULL_FACE)
+      gl.enable(gl.DEPTH_TEST)
+
+      // Clear the canvas AND the depth buffer.
+      gl.clearColor(0, 0, 0, 0) // 如果使用 1 像素离屏渲染，最好把颜色及透明度全部清 0 以免遗留透明度值导致计算 id 出错
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
+      // draw the geometries
+      gl.useProgram(pickingProgramInfo.program)
+      geometries.forEach((item) => {
+        item.uniforms.u_projection = projectionMatrix
+        item.uniforms.u_view = viewMatrix
+        setBuffersAndAttributes(gl, pickingProgramInfo, item.bufferInfo)
+        setUniforms(pickingProgramInfo, item.uniforms)
+        drawBufferInfo(gl, item.bufferInfo)
+      })
+
+      // read the 1 pixel
+      const data = new Uint8Array(4)
+      gl.readPixels(
+        0,                 // x
+        0,                 // y
+        1,                 // width
+        1,                 // height
+        gl.RGBA,           // format
+        gl.UNSIGNED_BYTE,  // type
+        data)             // typed array to hold result
+      const id = data[0] + (data[1] << 8) + (data[2] << 16) + (data[3] << 24)
+
+      // restore the object's color
+      if (oldPickNdx >= 0) {
+        const object = geometries[oldPickNdx]
+        object && (object.hover = false)
+        oldPickNdx = -1
+      }
+
+      // highlight object under mouse
+      if (id > 0) {
+        const pickNdx = id - 1
+        oldPickNdx = pickNdx
+        const object = geometries[pickNdx]
+        object && (object.hover = true)
+      }
+    }
     // Draw the scene.
     function drawScene () {
       // time = time * 0.0001 + 5;
       // Tell WebGL how to convert from clip space to pixels
+      resizeCanvasToDisplaySize(gl.canvas, window.devicePixelRatio)
+      setupPicker()
+      // ------ Draw the objects to the canvas
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null)
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
       // Clear the canvas AND the depth buffer.
       gl.clearColor(0, 0, 0, 1)
@@ -103,92 +323,40 @@ export default {
       gl.enable(gl.DEPTH_TEST)
 
       // Compute the projection matrix
-      uniformsThatAreComputedForAll.u_projection = camera.projectionMatrix()
-      uniformsThatAreComputedForAll.u_view = camera.viewMatrix()
-      
+      uniformsThatAreComputedForPlane.u_projection = camera.projectionMatrix()
+      uniformsThatAreComputedForPlane.u_view = camera.viewMatrix()
+
       // draw the plane
 
-      uniformsThatAreComputedForAll.u_world = mat4.create()
-      uniformsThatAreComputedForAll.u_color = [0.8, 0.8, 0.8, 1]
+      uniformsThatAreComputedForPlane.u_world = mat4.create()
+      uniformsThatAreComputedForPlane.u_color = [0.8, 0.8, 0.8, 1]
       gl.useProgram(programInfo.program)
       // Setup all the needed attributes.
       setBuffersAndAttributes(gl, programInfo, planeBufferInfo)
 
       // Set the uniforms that are the same for all objects.
-      setUniforms(programInfo, uniformsThatAreComputedForAll)
+      setUniforms(programInfo, uniformsThatAreComputedForPlane)
 
       // calls gl.drawArrays or gl.drawElements
       drawBufferInfo(gl, planeBufferInfo, gl.LINES)
 
-      // draw the sphere
 
-      uniformsThatAreComputedForAll.u_world = mat4.create()
-      mat4.translate(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, [-1.5, 1, 0.5])
-      uniformsThatAreComputedForAll.u_color = [0, 1, 0, 1]
-      gl.useProgram(programInfo.program)
-      // Setup all the needed attributes.
-      setBuffersAndAttributes(gl, programInfo, sphereBufferInfo)
+      // draw the geometries
+      geometries.forEach((item) => {
+        mat4.copy(item.uniforms.u_projection, uniformsThatAreComputedForPlane.u_projection)
+        mat4.copy(item.uniforms.u_view, uniformsThatAreComputedForPlane.u_view)
+        gl.useProgram(programInfo.program)
+        setBuffersAndAttributes(gl, programInfo, item.bufferInfo)
+        setUniforms(programInfo, item.uniforms)
+        drawBufferInfo(gl, item.bufferInfo)
+      })
 
-      // Set the uniforms that are the same for all objects.
-      setUniforms(programInfo, uniformsThatAreComputedForAll)
-
-      // calls gl.drawArrays or gl.drawElements
-      drawBufferInfo(gl, sphereBufferInfo)
-      
-      // draw the cube
-
-      uniformsThatAreComputedForAll.u_world = mat4.create()
-      mat4.translate(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, [1.5, 1, 0.5])
-      mat4.rotateY(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, degToRad(45))
-      uniformsThatAreComputedForAll.u_color = [1, 0.5, 0.5, 1]
-      gl.useProgram(programInfo.program)
-      // Setup all the needed attributes.
-      setBuffersAndAttributes(gl, programInfo, cubeBufferInfo)
-
-      // Set the uniforms that are the same for all objects.
-      setUniforms(programInfo, uniformsThatAreComputedForAll)
-
-      // calls gl.drawArrays or gl.drawElements
-      drawBufferInfo(gl, cubeBufferInfo)
-
-      // draw the truncated cone
-      uniformsThatAreComputedForAll.u_world = mat4.create()
-      mat4.translate(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, [1.5, 1, -2])
-      mat4.rotateY(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, degToRad(45))
-      uniformsThatAreComputedForAll.u_color = [0.2, 0.8, 1, 1]
-      gl.useProgram(programInfo.program)
-      // Setup all the needed attributes.
-      setBuffersAndAttributes(gl, programInfo, truncatedConeBufferInfo)
-
-      // Set the uniforms that are the same for all objects.
-      setUniforms(programInfo, uniformsThatAreComputedForAll)
-
-      // calls gl.drawArrays or gl.drawElements
-      drawBufferInfo(gl, truncatedConeBufferInfo)
-
-      // draw the cone
-      uniformsThatAreComputedForAll.u_world = mat4.create()
-      mat4.translate(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, [-1.5, 1.5, -2])
-      mat4.rotateY(uniformsThatAreComputedForAll.u_world, uniformsThatAreComputedForAll.u_world, degToRad(45))
-      uniformsThatAreComputedForAll.u_color = [0.2, 0.2, 1, 1]
-      gl.useProgram(programInfo.program)
-      // Setup all the needed attributes.
-      setBuffersAndAttributes(gl, programInfo, coneBufferInfo)
-
-      // Set the uniforms that are the same for all objects.
-      setUniforms(programInfo, uniformsThatAreComputedForAll)
-
-      // calls gl.drawArrays or gl.drawElements
-      drawBufferInfo(gl, coneBufferInfo)
-
-      // animationID = requestAnimationFrame(drawScene)
+      animationID = requestAnimationFrame(drawScene)
     }
 
 
     function updateCamera () {
       camera.updatePosition()
-
-      drawScene()
     }
     /* ================= Mouse events ====================== */
     function bindMouseEvents () {
@@ -290,7 +458,14 @@ export default {
     drawScene()
   },
   beforeDestroy () {
-    // animationID && cancelAnimationFrame(animationID)
+    animationID && cancelAnimationFrame(animationID)
   }
 }
 </script>
+<style scoped>
+.canvas {
+  width: 100%;
+  height: 100%;
+  min-height: 99.99vh;
+}
+</style>
