@@ -19,6 +19,10 @@ export default {
   },
   mounted () {
     const canvas = this.$refs.canvas
+    const cWidth = window.innerWidth
+    const cHeight = window.innerHeight
+    canvas.setAttribute('width', `${cWidth}px`)
+    canvas.setAttribute('height', `${cHeight}px`)
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
     const colorVertexShaderCode = `
       attribute vec4 a_position;
@@ -41,17 +45,7 @@ export default {
         gl_FragColor = u_color;
       }
     `
-    const pickVertexShaderCode = `
-      attribute vec4 a_position;
-      
-      uniform mat4 v_matrix;
-      uniform mat4 p_matrix;
-      uniform mat4 m_matrix;
-      
-      void main() {
-        gl_Position = p_matrix * v_matrix * m_matrix * a_position;
-      }
-    `
+
     const pickFragmentShaderCode = `
       precision mediump float;
       
@@ -81,7 +75,7 @@ export default {
     const coneBufferInfo = createConeBufferInfo(gl, 1, 1, 3, 12, 1, true, true)
     // setup GLSL programs
     const programInfo = createProgramInfo(gl, [colorVertexShaderCode, colorFragmentShaderCode])
-    const pickingProgramInfo = createProgramInfo(gl, [pickVertexShaderCode, pickFragmentShaderCode])
+    const pickingProgramInfo = createProgramInfo(gl, [colorVertexShaderCode, pickFragmentShaderCode])
 
     // Create a texture to render to
     const targetTexture = gl.createTexture()
@@ -306,12 +300,13 @@ export default {
         const object = geometries[pickNdx]
         object && (object.hover = true)
       }
+      // console.log(data)
     }
     // Draw the scene.
     function drawScene () {
       // time = time * 0.0001 + 5;
       // Tell WebGL how to convert from clip space to pixels
-      resizeCanvasToDisplaySize(gl.canvas, window.devicePixelRatio)
+      resizeCanvasToDisplaySize(gl.canvas)
       setupPicker()
       // ------ Draw the objects to the canvas
       gl.bindFramebuffer(gl.FRAMEBUFFER, null)
@@ -377,8 +372,10 @@ export default {
       }
 
       const mouseMove = function (e) {
+        const rect = canvas.getBoundingClientRect()
+        mouseX = e.clientX - rect.left
+        mouseY = e.clientY - rect.top
         if (!drag) {
-          canvas.style.cursor = 'grab'
           return
         }
         e.preventDefault()
@@ -398,7 +395,7 @@ export default {
           return
         }
 
-        canvas.style.cursor = 'none'
+        // canvas.style.cursor = 'none'
         camera.zoomIn(e.deltaY)
         updateCamera()
       }
@@ -462,10 +459,3 @@ export default {
   }
 }
 </script>
-<style scoped>
-.canvas {
-  width: 100%;
-  height: 100%;
-  min-height: 99.99vh;
-}
-</style>
