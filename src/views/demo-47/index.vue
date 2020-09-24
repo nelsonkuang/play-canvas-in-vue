@@ -62,10 +62,10 @@ export default {
     const sphereBufferInfo = createSphereBufferInfo(gl, 1, 32, 24)
     const planeBufferInfo = createPlaneBufferInfo(
       gl,
-      10,  // width
-      10,  // height
-      20,   // subdivisions across
-      20,   // subdivisions down
+      20,  // width
+      20,  // height
+      40,   // subdivisions across
+      40,   // subdivisions down
     )
     const cubeBufferInfo = createCubeBufferInfo(
       gl,
@@ -443,8 +443,9 @@ export default {
         drag = true
         oldX = e.touches[0].pageX
         oldY = e.touches[0].pageY
-        e.preventDefault()
-        return false
+        const rect = canvas.getBoundingClientRect()
+        mouseX = oldX - rect.left
+        mouseY = oldY - rect.top
       }
 
       const touchEnd = function () {
@@ -477,6 +478,7 @@ export default {
       canvas.addEventListener('touchend', touchEnd, false)
       canvas.addEventListener('touchmove', touchMove, false)
     }
+
     canvas.addEventListener('click', () => {
       if (havedClicked) {
         geometries[lastSelectedNdx] && (geometries[lastSelectedNdx].selected = false)
