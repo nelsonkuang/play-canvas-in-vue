@@ -56,7 +56,7 @@ export default {
         float numCircles = numVerts / numVertsPerCircle; // 总共有多少个圈
 
         float u = circleId / numCircles;    // goes from 0 to 1 // 20 分之 n，因为总共有 20 个圆
-        float x = u * 2.0 - 1.0;                // -1 to 1
+        float x = u * 4.0 - 2.0;                // -2 to 2
         float y = fract(time + u) * -2.0 + 1.0; // 1.0 ->  -1.0
         vec2 pos = vec2(x, y);
 
