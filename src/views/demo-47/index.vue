@@ -481,12 +481,14 @@ export default {
 
     canvas.addEventListener('click', () => {
       if (havedClicked) {
-        geometries[lastSelectedNdx] && (geometries[lastSelectedNdx].selected = false)
-        if (geometries[pickNdx] && geometries[pickNdx].hover) {
-          geometries[pickNdx].selected = true
-          lastSelectedNdx = pickNdx
-        }
-        havedClicked = false
+        setTimeout(() => {
+          geometries[lastSelectedNdx] && (geometries[lastSelectedNdx].selected = false)
+          if (geometries[pickNdx] && geometries[pickNdx].hover) {
+            geometries[pickNdx].selected = true
+            lastSelectedNdx = pickNdx
+          }
+          havedClicked = false
+        }, 50) // 确保选中失败的情况
       }
     }, false)
 
