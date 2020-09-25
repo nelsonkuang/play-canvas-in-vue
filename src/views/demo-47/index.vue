@@ -398,6 +398,7 @@ export default {
         mat4.translate(obj.uniforms.u_world, obj.uniforms.u_world, [0, 0, dy * scale])
       }
       const positions = [
+        [0, 0, 0],
         [0, 0, 8],
         [0, 0, -8],
         [0, 8, 0],
