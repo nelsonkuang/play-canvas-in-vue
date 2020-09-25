@@ -5,7 +5,7 @@
 <script>
 /* eslint-disable no-alert, no-console */
 import { mat4 } from 'gl-matrix'
-import { createProgramInfo, setBuffersAndAttributes, setUniforms, drawBufferInfo, resizeCanvasToDisplaySize } from '../../utils/tools/web-gl'
+import { createBufferInfoFromArrays, createProgramInfo, setBuffersAndAttributes, setUniforms, drawBufferInfo, resizeCanvasToDisplaySize } from '../../utils/tools/web-gl'
 import { createBufferInfoFunc, createSphereVertices, createGridVertices, createCubeVertices, createTruncatedConeVertices } from '../../utils/tools/primitives'
 import Camera from '../../utils/classes/Webgl/Camera'
 
@@ -73,6 +73,40 @@ export default {
     )
     const truncatedConeBufferInfo = createConeBufferInfo(gl, 1, 0, 2, 12, 1, true, false)
     const coneBufferInfo = createConeBufferInfo(gl, 1, 1, 3, 12, 1, true, true)
+    const axisBufferInfo = createBufferInfoFromArrays(gl, {
+      position: [
+        0, 0, 5,
+        0, 0, -5,
+        0, 5, 0,
+        0, -5, 0,
+        5, 0, 0,
+        -5, 0, 0,
+        // 0, 0, 5.01,
+        // 0, 0, -5.01,
+        // 0, 5.01, 0,
+        // 0, -5.01, 0,
+        // 5.01, 0, 0,
+        // -5.01, 0, 0,
+        // 0, 0, 4.99,
+        // 0, 0, -4.99,
+        // 0, 4.99, 0,
+        // 0, -4.99, 0,
+        // 4.99, 0, 0,
+        // -4.99, 0, 0,
+      ],
+      indices: [
+        0, 1,
+        2, 3,
+        4, 5,
+        // 6, 7,
+        // 8, 9,
+        // 10, 11,
+        // 12, 13,
+        // 14, 15,
+        // 16, 17
+      ],
+    })
+
     // setup GLSL programs
     const programInfo = createProgramInfo(gl, [colorVertexShaderCode, colorFragmentShaderCode])
     const pickingProgramInfo = createProgramInfo(gl, [colorVertexShaderCode, pickFragmentShaderCode])
@@ -324,19 +358,15 @@ export default {
       uniformsThatAreComputedForLines.u_view = camera.viewMatrix()
 
       // draw the plane
-
       uniformsThatAreComputedForLines.u_world = mat4.create()
       uniformsThatAreComputedForLines.u_color = [0.8, 0.8, 0.8, 1]
       gl.useProgram(programInfo.program)
       // Setup all the needed attributes.
       setBuffersAndAttributes(gl, programInfo, planeBufferInfo)
-
       // Set the uniforms that are the same for all objects.
       setUniforms(programInfo, uniformsThatAreComputedForLines)
-
       // calls gl.drawArrays or gl.drawElements
       drawBufferInfo(gl, planeBufferInfo, gl.LINES)
-
 
       // draw the geometries
       geometries.forEach((item) => {
@@ -355,6 +385,13 @@ export default {
           setBuffersAndAttributes(gl, programInfo, item.bufferInfo)
           setUniforms(programInfo, item.uniforms)
           drawBufferInfo(gl, item.bufferInfo, gl.LINES)
+          // draw the Axies
+          uniformsThatAreComputedForLines.u_color = [1, 1, 0, 1]
+          uniformsThatAreComputedForLines.u_world = oldWorld
+          setBuffersAndAttributes(gl, programInfo, axisBufferInfo)
+          setUniforms(programInfo, uniformsThatAreComputedForLines)
+          drawBufferInfo(gl, axisBufferInfo, gl.LINES)
+
           item.uniforms.u_color = oldColor
           item.uniforms.u_world = oldWorld
         }
@@ -387,7 +424,7 @@ export default {
 
       const mouseUp = function () {
         endTime = (new Date()).getTime()
-        if (endTime - startTime < 20) {
+        if (endTime - startTime < 150) {
           havedClicked = true
         }
         drag = false
@@ -450,7 +487,7 @@ export default {
 
       const touchEnd = function () {
         endTime = (new Date()).getTime()
-        if (endTime - startTime < 20) {
+        if (endTime - startTime < 150) {
           havedClicked = true
         }
         drag = false
