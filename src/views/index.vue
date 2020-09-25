@@ -4,7 +4,7 @@
     <ul>
       <li v-for="route in routes" :key="route.path"><a href="javascript:void(0);" @click="$router.push(route.path)" rel="noopener">{{ route.meta.title }}</a></li>
     </ul>
-    <h3>不断更新中...</h3>
+    <h3>不断更新中...目标是 3D 编辑器</h3>
   </div>
 </template>
 

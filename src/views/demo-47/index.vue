@@ -75,35 +75,17 @@ export default {
     const coneBufferInfo = createConeBufferInfo(gl, 1, 1, 3, 12, 1, true, true)
     const axisBufferInfo = createBufferInfoFromArrays(gl, {
       position: [
-        0, 0, 5,
-        0, 0, -5,
-        0, 5, 0,
-        0, -5, 0,
-        5, 0, 0,
-        -5, 0, 0,
-        // 0, 0, 5.01,
-        // 0, 0, -5.01,
-        // 0, 5.01, 0,
-        // 0, -5.01, 0,
-        // 5.01, 0, 0,
-        // -5.01, 0, 0,
-        // 0, 0, 4.99,
-        // 0, 0, -4.99,
-        // 0, 4.99, 0,
-        // 0, -4.99, 0,
-        // 4.99, 0, 0,
-        // -4.99, 0, 0,
+        0, 0, 8,
+        0, 0, -8,
+        0, 8, 0,
+        0, -8, 0,
+        8, 0, 0,
+        -8, 0, 0,
       ],
       indices: [
         0, 1,
         2, 3,
         4, 5,
-        // 6, 7,
-        // 8, 9,
-        // 10, 11,
-        // 12, 13,
-        // 14, 15,
-        // 16, 17
       ],
     })
 
@@ -239,6 +221,8 @@ export default {
     let dY = 0
     let mouseX = -1
     let mouseY = -1
+    let oldMouseX = -1
+    let oldMouseY = -1
     let drag = false
     let oldPickNdx = -1
     let pickNdx = -1
@@ -387,7 +371,7 @@ export default {
           drawBufferInfo(gl, item.bufferInfo, gl.LINES)
           // draw the Axies
           uniformsThatAreComputedForLines.u_color = [1, 1, 0, 1]
-          uniformsThatAreComputedForLines.u_world = oldWorld
+          uniformsThatAreComputedForLines.u_world = [...mat4.fromTranslation(tempMatrix, [oldWorld[12], oldWorld[13], oldWorld[14]])]
           setBuffersAndAttributes(gl, programInfo, axisBufferInfo)
           setUniforms(programInfo, uniformsThatAreComputedForLines)
           drawBufferInfo(gl, axisBufferInfo, gl.LINES)
@@ -400,6 +384,19 @@ export default {
       animationID = requestAnimationFrame(drawScene)
     }
 
+    function translateGeometry (obj, oldV2Pos, newV2Pos) {
+      const scale = 0.005
+      const dy = newV2Pos[1] - oldV2Pos[1]
+      const dx = newV2Pos[0] - oldV2Pos[0]
+      const len = Math.hypot(dx, dy) || 0.001
+      const sin = dx / len
+      const cos = -dy / len
+      if ((sin < 0.5 && sin > 0 && cos > 0.5) || (sin > -0.5 && sin > 0 && cos > 0.5) || (sin < 0.5 && sin > 0 && cos < -0.5) || (sin > -0.5 && sin < 0 && cos < -0.5)) {
+        mat4.translate(obj.uniforms.u_world, obj.uniforms.u_world, [0, -dy * scale, 0])
+      } else if ((sin > 0.5 && sin < 0.866 && cos > 0.5 && cos < 0.866) || (sin > -0.866 && sin < -0.5 && cos > 0.5 && cos < 0.866)) {
+        mat4.translate(obj.uniforms.u_world, obj.uniforms.u_world, [0, 0, -dy * scale])
+      }
+    }
 
     function updateCamera () {
       camera.updatePosition()
@@ -418,8 +415,10 @@ export default {
         drag = true
         oldX = e.pageX
         oldY = e.pageY
+        const rect = canvas.getBoundingClientRect()
+        oldMouseX = e.clientX - rect.left
+        oldMouseY = e.clientY - rect.top
         pressedButton = e.button
-        return false
       }
 
       const mouseUp = function () {
@@ -443,11 +442,19 @@ export default {
         oldX = e.pageX
         oldY = e.pageY
         if (pressedButton === 0) {
-          camera.rotate(dX, dY)
+          const geometry = geometries[lastSelectedNdx]
+          if (geometry && geometry.hover && geometry.selected) {
+            translateGeometry(geometry, [oldMouseX, oldMouseY], [mouseX, mouseY])
+          } else {
+            camera.rotate(dX, dY)
+            updateCamera()
+          }
         } else if (pressedButton === 2) {
           camera.pan(dX, dY)
+          updateCamera()
         }
-        updateCamera()
+        oldMouseX = mouseX
+        oldMouseY = mouseY
       }
       const mouseWheel = function (e) {
         if (Math.abs(e.deltaY) < 1.0) {
@@ -496,7 +503,7 @@ export default {
       const touchMove = function (e) {
         if (!drag) return false
         e.preventDefault()
-        if (event.touches[1] == undefined) {// 单点触控
+        if (event.touches[1] == undefined) { // 单点触控
           dX = (e.touches[0].pageX - oldX) * 2 * Math.PI / gl.canvas.clientWidth
           dY = (e.touches[0].pageY - oldY) * 2 * Math.PI / gl.canvas.clientHeight
           oldX = e.touches[0].pageX

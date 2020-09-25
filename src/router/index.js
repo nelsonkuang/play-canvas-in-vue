@@ -97,7 +97,7 @@ const routes = [
     name: 'CircleRandomRainEffect',
     component: () => import('@/views/demo-5/circle-random-rain-effect'),
     meta: {
-      title: 'Webgl 教程 随机圆雨点效果'
+      title: 'Webgl 实战 随机圆雨点效果'
     }
   },
   {
@@ -345,7 +345,7 @@ const routes = [
     name: 'Demo35',
     component: () => import('@/views/demo-35/index'),
     meta: {
-      title: 'Webgl 教程 天空盒II'
+      title: 'Webgl 实战 天空盒II'
     }
   }, 
   {
@@ -361,7 +361,7 @@ const routes = [
     name: 'Demo37',
     component: () => import('@/views/demo-37/index'),
     meta: {
-      title: 'Webgl 教程 天空球（全景图）'
+      title: 'Webgl 实战 天空球（全景图）'
     }
   }, 
   {
@@ -425,7 +425,7 @@ const routes = [
     name: 'Demo45',
     component: () => import('@/views/demo-45/index'),
     meta: {
-      title: 'Webgl 教程 地球贴图 及 按国家经纬度贴名'
+      title: 'Webgl 实战 地球贴图 及 按国家经纬度贴名'
     }
   }, 
   {
@@ -433,7 +433,7 @@ const routes = [
     name: 'Demo46',
     component: () => import('@/views/demo-46/index'),
     meta: {
-      title: 'Webgl 教程 地图国家贴名增加 mouse over 效果'
+      title: 'Webgl 实战 地图国家贴名增加 mouse over 效果'
     }
   }, 
   {
@@ -441,7 +441,7 @@ const routes = [
     name: 'Demo47',
     component: () => import('@/views/demo-47/index'),
     meta: {
-      title: 'Webgl 教程 移动模型'
+      title: 'Webgl 实战 编辑物体 - 平移'
     }
   }
 ]
