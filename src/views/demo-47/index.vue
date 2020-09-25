@@ -4,7 +4,7 @@
 
 <script>
 /* eslint-disable no-alert, no-console */
-import { mat4 } from 'gl-matrix'
+import { mat4, vec3 } from 'gl-matrix'
 import { createBufferInfoFromArrays, createProgramInfo, setBuffersAndAttributes, setUniforms, drawBufferInfo, resizeCanvasToDisplaySize } from '../../utils/tools/web-gl'
 import { createBufferInfoFunc, createSphereVertices, createGridVertices, createCubeVertices, createTruncatedConeVertices } from '../../utils/tools/primitives'
 import Camera from '../../utils/classes/Webgl/Camera'
@@ -73,7 +73,7 @@ export default {
     )
     const truncatedConeBufferInfo = createConeBufferInfo(gl, 1, 0, 2, 12, 1, true, false)
     const coneBufferInfo = createConeBufferInfo(gl, 1, 1, 3, 12, 1, true, true)
-    const axisBufferInfo = createBufferInfoFromArrays(gl, {
+    const axisArrays = {
       position: [
         0, 0, 8,
         0, 0, -8,
@@ -87,7 +87,8 @@ export default {
         2, 3,
         4, 5,
       ],
-    })
+    }
+    const axisBufferInfo = createBufferInfoFromArrays(gl, axisArrays)
 
     // setup GLSL programs
     const programInfo = createProgramInfo(gl, [colorVertexShaderCode, colorFragmentShaderCode])
@@ -385,7 +386,7 @@ export default {
     }
 
     function translateGeometry (obj, oldV2Pos, newV2Pos) {
-      const scale = 0.005
+      const scale = 0.02
       const dy = newV2Pos[1] - oldV2Pos[1]
       const dx = newV2Pos[0] - oldV2Pos[0]
       const len = Math.hypot(dx, dy) || 0.001
@@ -394,8 +395,22 @@ export default {
       if ((sin < 0.5 && sin > 0 && cos > 0.5) || (sin > -0.5 && sin > 0 && cos > 0.5) || (sin < 0.5 && sin > 0 && cos < -0.5) || (sin > -0.5 && sin < 0 && cos < -0.5)) {
         mat4.translate(obj.uniforms.u_world, obj.uniforms.u_world, [0, -dy * scale, 0])
       } else if ((sin > 0.5 && sin < 0.866 && cos > 0.5 && cos < 0.866) || (sin > -0.866 && sin < -0.5 && cos > 0.5 && cos < 0.866)) {
-        mat4.translate(obj.uniforms.u_world, obj.uniforms.u_world, [0, 0, -dy * scale])
+        mat4.translate(obj.uniforms.u_world, obj.uniforms.u_world, [0, 0, dy * scale])
       }
+      const positions = [
+        [0, 0, 8],
+        [0, 0, -8],
+        [0, 8, 0],
+        [0, -8, 0],
+        [8, 0, 0],
+        [-8, 0, 0],
+      ]
+      const viewProjectonMatrix = mat4.create()
+      mat4.multiply(viewProjectonMatrix, camera.projectionMatrix(), camera.viewMatrix())
+      positions.forEach((point) => {
+        vec3.transformMat4(point, point, viewProjectonMatrix)
+      })
+      console.log(positions)
     }
 
     function updateCamera () {
