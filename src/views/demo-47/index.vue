@@ -394,8 +394,7 @@ export default {
       const tempPositionArr = [0, 0, 0].concat(axisArrays.position)
       let axisPositions = []
       for (let i = 0; i < tempPositionArr.length; i += 3) {
-        const tempPosition = vec3.create()
-        axisPositions.push(vec3.normalize(tempPosition, [tempPositionArr[i], tempPositionArr[i + 1], tempPositionArr[i + 2]]))
+        axisPositions.push([tempPositionArr[i], tempPositionArr[i + 1], tempPositionArr[i + 2]])
       }
 
       const viewProjectonMatrix = mat4.create()
