@@ -4,7 +4,7 @@
 
 <script>
 /* eslint-disable no-alert, no-console */
-import { mat4, vec3 } from 'gl-matrix'
+import { mat4, vec3, vec2 } from 'gl-matrix'
 import { createBufferInfoFromArrays, createProgramInfo, setBuffersAndAttributes, setUniforms, drawBufferInfo, resizeCanvasToDisplaySize } from '../../utils/tools/web-gl'
 import { createBufferInfoFunc, createSphereVertices, createGridVertices, createCubeVertices, createTruncatedConeVertices } from '../../utils/tools/primitives'
 import Camera from '../../utils/classes/Webgl/Camera'
@@ -75,12 +75,12 @@ export default {
     const coneBufferInfo = createConeBufferInfo(gl, 1, 1, 3, 12, 1, true, true)
     const axisArrays = {
       position: [
-        0, 0, 8,
-        0, 0, -8,
-        0, 8, 0,
-        0, -8, 0,
         8, 0, 0,
         -8, 0, 0,
+        0, 8, 0,
+        0, -8, 0,
+        0, 0, 8,
+        0, 0, -8,
       ],
       indices: [
         0, 1,
@@ -386,32 +386,59 @@ export default {
     }
 
     function translateGeometry (obj, oldV2Pos, newV2Pos) {
-      const scale = 0.02
-      const dy = newV2Pos[1] - oldV2Pos[1]
-      const dx = newV2Pos[0] - oldV2Pos[0]
-      const len = Math.hypot(dx, dy) || 0.001
-      const sin = dx / len
-      const cos = -dy / len
-      if ((sin < 0.5 && sin > 0 && cos > 0.5) || (sin > -0.5 && sin > 0 && cos > 0.5) || (sin < 0.5 && sin > 0 && cos < -0.5) || (sin > -0.5 && sin < 0 && cos < -0.5)) {
-        mat4.translate(obj.uniforms.u_world, obj.uniforms.u_world, [0, -dy * scale, 0])
-      } else if ((sin > 0.5 && sin < 0.866 && cos > 0.5 && cos < 0.866) || (sin > -0.866 && sin < -0.5 && cos > 0.5 && cos < 0.866)) {
-        mat4.translate(obj.uniforms.u_world, obj.uniforms.u_world, [0, 0, dy * scale])
+      const speed = 20 * 0.002
+      const target = vec2.create()
+      vec2.subtract(target, newV2Pos, oldV2Pos)
+
+      // console.log('target', target)
+      const tempPositionArr = [0, 0, 0].concat(axisArrays.position)
+      let axisPositions = []
+      for (let i = 0; i < tempPositionArr.length; i += 3) {
+        const tempPosition = vec3.create()
+        axisPositions.push(vec3.normalize(tempPosition, [tempPositionArr[i], tempPositionArr[i + 1], tempPositionArr[i + 2]]))
       }
-      const positions = [
-        [0, 0, 0],
-        [0, 0, 8],
-        [0, 0, -8],
-        [0, 8, 0],
-        [0, -8, 0],
-        [8, 0, 0],
-        [-8, 0, 0],
-      ]
+
       const viewProjectonMatrix = mat4.create()
       mat4.multiply(viewProjectonMatrix, camera.projectionMatrix(), camera.viewMatrix())
-      positions.forEach((point) => {
+      // 世界坐标转标准设备坐标
+      axisPositions.forEach((point) => {
         vec3.transformMat4(point, point, viewProjectonMatrix)
       })
-      console.log(positions)
+
+      // 标准设备坐标转屏幕坐标
+      axisPositions = axisPositions.map((_) => {
+        const ax = gl.canvas.clientWidth / 2
+        const ay = gl.canvas.clientHeight / 2
+        return [_[0] * ax + ax, -_[1] * ay + ay, _[2]]
+      })
+
+      // console.log('axisPositions', axisPositions)
+
+      const axisDirections = axisPositions.slice(1).map((_) => {
+        return [_[0] - axisPositions[0][0], _[1] - axisPositions[0][1]]
+      })
+
+      // console.log('axisDirections', axisDirections)
+
+      const anglesOfAxisNTarget = axisDirections.map((_) => {
+        return vec2.angle(_, target)
+      })
+
+      // console.log('anglesOfAxisNTarget', anglesOfAxisNTarget)
+      const minAngle = Math.min(...anglesOfAxisNTarget)
+      if (minAngle === anglesOfAxisNTarget[5]) {
+        mat4.translate(obj.uniforms.u_world, obj.uniforms.u_world, [0, 0, -speed])
+      } else if (minAngle === anglesOfAxisNTarget[4]) {
+        mat4.translate(obj.uniforms.u_world, obj.uniforms.u_world, [0, 0, speed])
+      } else if (minAngle === anglesOfAxisNTarget[3]) {
+        mat4.translate(obj.uniforms.u_world, obj.uniforms.u_world, [0, -speed, 0])
+      } else if (minAngle === anglesOfAxisNTarget[2]) {
+        mat4.translate(obj.uniforms.u_world, obj.uniforms.u_world, [0, speed, 0])
+      } else if (minAngle === anglesOfAxisNTarget[1]) {
+        mat4.translate(obj.uniforms.u_world, obj.uniforms.u_world, [-speed, 0, 0])
+      } else {
+        mat4.translate(obj.uniforms.u_world, obj.uniforms.u_world, [speed, 0, 0])
+      }
     }
 
     function updateCamera () {
@@ -469,8 +496,10 @@ export default {
           camera.pan(dX, dY)
           updateCamera()
         }
-        oldMouseX = mouseX
-        oldMouseY = mouseY
+        if (vec2.length([mouseX - oldMouseX, mouseY - oldMouseY]) > 2) { // 增加敏感度
+          oldMouseX = mouseX
+          oldMouseY = mouseY
+        }
       }
       const mouseWheel = function (e) {
         if (Math.abs(e.deltaY) < 1.0) {
