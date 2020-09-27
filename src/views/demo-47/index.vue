@@ -69,7 +69,7 @@ export default {
     )
     const cubeBufferInfo = createCubeBufferInfo(
       gl,
-      2,  // size
+      1,  // size
     )
     const truncatedConeBufferInfo = createConeBufferInfo(gl, 1, 0, 2, 12, 1, true, false)
     const coneBufferInfo = createConeBufferInfo(gl, 1, 1, 3, 12, 1, true, true)
@@ -151,7 +151,7 @@ export default {
       {
         bufferInfo: cubeBufferInfo,
         uniforms: {
-          u_world: [...mat4.rotateY(tempMatrix, mat4.fromTranslation(tempMatrix, [1.5, 1, 0.5]), degToRad(45))],
+          u_world: [...mat4.rotateY(tempMatrix, mat4.fromTranslation(tempMatrix, [1.5, 0.5, 0.5]), degToRad(45))],
           u_color: [1, 0.5, 0.5, 1],
           u_projection: mat4.create(),
           u_view: mat4.create(),
@@ -371,11 +371,13 @@ export default {
           setUniforms(programInfo, item.uniforms)
           drawBufferInfo(gl, item.bufferInfo, gl.LINES)
           // draw the Axies
+          gl.disable(gl.DEPTH_TEST)
           uniformsThatAreComputedForLines.u_color = [1, 1, 0, 1]
           uniformsThatAreComputedForLines.u_world = [...mat4.fromTranslation(tempMatrix, [oldWorld[12], oldWorld[13], oldWorld[14]])]
           setBuffersAndAttributes(gl, programInfo, axisBufferInfo)
           setUniforms(programInfo, uniformsThatAreComputedForLines)
           drawBufferInfo(gl, axisBufferInfo, gl.LINES)
+          gl.enable(gl.DEPTH_TEST)
 
           item.uniforms.u_color = oldColor
           item.uniforms.u_world = oldWorld
