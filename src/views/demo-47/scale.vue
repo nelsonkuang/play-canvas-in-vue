@@ -230,6 +230,7 @@ export default {
     let lastSelectedNdx = -1
     // let zoom = 1
     let pressedButton = null
+    let operatingType = 'scaling' // translating, rotating
     const camera = new Camera()
     camera.aspectRatio = gl.canvas.clientWidth / gl.canvas.clientHeight
     camera.fitViewToScene([-2, -2, -2], [2, 2, 2])
@@ -371,11 +372,13 @@ export default {
           setUniforms(programInfo, item.uniforms)
           drawBufferInfo(gl, item.bufferInfo, gl.LINES)
           // draw the Axies
+          gl.disable(gl.DEPTH_TEST)
           uniformsThatAreComputedForLines.u_color = [1, 1, 0, 1]
           uniformsThatAreComputedForLines.u_world = [...mat4.fromTranslation(tempMatrix, [oldWorld[12], oldWorld[13], oldWorld[14]])]
           setBuffersAndAttributes(gl, programInfo, axisBufferInfo)
           setUniforms(programInfo, uniformsThatAreComputedForLines)
           drawBufferInfo(gl, axisBufferInfo, gl.LINES)
+          gl.enable(gl.DEPTH_TEST)
 
           item.uniforms.u_color = oldColor
           item.uniforms.u_world = oldWorld
@@ -383,6 +386,18 @@ export default {
       })
 
       animationID = requestAnimationFrame(drawScene)
+    }
+
+    function setGeometry(obj, oldV2Pos, newV2Pos) {
+      if(operatingType === 'translating') {
+        translateGeometry (obj, oldV2Pos, newV2Pos)
+      } else if(operatingType === 'scaling') {
+        scaleGeometry (obj, oldV2Pos, newV2Pos)
+      }
+    }
+
+    function scaleGeometry (obj, oldV2Pos, newV2Pos) {
+      
     }
 
     function translateGeometry (obj, oldV2Pos, newV2Pos) {
@@ -487,7 +502,7 @@ export default {
         if (pressedButton === 0) {
           const geometry = geometries[lastSelectedNdx]
           if (geometry && geometry.hover && geometry.selected) {
-            translateGeometry(geometry, [oldMouseX, oldMouseY], [mouseX, mouseY])
+            setGeometry(geometry, [oldMouseX, oldMouseY], [mouseX, mouseY])
           } else {
             camera.rotate(dX, dY)
             updateCamera()
@@ -560,7 +575,7 @@ export default {
           oldY = e.touches[0].pageY
           const geometry = geometries[lastSelectedNdx]
           if (geometry && geometry.hover && geometry.selected) {
-            translateGeometry(geometry, [oldMouseX, oldMouseY], [mouseX, mouseY])
+            setGeometry(geometry, [oldMouseX, oldMouseY], [mouseX, mouseY])
           } else {
             camera.rotate(dX, dY)
             updateCamera()
