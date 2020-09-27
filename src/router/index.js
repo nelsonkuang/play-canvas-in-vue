@@ -443,6 +443,14 @@ const routes = [
     meta: {
       title: 'Webgl 实战 编辑物体 - 平移'
     }
+  }, 
+  {
+    path: '/scale',
+    name: 'Scale',
+    component: () => import('@/views/demo-47/scale'),
+    meta: {
+      title: 'Webgl 实战 编辑物体 - 缩放'
+    }
   }
 ]
 

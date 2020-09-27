@@ -372,13 +372,11 @@ export default {
           setUniforms(programInfo, item.uniforms)
           drawBufferInfo(gl, item.bufferInfo, gl.LINES)
           // draw the Axies
-          gl.disable(gl.DEPTH_TEST)
           uniformsThatAreComputedForLines.u_color = [1, 1, 0, 1]
-          uniformsThatAreComputedForLines.u_world = [...mat4.fromTranslation(tempMatrix, [oldWorld[12], oldWorld[13], oldWorld[14]])]
+          uniformsThatAreComputedForLines.u_world = oldWorld
           setBuffersAndAttributes(gl, programInfo, axisBufferInfo)
           setUniforms(programInfo, uniformsThatAreComputedForLines)
           drawBufferInfo(gl, axisBufferInfo, gl.LINES)
-          gl.enable(gl.DEPTH_TEST)
 
           item.uniforms.u_color = oldColor
           item.uniforms.u_world = oldWorld
@@ -388,16 +386,69 @@ export default {
       animationID = requestAnimationFrame(drawScene)
     }
 
-    function setGeometry(obj, oldV2Pos, newV2Pos) {
-      if(operatingType === 'translating') {
-        translateGeometry (obj, oldV2Pos, newV2Pos)
-      } else if(operatingType === 'scaling') {
-        scaleGeometry (obj, oldV2Pos, newV2Pos)
+    function setGeometry (obj, oldV2Pos, newV2Pos) {
+      if (operatingType === 'translating') {
+        translateGeometry(obj, oldV2Pos, newV2Pos)
+      } else if (operatingType === 'scaling') {
+        scaleGeometry(obj, oldV2Pos, newV2Pos)
       }
     }
 
     function scaleGeometry (obj, oldV2Pos, newV2Pos) {
-      
+      const target = vec2.create()
+      vec2.subtract(target, newV2Pos, oldV2Pos)
+
+      // console.log('target', target)
+      const tempPositionArr = [0, 0, 0].concat(axisArrays.position)
+      let axisPositions = []
+      for (let i = 0; i < tempPositionArr.length; i += 3) {
+        // const tempPosition = vec3.create()
+        axisPositions.push([tempPositionArr[i], tempPositionArr[i + 1], tempPositionArr[i + 2]])
+      }
+
+      const worldViewProjectonMatrix = mat4.create()
+      mat4.multiply(worldViewProjectonMatrix, camera.projectionMatrix(), camera.viewMatrix())
+      mat4.multiply(worldViewProjectonMatrix, worldViewProjectonMatrix, obj.uniforms.u_world)
+      // 世界坐标转标准设备坐标
+      axisPositions.forEach((point) => {
+        vec3.transformMat4(point, point, worldViewProjectonMatrix)
+      })
+
+      // 标准设备坐标转屏幕坐标
+      axisPositions = axisPositions.map((_) => {
+        const ax = gl.canvas.clientWidth / 2
+        const ay = gl.canvas.clientHeight / 2
+        return [_[0] * ax + ax, -_[1] * ay + ay, _[2]]
+      })
+
+      // console.log('axisPositions', axisPositions)
+
+      const axisDirections = axisPositions.slice(1).map((_) => {
+        return [_[0] - axisPositions[0][0], _[1] - axisPositions[0][1]]
+      })
+
+      // console.log('axisDirections', axisDirections)
+
+      const anglesOfAxisNTarget = axisDirections.map((_) => {
+        return vec2.angle(_, target)
+      })
+
+      // console.log('anglesOfAxisNTarget', anglesOfAxisNTarget)
+      const minAngle = Math.min(...anglesOfAxisNTarget)
+      const delta = 0.03
+      if (minAngle === anglesOfAxisNTarget[5]) {
+        mat4.scale(obj.uniforms.u_world, obj.uniforms.u_world, [1, 1, 1 - delta])
+      } else if (minAngle === anglesOfAxisNTarget[4]) {
+        mat4.scale(obj.uniforms.u_world, obj.uniforms.u_world, [1, 1, 1 + delta])
+      } else if (minAngle === anglesOfAxisNTarget[3]) {
+        mat4.scale(obj.uniforms.u_world, obj.uniforms.u_world, [1, 1 - delta, 1])
+      } else if (minAngle === anglesOfAxisNTarget[2]) {
+        mat4.scale(obj.uniforms.u_world, obj.uniforms.u_world, [1, 1 + delta, 1])
+      } else if (minAngle === anglesOfAxisNTarget[1]) {
+        mat4.scale(obj.uniforms.u_world, obj.uniforms.u_world, [1 - delta, 1, 1])
+      } else {
+        mat4.scale(obj.uniforms.u_world, obj.uniforms.u_world, [1 + delta, 1, 1])
+      }
     }
 
     function translateGeometry (obj, oldV2Pos, newV2Pos) {
