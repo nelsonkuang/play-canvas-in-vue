@@ -535,6 +535,8 @@ export default {
         const rect = canvas.getBoundingClientRect()
         mouseX = oldX - rect.left
         mouseY = oldY - rect.top
+        oldMouseX = mouseX
+        oldMouseY = mouseY
       }
 
       const touchEnd = function () {
@@ -546,6 +548,9 @@ export default {
       }
 
       const touchMove = function (e) {
+        const rect = canvas.getBoundingClientRect()
+        mouseX = e.touches[0].pageX - rect.left
+        mouseY = e.touches[0].pageY - rect.top
         if (!drag) return false
         e.preventDefault()
         if (event.touches[1] == undefined) { // 单点触控
@@ -553,13 +558,22 @@ export default {
           dY = (e.touches[0].pageY - oldY) * 2 * Math.PI / gl.canvas.clientHeight
           oldX = e.touches[0].pageX
           oldY = e.touches[0].pageY
-          camera.rotate(dX, dY)
-          updateCamera()
+          const geometry = geometries[lastSelectedNdx]
+          if (geometry && geometry.hover && geometry.selected) {
+            translateGeometry(geometry, [oldMouseX, oldMouseY], [mouseX, mouseY])
+          } else {
+            camera.rotate(dX, dY)
+            updateCamera()
+          }
         } else {
           currentDistance = Math.sqrt(Math.pow(e.touches[1].pageX - e.touches[0].pageX, 2) + Math.pow(e.touches[1].pageY - e.touches[0].pageY, 2))
           camera.zoomIn(startDistance - currentDistance)
           startDistance = currentDistance
           updateCamera()
+        }
+        if (vec2.length([mouseX - oldMouseX, mouseY - oldMouseY]) > 2) { // 增加敏感度
+          oldMouseX = mouseX
+          oldMouseY = mouseY
         }
       }
 
