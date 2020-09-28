@@ -251,7 +251,7 @@ export default {
       faces.push({
         uniforms: {
           u_world: mat4.create(),
-          u_color: [0, 0, 1, 0.5],
+          u_color: [0, 0.5, 0.5, 1],
           u_projection: mat4.create(),
           u_view: mat4.create(),
           u_id: [
@@ -266,21 +266,22 @@ export default {
         name: faceNames[ii]
       })
     }
-    faces.forEach((face) => {
+    function placeFace (face) {
       switch (face.name) {
         case faceNames[0]:
           mat4.translate(face.uniforms.u_world, face.uniforms.u_world, [0, 1, 0])
           break
         case faceNames[1]:
           mat4.translate(face.uniforms.u_world, face.uniforms.u_world, [1, 0, 0])
-          mat4.rotateZ(face.uniforms.u_world, face.uniforms.u_world, degToRad(90))
+          mat4.rotateZ(face.uniforms.u_world, face.uniforms.u_world, degToRad(-90))
           break
         case faceNames[2]:
           mat4.translate(face.uniforms.u_world, face.uniforms.u_world, [0, -1, 0])
+          mat4.rotateZ(face.uniforms.u_world, face.uniforms.u_world, degToRad(180))
           break
         case faceNames[3]:
           mat4.translate(face.uniforms.u_world, face.uniforms.u_world, [-1, 0, 0])
-          mat4.rotateZ(face.uniforms.u_world, face.uniforms.u_world, degToRad(-90))
+          mat4.rotateZ(face.uniforms.u_world, face.uniforms.u_world, degToRad(90))
           break
         case faceNames[4]:
           mat4.translate(face.uniforms.u_world, face.uniforms.u_world, [0, 0, 1])
@@ -293,7 +294,7 @@ export default {
         default:
           break
       }
-    })
+    }
 
     let dX = 0
     let dY = 0
@@ -413,8 +414,8 @@ export default {
       // Clear the canvas AND the depth buffer.
       gl.clearColor(0, 0, 0, 1)
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-      gl.enable(gl.CULL_FACE)
       gl.enable(gl.DEPTH_TEST)
+      gl.enable(gl.CULL_FACE)
 
       // Compute the projection matrix
       uniformsThatAreComputedForLines.u_projection = camera.projectionMatrix()
@@ -435,16 +436,16 @@ export default {
       geometries.forEach((item) => {
         mat4.copy(item.uniforms.u_projection, uniformsThatAreComputedForLines.u_projection)
         mat4.copy(item.uniforms.u_view, uniformsThatAreComputedForLines.u_view)
-        gl.useProgram(programInfo.program)
+        // gl.useProgram(programInfo.program)
         setBuffersAndAttributes(gl, programInfo, item.bufferInfo)
         setUniforms(programInfo, item.uniforms)
         drawBufferInfo(gl, item.bufferInfo)
         if (item.selected) {
           let oldColor = [...item.uniforms.u_color]
-          let oldWorld = [...item.uniforms.u_world]
+          let oldWorld = mat4.clone(item.uniforms.u_world)
           item.uniforms.u_color = [1, 1, 1, 1]
           mat4.scale(item.uniforms.u_world, item.uniforms.u_world, [1.005, 1.005, 1.005])
-          gl.useProgram(programInfo.program)
+          // gl.useProgram(programInfo.program)
           setBuffersAndAttributes(gl, programInfo, item.bufferInfo)
           setUniforms(programInfo, item.uniforms)
           drawBufferInfo(gl, item.bufferInfo, gl.LINES)
@@ -457,9 +458,29 @@ export default {
 
           item.uniforms.u_color = oldColor
           item.uniforms.u_world = oldWorld
+          // gl.disable(gl.DEPTH_TEST)
+          // gl.disable(gl.CULL_FACE)
+          // gl.enable(gl.BLEND)
+          // gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
+          // gl.depthMask(false)
+          // gl.useProgram(programInfo.program)
+          faces.forEach((face) => {
+            let oldFaceWorld = mat4.clone(face.uniforms.u_world)
+            mat4.copy(face.uniforms.u_projection, uniformsThatAreComputedForLines.u_projection)
+            mat4.copy(face.uniforms.u_view, uniformsThatAreComputedForLines.u_view)
+            mat4.copy(face.uniforms.u_world, oldWorld)
+            placeFace(face)
+            setBuffersAndAttributes(gl, programInfo, faceBufferInfo)
+            setUniforms(programInfo, face.uniforms)
+            drawBufferInfo(gl, faceBufferInfo)
+            face.uniforms.u_world = oldFaceWorld
+          })
+          // gl.enable(gl.DEPTH_TEST)
+          // gl.enable(gl.CULL_FACE)
+          // gl.disable(gl.BLEND)
+          // gl.depthMask(true)
         }
       })
-
       animationID = requestAnimationFrame(drawScene)
     }
 
