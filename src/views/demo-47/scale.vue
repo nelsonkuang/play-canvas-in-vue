@@ -398,6 +398,8 @@ export default {
       const target = vec2.create()
       vec2.subtract(target, newV2Pos, oldV2Pos)
 
+      // console.log('oldV2Pos', oldV2Pos)
+      // console.log('newV2Pos', newV2Pos)
       // console.log('target', target)
       const tempPositionArr = [0, 0, 0].concat(axisArrays.position)
       let axisPositions = []
@@ -435,19 +437,16 @@ export default {
 
       // console.log('anglesOfAxisNTarget', anglesOfAxisNTarget)
       const minAngle = Math.min(...anglesOfAxisNTarget)
-      const delta = 0.03
-      if (minAngle === anglesOfAxisNTarget[5]) {
-        mat4.scale(obj.uniforms.u_world, obj.uniforms.u_world, [1, 1, 1 - delta])
-      } else if (minAngle === anglesOfAxisNTarget[4]) {
-        mat4.scale(obj.uniforms.u_world, obj.uniforms.u_world, [1, 1, 1 + delta])
-      } else if (minAngle === anglesOfAxisNTarget[3]) {
-        mat4.scale(obj.uniforms.u_world, obj.uniforms.u_world, [1, 1 - delta, 1])
-      } else if (minAngle === anglesOfAxisNTarget[2]) {
-        mat4.scale(obj.uniforms.u_world, obj.uniforms.u_world, [1, 1 + delta, 1])
-      } else if (minAngle === anglesOfAxisNTarget[1]) {
-        mat4.scale(obj.uniforms.u_world, obj.uniforms.u_world, [1 - delta, 1, 1])
-      } else {
-        mat4.scale(obj.uniforms.u_world, obj.uniforms.u_world, [1 + delta, 1, 1])
+      let scale = 1.03
+      if (vec2.distance(axisPositions[0], newV2Pos) < vec2.distance(axisPositions[0], oldV2Pos)) {
+        scale = 0.97
+      }
+      if (minAngle === anglesOfAxisNTarget[5] || minAngle === anglesOfAxisNTarget[4]) {
+        mat4.scale(obj.uniforms.u_world, obj.uniforms.u_world, [1, 1, scale])
+      } else if (minAngle === anglesOfAxisNTarget[3] || minAngle === anglesOfAxisNTarget[2]) {
+        mat4.scale(obj.uniforms.u_world, obj.uniforms.u_world, [1, scale, 1])
+      } else if (minAngle === anglesOfAxisNTarget[1] || minAngle === anglesOfAxisNTarget[0]) {
+        mat4.scale(obj.uniforms.u_world, obj.uniforms.u_world, [scale, 1, 1])
       }
     }
 
