@@ -6,7 +6,7 @@
 /* eslint-disable no-alert, no-console */
 import { mat4, vec3, vec2 } from 'gl-matrix'
 import { createBufferInfoFromArrays, createProgramInfo, setBuffersAndAttributes, setUniforms, drawBufferInfo, resizeCanvasToDisplaySize } from '../../utils/tools/web-gl'
-import { createBufferInfoFunc, createSphereVertices, createGridVertices, createCubeVertices, createTruncatedConeVertices } from '../../utils/tools/primitives'
+import { createBufferInfoFunc, createSphereVertices, createGridVertices, createPlaneVertices, createCubeVertices, createTruncatedConeVertices } from '../../utils/tools/primitives'
 import Camera from '../../utils/classes/Webgl/Camera'
 
 let animationID = null
@@ -57,6 +57,7 @@ export default {
     `
     const createSphereBufferInfo = createBufferInfoFunc(createSphereVertices)
     const createPlaneBufferInfo = createBufferInfoFunc(createGridVertices)
+    const createFaceBufferInfo = createBufferInfoFunc(createPlaneVertices)
     const createCubeBufferInfo = createBufferInfoFunc(createCubeVertices)
     const createConeBufferInfo = createBufferInfoFunc(createTruncatedConeVertices)
     const sphereBufferInfo = createSphereBufferInfo(gl, 1, 32, 24)
@@ -66,6 +67,11 @@ export default {
       20,  // height
       40,   // subdivisions across
       40,   // subdivisions down
+    )
+    const faceBufferInfo = createFaceBufferInfo(
+      gl,
+      2,  // width
+      2,  // height
     )
     const cubeBufferInfo = createCubeBufferInfo(
       gl,
@@ -163,7 +169,12 @@ export default {
           ],
         },
         selected: false,
-        hover: false
+        hover: false,
+        bbox: {
+          width: 1,
+          height: 1,
+          depth: 1
+        }
       },
       {
         bufferInfo: truncatedConeBufferInfo,
@@ -180,7 +191,12 @@ export default {
           ],
         },
         selected: false,
-        hover: false
+        hover: false,
+        bbox: {
+          width: 2,
+          height: 2,
+          depth: 2
+        }
       },
       {
         bufferInfo: coneBufferInfo,
@@ -197,7 +213,12 @@ export default {
           ],
         },
         selected: false,
-        hover: false
+        hover: false,
+        bbox: {
+          width: 2,
+          height: 3,
+          depth: 2
+        }
       },
       {
         bufferInfo: sphereBufferInfo,
@@ -214,9 +235,65 @@ export default {
           ],
         },
         selected: false,
-        hover: false
+        hover: false,
+        bbox: {
+          width: 2,
+          height: 2,
+          depth: 2
+        }
       }
     ]
+    const numFaces = 6
+    const faces = []
+    const faceNames = ['top', 'right', 'bottom', 'left', 'front', 'back']
+    for (let ii = 0; ii < numFaces; ++ii) {
+      const id = ii + 1
+      faces.push({
+        uniforms: {
+          u_world: mat4.create(),
+          u_color: [0, 0, 1, 0.5],
+          u_projection: mat4.create(),
+          u_view: mat4.create(),
+          u_id: [
+            ((id >> 0) & 0xFF) / 0xFF,
+            ((id >> 8) & 0xFF) / 0xFF,
+            ((id >> 16) & 0xFF) / 0xFF,
+            ((id >> 24) & 0xFF) / 0xFF
+          ]
+        },
+        selected: false,
+        hover: false,
+        name: faceNames[ii]
+      })
+    }
+    faces.forEach((face) => {
+      switch (face.name) {
+        case faceNames[0]:
+          mat4.translate(face.uniforms.u_world, face.uniforms.u_world, [0, 1, 0])
+          break
+        case faceNames[1]:
+          mat4.translate(face.uniforms.u_world, face.uniforms.u_world, [1, 0, 0])
+          mat4.rotateZ(face.uniforms.u_world, face.uniforms.u_world, degToRad(90))
+          break
+        case faceNames[2]:
+          mat4.translate(face.uniforms.u_world, face.uniforms.u_world, [0, -1, 0])
+          break
+        case faceNames[3]:
+          mat4.translate(face.uniforms.u_world, face.uniforms.u_world, [-1, 0, 0])
+          mat4.rotateZ(face.uniforms.u_world, face.uniforms.u_world, degToRad(-90))
+          break
+        case faceNames[4]:
+          mat4.translate(face.uniforms.u_world, face.uniforms.u_world, [0, 0, 1])
+          mat4.rotateX(face.uniforms.u_world, face.uniforms.u_world, degToRad(90))
+          break
+        case faceNames[5]:
+          mat4.translate(face.uniforms.u_world, face.uniforms.u_world, [0, 0, -1])
+          mat4.rotateX(face.uniforms.u_world, face.uniforms.u_world, degToRad(-90))
+          break
+        default:
+          break
+      }
+    })
 
     let dX = 0
     let dY = 0
