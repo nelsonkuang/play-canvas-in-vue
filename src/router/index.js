@@ -451,6 +451,14 @@ const routes = [
     meta: {
       title: 'Webgl 实战 编辑物体 - 缩放'
     }
+  }, 
+  {
+    path: '/rotate',
+    name: 'Rotate',
+    component: () => import('@/views/demo-47/rotate'),
+    meta: {
+      title: 'Webgl 实战 编辑物体 - 旋转'
+    }
   }
 ]
 
