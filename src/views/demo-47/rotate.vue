@@ -321,6 +321,7 @@ export default {
     // let zoom = 1
     let pressedButton = null
     let operatingType = 'rotating' // translating, rotating, scaling
+    let rotatingDirection = 'rotateX' // rotateX, rotateY, rotateZ
     const camera = new Camera()
     camera.aspectRatio = gl.canvas.clientWidth / gl.canvas.clientHeight
     camera.fitViewToScene([-2, -2, -2], [2, 2, 2])
@@ -447,6 +448,8 @@ export default {
         oldFacePickNdx = facePickNdx
         const object = faces[facePickNdx]
         object && (object.hover = true)
+      } else {
+        facePickNdx = -1
       }
       // console.log(data)
     }
@@ -606,7 +609,9 @@ export default {
       const target = vec2.create()
       vec2.subtract(target, newV2Pos, oldV2Pos)
 
-      // console.log('target', target)
+      console.log('target', target)
+      console.log('oldV2Pos', oldV2Pos)
+      console.log('newV2Pos', newV2Pos)
       const tempPositionArr = [0, 0, 0].concat(axisArrays.position)
       let axisPositions = []
       for (let i = 0; i < tempPositionArr.length; i += 3) {
@@ -629,19 +634,25 @@ export default {
         return [_[0] * ax + ax, -_[1] * ay + ay, _[2]]
       })
 
-      // console.log('axisPositions', axisPositions)
+      console.log('axisPositions', axisPositions)
 
       const axisDirections = axisPositions.slice(1).map((_) => {
         return [_[0] - axisPositions[0][0], _[1] - axisPositions[0][1]]
       })
 
-      // console.log('axisDirections', axisDirections)
+      for (let i = 0; i < axisDirections.length; i++) {
+        if ((i + 1) % 2 === 0) {
+          axisDirections[i] = [-axisDirections[i - 1][0], -axisDirections[i - 1][1], -axisDirections[i - 1][2]]
+        }
+      }
+
+      console.log('axisDirections', axisDirections)
 
       const anglesOfAxisNTarget = axisDirections.map((_) => {
-        return vec2.angle(_, target)
+        return (vec2.angle(_, target) * 10) | 0
       })
 
-      // console.log('anglesOfAxisNTarget', anglesOfAxisNTarget)
+      console.log('anglesOfAxisNTarget', anglesOfAxisNTarget)
       // 根据面排除法线坐标轴的干扰
       switch (faces[facePickNdx].name) {
         case faceNames[0]:
@@ -666,69 +677,51 @@ export default {
       const delta = 1 * Math.PI / 180
       switch (faces[facePickNdx].name) {
         case faceNames[0]:
-          if (minAngle === anglesOfAxisNTarget[5]) {
-            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, delta)
-          } else if (minAngle === anglesOfAxisNTarget[4]) {
-            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
-          } else if (minAngle === anglesOfAxisNTarget[1]) {
-            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, delta)
-          } else {
-            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
-          }
-          break
         case faceNames[2]:
           if (minAngle === anglesOfAxisNTarget[5]) {
-            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, delta)
+            !rotatingDirection && (rotatingDirection = 'rotateX')
+              ; (rotatingDirection === 'rotateX') && mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
           } else if (minAngle === anglesOfAxisNTarget[4]) {
-            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
-          } else if (minAngle === anglesOfAxisNTarget[1]) {
-            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, delta)
+            !rotatingDirection && (rotatingDirection = 'rotateX')
+              ; (rotatingDirection === 'rotateX') && mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, delta)
+          } else if (minAngle === anglesOfAxisNTarget[0]) {
+            !rotatingDirection && (rotatingDirection = 'rotateZ')
+              ; (rotatingDirection === 'rotateZ') && mat4.rotateZ(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
           } else {
-            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
+            !rotatingDirection && (rotatingDirection = 'rotateZ')
+              ; (rotatingDirection === 'rotateZ') && mat4.rotateZ(obj.uniforms.u_world, obj.uniforms.u_world, delta)
           }
           break
         case faceNames[1]:
-          if (minAngle === anglesOfAxisNTarget[5]) {
-            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, delta)
-          } else if (minAngle === anglesOfAxisNTarget[4]) {
-            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
-          } else if (minAngle === anglesOfAxisNTarget[3]) {
-            mat4.rotateZ(obj.uniforms.u_world, obj.uniforms.u_world, delta)
-          } else if (minAngle === anglesOfAxisNTarget[2]) {
-            mat4.rotateZ(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
-          }
-          break
         case faceNames[3]:
           if (minAngle === anglesOfAxisNTarget[5]) {
-            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, delta)
+            !rotatingDirection && (rotatingDirection = 'rotateY')
+              ; (rotatingDirection === 'rotateY') && mat4.rotateY(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
           } else if (minAngle === anglesOfAxisNTarget[4]) {
-            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
+            !rotatingDirection && (rotatingDirection = 'rotateY')
+              ; (rotatingDirection === 'rotateY') && mat4.rotateY(obj.uniforms.u_world, obj.uniforms.u_world, delta)
           } else if (minAngle === anglesOfAxisNTarget[3]) {
-            mat4.rotateZ(obj.uniforms.u_world, obj.uniforms.u_world, delta)
-          } else if (minAngle === anglesOfAxisNTarget[2]) {
-            mat4.rotateZ(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
+            !rotatingDirection && (rotatingDirection = 'rotateZ')
+              ; (rotatingDirection === 'rotateZ') && mat4.rotateZ(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
+          } else {
+            !rotatingDirection && (rotatingDirection = 'rotateZ')
+              ; (rotatingDirection === 'rotateZ') && mat4.rotateZ(obj.uniforms.u_world, obj.uniforms.u_world, delta)
           }
           break
         case faceNames[4]:
-          if (minAngle === anglesOfAxisNTarget[3]) {
-            mat4.rotateZ(obj.uniforms.u_world, obj.uniforms.u_world, delta)
-          } else if (minAngle === anglesOfAxisNTarget[2]) {
-            mat4.rotateZ(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
-          } else if (minAngle === anglesOfAxisNTarget[1]) {
-            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, delta)
-          } else {
-            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
-          }
-          break
         case faceNames[5]:
           if (minAngle === anglesOfAxisNTarget[3]) {
-            mat4.rotateZ(obj.uniforms.u_world, obj.uniforms.u_world, delta)
+            !rotatingDirection && (rotatingDirection = 'rotateX')
+              ; (rotatingDirection === 'rotateX') && mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, delta)
           } else if (minAngle === anglesOfAxisNTarget[2]) {
-            mat4.rotateZ(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
+            !rotatingDirection && (rotatingDirection = 'rotateX')
+              ; (rotatingDirection === 'rotateX') && mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
           } else if (minAngle === anglesOfAxisNTarget[1]) {
-            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, delta)
+            !rotatingDirection && (rotatingDirection = 'rotateY')
+              ; (rotatingDirection === 'rotateY') && mat4.rotateY(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
           } else {
-            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
+            !rotatingDirection && (rotatingDirection = 'rotateY')
+              ; (rotatingDirection === 'rotateY') && mat4.rotateY(obj.uniforms.u_world, obj.uniforms.u_world, delta)
           }
           break
         default:
@@ -821,6 +814,7 @@ export default {
           havedClicked = true
         }
         drag = false
+        rotatingDirection = null
       }
 
       const mouseMove = function (e) {
@@ -838,7 +832,7 @@ export default {
         if (pressedButton === 0) {
           const geometry = geometries[lastSelectedNdx]
           const face = faces[facePickNdx]
-          if (face || (geometry && geometry.hover && geometry.selected)) {
+          if ((face && face.hover && geometry && geometry.selected) || (geometry && geometry.hover && geometry.selected)) {
             setGeometry(geometry, [oldMouseX, oldMouseY], [mouseX, mouseY])
           } else {
             camera.rotate(dX, dY)
@@ -848,7 +842,7 @@ export default {
           camera.pan(dX, dY)
           updateCamera()
         }
-        if (vec2.length([mouseX - oldMouseX, mouseY - oldMouseY]) > 2) { // 增加敏感度
+        if (vec2.length([mouseX - oldMouseX, mouseY - oldMouseY]) > 4) { // 增加敏感度
           oldMouseX = mouseX
           oldMouseY = mouseY
         }
