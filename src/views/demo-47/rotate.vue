@@ -642,20 +642,97 @@ export default {
       })
 
       // console.log('anglesOfAxisNTarget', anglesOfAxisNTarget)
+      // 根据面排除法线坐标轴的干扰
+      switch (faces[facePickNdx].name) {
+        case faceNames[0]:
+        case faceNames[2]: // 去掉 y 轴
+          anglesOfAxisNTarget[2] = Infinity
+          anglesOfAxisNTarget[3] = Infinity
+          break
+        case faceNames[1]:
+        case faceNames[3]: // 去掉 x 轴
+          anglesOfAxisNTarget[0] = Infinity
+          anglesOfAxisNTarget[1] = Infinity
+          break
+        case faceNames[4]:
+        case faceNames[5]: // 去掉 z 轴
+          anglesOfAxisNTarget[4] = Infinity
+          anglesOfAxisNTarget[5] = Infinity
+          break
+        default:
+          break
+      }
       const minAngle = Math.min(...anglesOfAxisNTarget)
       const delta = 1 * Math.PI / 180
-      if (minAngle === anglesOfAxisNTarget[5]) {
-        mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, delta)
-      } else if (minAngle === anglesOfAxisNTarget[4]) {
-        mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
-      } else if (minAngle === anglesOfAxisNTarget[3]) {
-        mat4.rotateZ(obj.uniforms.u_world, obj.uniforms.u_world, delta)
-      } else if (minAngle === anglesOfAxisNTarget[2]) {
-        mat4.rotateZ(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
-      } else if (minAngle === anglesOfAxisNTarget[1]) {
-        mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, delta)
-      } else {
-        mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
+      switch (faces[facePickNdx].name) {
+        case faceNames[0]:
+          if (minAngle === anglesOfAxisNTarget[5]) {
+            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, delta)
+          } else if (minAngle === anglesOfAxisNTarget[4]) {
+            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
+          } else if (minAngle === anglesOfAxisNTarget[1]) {
+            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, delta)
+          } else {
+            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
+          }
+          break
+        case faceNames[2]:
+          if (minAngle === anglesOfAxisNTarget[5]) {
+            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, delta)
+          } else if (minAngle === anglesOfAxisNTarget[4]) {
+            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
+          } else if (minAngle === anglesOfAxisNTarget[1]) {
+            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, delta)
+          } else {
+            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
+          }
+          break
+        case faceNames[1]:
+          if (minAngle === anglesOfAxisNTarget[5]) {
+            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, delta)
+          } else if (minAngle === anglesOfAxisNTarget[4]) {
+            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
+          } else if (minAngle === anglesOfAxisNTarget[3]) {
+            mat4.rotateZ(obj.uniforms.u_world, obj.uniforms.u_world, delta)
+          } else if (minAngle === anglesOfAxisNTarget[2]) {
+            mat4.rotateZ(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
+          }
+          break
+        case faceNames[3]:
+          if (minAngle === anglesOfAxisNTarget[5]) {
+            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, delta)
+          } else if (minAngle === anglesOfAxisNTarget[4]) {
+            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
+          } else if (minAngle === anglesOfAxisNTarget[3]) {
+            mat4.rotateZ(obj.uniforms.u_world, obj.uniforms.u_world, delta)
+          } else if (minAngle === anglesOfAxisNTarget[2]) {
+            mat4.rotateZ(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
+          }
+          break
+        case faceNames[4]:
+          if (minAngle === anglesOfAxisNTarget[3]) {
+            mat4.rotateZ(obj.uniforms.u_world, obj.uniforms.u_world, delta)
+          } else if (minAngle === anglesOfAxisNTarget[2]) {
+            mat4.rotateZ(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
+          } else if (minAngle === anglesOfAxisNTarget[1]) {
+            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, delta)
+          } else {
+            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
+          }
+          break
+        case faceNames[5]:
+          if (minAngle === anglesOfAxisNTarget[3]) {
+            mat4.rotateZ(obj.uniforms.u_world, obj.uniforms.u_world, delta)
+          } else if (minAngle === anglesOfAxisNTarget[2]) {
+            mat4.rotateZ(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
+          } else if (minAngle === anglesOfAxisNTarget[1]) {
+            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, delta)
+          } else {
+            mat4.rotateX(obj.uniforms.u_world, obj.uniforms.u_world, -delta)
+          }
+          break
+        default:
+          break
       }
     }
 
