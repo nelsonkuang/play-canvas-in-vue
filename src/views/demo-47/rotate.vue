@@ -760,7 +760,8 @@ export default {
         oldY = e.pageY
         if (pressedButton === 0) {
           const geometry = geometries[lastSelectedNdx]
-          if (geometry && geometry.hover && geometry.selected) {
+          const face = faces[facePickNdx]
+          if (face || (geometry && geometry.hover && geometry.selected)) {
             setGeometry(geometry, [oldMouseX, oldMouseY], [mouseX, mouseY])
           } else {
             camera.rotate(dX, dY)
