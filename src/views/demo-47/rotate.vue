@@ -609,9 +609,9 @@ export default {
       const target = vec2.create()
       vec2.subtract(target, newV2Pos, oldV2Pos)
 
-      console.log('target', target)
-      console.log('oldV2Pos', oldV2Pos)
-      console.log('newV2Pos', newV2Pos)
+      // console.log('target', target)
+      // console.log('oldV2Pos', oldV2Pos)
+      // console.log('newV2Pos', newV2Pos)
       const tempPositionArr = [0, 0, 0].concat(axisArrays.position)
       let axisPositions = []
       for (let i = 0; i < tempPositionArr.length; i += 3) {
@@ -634,7 +634,7 @@ export default {
         return [_[0] * ax + ax, -_[1] * ay + ay, _[2]]
       })
 
-      console.log('axisPositions', axisPositions)
+      // console.log('axisPositions', axisPositions)
 
       const axisDirections = axisPositions.slice(1).map((_) => {
         return [_[0] - axisPositions[0][0], _[1] - axisPositions[0][1]]
@@ -646,13 +646,13 @@ export default {
         }
       }
 
-      console.log('axisDirections', axisDirections)
+      // console.log('axisDirections', axisDirections)
 
       const anglesOfAxisNTarget = axisDirections.map((_) => {
         return (vec2.angle(_, target) * 10) | 0
       })
 
-      console.log('anglesOfAxisNTarget', anglesOfAxisNTarget)
+      // console.log('anglesOfAxisNTarget', anglesOfAxisNTarget)
       // 根据面排除法线坐标轴的干扰
       switch (faces[facePickNdx].name) {
         case faceNames[0]:
@@ -891,6 +891,7 @@ export default {
           havedClicked = true
         }
         drag = false
+        rotatingDirection = null
       }
 
       const touchMove = function (e) {
@@ -905,7 +906,8 @@ export default {
           oldX = e.touches[0].pageX
           oldY = e.touches[0].pageY
           const geometry = geometries[lastSelectedNdx]
-          if (geometry && geometry.hover && geometry.selected) {
+          const face = faces[facePickNdx]
+          if ((face && face.hover && geometry && geometry.selected) || (geometry && geometry.hover && geometry.selected)) {
             setGeometry(geometry, [oldMouseX, oldMouseY], [mouseX, mouseY])
           } else {
             camera.rotate(dX, dY)
