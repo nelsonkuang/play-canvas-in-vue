@@ -251,7 +251,7 @@ export default {
       faces.push({
         uniforms: {
           u_world: mat4.create(),
-          u_color: [0.5, 0.5, 0.5, 0.9],
+          u_color: [0.5, 0.5, 0.5, 0.7],
           u_projection: mat4.create(),
           u_view: mat4.create(),
           u_id: [
@@ -316,6 +316,8 @@ export default {
     let oldPickNdx = -1
     let pickNdx = -1
     let lastSelectedNdx = -1
+    let oldFacePickNdx = -1
+    let facePickNdx = -1
     // let zoom = 1
     let pressedButton = null
     let operatingType = 'rotating' // translating, rotating, scaling
@@ -411,6 +413,42 @@ export default {
         object && (object.hover = true)
       }
       // console.log(data)
+
+      faces.forEach((face) => {
+        face.uniforms.u_projection = projectionMatrix
+        face.uniforms.u_view = viewMatrix
+        setBuffersAndAttributes(gl, pickingProgramInfo, faceBufferInfo)
+        setUniforms(pickingProgramInfo, face.uniforms)
+        drawBufferInfo(gl, faceBufferInfo)
+      })
+
+      // read the 1 pixel
+      const faceData = new Uint8Array(4)
+      gl.readPixels(
+        0,                 // x
+        0,                 // y
+        1,                 // width
+        1,                 // height
+        gl.RGBA,           // format
+        gl.UNSIGNED_BYTE,  // type
+        faceData)             // typed array to hold result
+      const faceId = faceData[0] + (faceData[1] << 8) + (faceData[2] << 16) + (faceData[3] << 24)
+
+      // restore the object's color
+      if (oldFacePickNdx >= 0) {
+        const object = faces[oldFacePickNdx]
+        object && (object.hover = false)
+        oldFacePickNdx = -1
+      }
+
+      // highlight object under mouse
+      if (faceId > 0) {
+        facePickNdx = faceId - 1
+        oldFacePickNdx = facePickNdx
+        const object = faces[facePickNdx]
+        object && (object.hover = true)
+      }
+      // console.log(data)
     }
     // Draw the scene.
     function drawScene () {
@@ -465,9 +503,6 @@ export default {
           setBuffersAndAttributes(gl, programInfo, axisBufferInfo)
           setUniforms(programInfo, uniformsThatAreComputedForLines)
           drawBufferInfo(gl, axisBufferInfo, gl.LINES)
-
-          item.uniforms.u_color = oldColor
-          item.uniforms.u_world = oldWorld
           // gl.disable(gl.DEPTH_TEST)
           // gl.disable(gl.CULL_FACE)
           gl.enable(gl.BLEND)
@@ -475,16 +510,22 @@ export default {
           gl.depthMask(false)
           // gl.useProgram(programInfo.program)
           faces.forEach((face) => {
-            let oldFaceWorld = mat4.clone(face.uniforms.u_world)
+            const oldFaceColor = [...face.uniforms.u_color]
             mat4.copy(face.uniforms.u_projection, uniformsThatAreComputedForLines.u_projection)
             mat4.copy(face.uniforms.u_view, uniformsThatAreComputedForLines.u_view)
-            mat4.copy(face.uniforms.u_world, oldWorld)
+            mat4.copy(face.uniforms.u_world, item.uniforms.u_world)
+            if (face.hover) {
+              face.uniforms.u_color = [0.3, 0.3, 0.3, 0.7]
+            }
             placeFace(face, item.bbox)
             setBuffersAndAttributes(gl, programInfo, faceBufferInfo)
             setUniforms(programInfo, face.uniforms)
             drawBufferInfo(gl, faceBufferInfo)
-            face.uniforms.u_world = oldFaceWorld
+            face.uniforms.u_color = oldFaceColor
           })
+
+          item.uniforms.u_color = oldColor
+          item.uniforms.u_world = oldWorld
           // gl.enable(gl.DEPTH_TEST)
           // gl.enable(gl.CULL_FACE)
           gl.disable(gl.BLEND)
