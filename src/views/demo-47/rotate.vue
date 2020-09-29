@@ -251,7 +251,7 @@ export default {
       faces.push({
         uniforms: {
           u_world: mat4.create(),
-          u_color: [0, 0.5, 0.5, 1],
+          u_color: [0.5, 0.5, 0.5, 0.9],
           u_projection: mat4.create(),
           u_view: mat4.create(),
           u_id: [
@@ -261,34 +261,44 @@ export default {
             ((id >> 24) & 0xFF) / 0xFF
           ]
         },
+        width: 2,
+        height: 2,
         selected: false,
         hover: false,
         name: faceNames[ii]
       })
     }
-    function placeFace (face) {
+    function placeFace (face, { width, height, depth }) {
+      const faceWidth = face.width
+      const scales = [width / faceWidth, height / faceWidth, depth / faceWidth]
       switch (face.name) {
         case faceNames[0]:
-          mat4.translate(face.uniforms.u_world, face.uniforms.u_world, [0, 1, 0])
+          mat4.scale(face.uniforms.u_world, face.uniforms.u_world, [scales[0], 1, scales[2]])
+          mat4.translate(face.uniforms.u_world, face.uniforms.u_world, [0, height / 2, 0])
           break
         case faceNames[1]:
-          mat4.translate(face.uniforms.u_world, face.uniforms.u_world, [1, 0, 0])
+          mat4.scale(face.uniforms.u_world, face.uniforms.u_world, [1, scales[1], scales[2]])
+          mat4.translate(face.uniforms.u_world, face.uniforms.u_world, [width / 2, 0, 0])
           mat4.rotateZ(face.uniforms.u_world, face.uniforms.u_world, degToRad(-90))
           break
         case faceNames[2]:
-          mat4.translate(face.uniforms.u_world, face.uniforms.u_world, [0, -1, 0])
+          mat4.scale(face.uniforms.u_world, face.uniforms.u_world, [scales[0], 1, scales[2]])
+          mat4.translate(face.uniforms.u_world, face.uniforms.u_world, [0, -height / 2, 0])
           mat4.rotateZ(face.uniforms.u_world, face.uniforms.u_world, degToRad(180))
           break
         case faceNames[3]:
-          mat4.translate(face.uniforms.u_world, face.uniforms.u_world, [-1, 0, 0])
+          mat4.scale(face.uniforms.u_world, face.uniforms.u_world, [1, scales[1], scales[2]])
+          mat4.translate(face.uniforms.u_world, face.uniforms.u_world, [-width / 2, 0, 0])
           mat4.rotateZ(face.uniforms.u_world, face.uniforms.u_world, degToRad(90))
           break
         case faceNames[4]:
-          mat4.translate(face.uniforms.u_world, face.uniforms.u_world, [0, 0, 1])
+          mat4.scale(face.uniforms.u_world, face.uniforms.u_world, [scales[0], scales[1], 1])
+          mat4.translate(face.uniforms.u_world, face.uniforms.u_world, [0, 0, depth / 2])
           mat4.rotateX(face.uniforms.u_world, face.uniforms.u_world, degToRad(90))
           break
         case faceNames[5]:
-          mat4.translate(face.uniforms.u_world, face.uniforms.u_world, [0, 0, -1])
+          mat4.scale(face.uniforms.u_world, face.uniforms.u_world, [scales[0], scales[1], 1])
+          mat4.translate(face.uniforms.u_world, face.uniforms.u_world, [0, 0, -depth / 2])
           mat4.rotateX(face.uniforms.u_world, face.uniforms.u_world, degToRad(-90))
           break
         default:
@@ -460,16 +470,16 @@ export default {
           item.uniforms.u_world = oldWorld
           // gl.disable(gl.DEPTH_TEST)
           // gl.disable(gl.CULL_FACE)
-          // gl.enable(gl.BLEND)
-          // gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
-          // gl.depthMask(false)
+          gl.enable(gl.BLEND)
+          gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
+          gl.depthMask(false)
           // gl.useProgram(programInfo.program)
           faces.forEach((face) => {
             let oldFaceWorld = mat4.clone(face.uniforms.u_world)
             mat4.copy(face.uniforms.u_projection, uniformsThatAreComputedForLines.u_projection)
             mat4.copy(face.uniforms.u_view, uniformsThatAreComputedForLines.u_view)
             mat4.copy(face.uniforms.u_world, oldWorld)
-            placeFace(face)
+            placeFace(face, item.bbox)
             setBuffersAndAttributes(gl, programInfo, faceBufferInfo)
             setUniforms(programInfo, face.uniforms)
             drawBufferInfo(gl, faceBufferInfo)
@@ -477,8 +487,8 @@ export default {
           })
           // gl.enable(gl.DEPTH_TEST)
           // gl.enable(gl.CULL_FACE)
-          // gl.disable(gl.BLEND)
-          // gl.depthMask(true)
+          gl.disable(gl.BLEND)
+          gl.depthMask(true)
         }
       })
       animationID = requestAnimationFrame(drawScene)
