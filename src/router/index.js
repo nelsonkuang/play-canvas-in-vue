@@ -227,7 +227,7 @@ const routes = [
     meta: {
       title: 'Webgl 教程 使用场景图制作简单太阳、地球、月亮'
     }
-  }, 
+  },
   {
     path: '/demo-21',
     name: 'Demo21',
@@ -235,7 +235,7 @@ const routes = [
     meta: {
       title: 'Webgl 教程 简单方块人及关节'
     }
-  }, 
+  },
   {
     path: '/demo-22',
     name: 'Demo22',
@@ -243,7 +243,7 @@ const routes = [
     meta: {
       title: 'Webgl 教程 使用文字作为纹理二 - 图片文字'
     }
-  }, 
+  },
   {
     path: '/demo-23',
     name: 'Demo23',
@@ -251,7 +251,7 @@ const routes = [
     meta: {
       title: 'Webgl 教程 创建及使用纹理图集'
     }
-  }, 
+  },
   {
     path: '/demo-24',
     name: 'Demo24',
@@ -259,7 +259,7 @@ const routes = [
     meta: {
       title: 'Webgl 教程 环境贴图（镜面反射）'
     }
-  }, 
+  },
   {
     path: '/demo-25',
     name: 'Demo25',
@@ -267,7 +267,7 @@ const routes = [
     meta: {
       title: 'Webgl 教程 天空盒（盒子全景图）'
     }
-  }, 
+  },
   {
     path: '/demo-26',
     name: 'Demo26',
@@ -275,7 +275,7 @@ const routes = [
     meta: {
       title: 'Webgl 教程 雾'
     }
-  }, 
+  },
   {
     path: '/demo-27',
     name: 'Demo27',
@@ -339,7 +339,7 @@ const routes = [
     meta: {
       title: 'Webgl 教程 环境贴图（镜面反射）II'
     }
-  }, 
+  },
   {
     path: '/demo-35',
     name: 'Demo35',
@@ -347,7 +347,7 @@ const routes = [
     meta: {
       title: 'Webgl 实战 天空盒II'
     }
-  }, 
+  },
   {
     path: '/demo-36',
     name: 'Demo36',
@@ -355,7 +355,7 @@ const routes = [
     meta: {
       title: 'Webgl 教程 球状环境贴图'
     }
-  }, 
+  },
   {
     path: '/demo-37',
     name: 'Demo37',
@@ -363,7 +363,7 @@ const routes = [
     meta: {
       title: 'Webgl 实战 天空球（全景图）'
     }
-  }, 
+  },
   {
     path: '/demo-38',
     name: 'Demo38',
@@ -371,7 +371,7 @@ const routes = [
     meta: {
       title: 'Webgl 教程 画各种线框'
     }
-  }, 
+  },
   {
     path: '/demo-39',
     name: 'Demo39',
@@ -379,7 +379,7 @@ const routes = [
     meta: {
       title: 'Webgl 教程 斜面纹理（面部正常阴影渲染）'
     }
-  }, 
+  },
   {
     path: '/demo-40',
     name: 'Demo40',
@@ -387,7 +387,7 @@ const routes = [
     meta: {
       title: 'Webgl 教程 实现 Web VR'
     }
-  }, 
+  },
   {
     path: '/demo-41',
     name: 'Demo41',
@@ -395,7 +395,7 @@ const routes = [
     meta: {
       title: 'Webgl 教程 实现多视图'
     }
-  }, 
+  },
   {
     path: '/demo-42',
     name: 'Demo42',
@@ -403,7 +403,7 @@ const routes = [
     meta: {
       title: 'Webgl 教程 Camera 可视化'
     }
-  }, 
+  },
   {
     path: '/demo-43',
     name: 'Demo43',
@@ -411,7 +411,7 @@ const routes = [
     meta: {
       title: 'Webgl 教程 Camera 可视化II 正交透视'
     }
-  }, 
+  },
   {
     path: '/demo-44',
     name: 'Demo44',
@@ -419,7 +419,7 @@ const routes = [
     meta: {
       title: '使用 Canvas 2D 作图，画旋转立方体'
     }
-  }, 
+  },
   {
     path: '/demo-45',
     name: 'Demo45',
@@ -427,7 +427,7 @@ const routes = [
     meta: {
       title: 'Webgl 实战 地球贴图 及 按国家经纬度贴名'
     }
-  }, 
+  },
   {
     path: '/demo-46',
     name: 'Demo46',
@@ -435,7 +435,7 @@ const routes = [
     meta: {
       title: 'Webgl 实战 地图国家贴名增加 mouse over 效果'
     }
-  }, 
+  },
   {
     path: '/demo-47',
     name: 'Demo47',
@@ -443,7 +443,7 @@ const routes = [
     meta: {
       title: 'Webgl 实战 编辑物体 - 平移'
     }
-  }, 
+  },
   {
     path: '/scale',
     name: 'Scale',
@@ -451,13 +451,29 @@ const routes = [
     meta: {
       title: 'Webgl 实战 编辑物体 - 缩放'
     }
-  }, 
+  },
   {
     path: '/rotate',
     name: 'Rotate',
     component: () => import('@/views/demo-47/rotate'),
     meta: {
       title: 'Webgl 实战 编辑物体 - 旋转'
+    }
+  },
+  {
+    path: '/translate-ii',
+    name: 'TranslateII',
+    component: () => import('@/views/demo-47/translate-ii'),
+    meta: {
+      title: 'Webgl 实战 编辑物体 - 平移 II（优化版）'
+    }
+  },
+  {
+    path: '/scale-ii',
+    name: 'ScaleII',
+    component: () => import('@/views/demo-47/scale-ii'),
+    meta: {
+      title: 'Webgl 实战 编辑物体 - 缩放 II（优化版）'
     }
   }
 ]
