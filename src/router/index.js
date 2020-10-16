@@ -429,6 +429,14 @@ const routes = [
     }
   },
   {
+    path: '/height-map',
+    name: 'HeightMap',
+    component: () => import('@/views/demo-45/height-map'),
+    meta: {
+      title: 'Webgl 实战 地球贴图 高度图'
+    }
+  },
+  {
     path: '/demo-46',
     name: 'Demo46',
     component: () => import('@/views/demo-46/index'),
