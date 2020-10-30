@@ -60,9 +60,9 @@ export default {
     // setup GLSL programs
     const programInfo = createProgramInfo(gl, [colorVertexShaderCode, colorFragmentShaderCode])
 
-    function degToRad (d) {
-      return d * Math.PI / 180
-    }
+    // function degToRad (d) {
+    //   return d * Math.PI / 180
+    // }
 
     const uniformsThatAreComputedForLines = {
       u_view: null,
@@ -82,10 +82,10 @@ export default {
     let pressedButton = null
     const camera = new Camera()
     camera.aspectRatio = gl.canvas.clientWidth / gl.canvas.clientHeight
-    camera.fitViewToScene([-2, -2, -2], [2, 2, 2])
-    camera.rotate(0, degToRad(-20)) // 修改相机初始角度
-    camera.target = [0, 1, 0]
-    camera.position = [0, 2, 2]
+    // camera.fitViewToScene([-2, -2, -2], [2, 2, 2])
+    // camera.rotate(0, degToRad(-20)) // 修改相机初始角度
+    // camera.target = [0, 1, 0]
+    // camera.position = [0, 2, 2]
     camera.updatePosition()
     const supportedTouch = window.hasOwnProperty('ontouchstart')
 
