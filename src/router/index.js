@@ -377,7 +377,7 @@ const routes = [
     name: 'Lines',
     component: () => import('@/views/demo-38/lines'),
     meta: {
-      title: 'Webgl 实战 点击屏幕动态生成射线'
+      title: 'Webgl 实战 点击屏幕动态生成射线（屏幕坐标转 world 坐标）'
     }
   },
   {
