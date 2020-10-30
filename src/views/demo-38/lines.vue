@@ -63,6 +63,7 @@ export default {
     // function degToRad (d) {
     //   return d * Math.PI / 180
     // }
+    const random = Math.random
 
     const uniformsThatAreComputedForLines = {
       u_view: null,
@@ -143,7 +144,7 @@ export default {
       // calls gl.drawArrays or gl.drawElements
       drawBufferInfo(gl, planeBufferInfo, gl.LINES)
 
-      uniformsThatAreComputedForLines.u_color = [1, 1, 1, 1]
+      uniformsThatAreComputedForLines.u_color = [random(), random(), random(), 1]
       linesBufferInfo.forEach((lineBufferInfo) => {
         // gl.useProgram(programInfo.program)
         setBuffersAndAttributes(gl, programInfo, lineBufferInfo)
