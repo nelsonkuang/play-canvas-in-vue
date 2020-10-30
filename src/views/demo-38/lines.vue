@@ -94,14 +94,16 @@ export default {
       const projectionMatrixInverse = mat4.create()
       mat4.invert(projectionMatrixInverse, camera.projectionMatrix())
       vec3.transformMat4(coords, coords, projectionMatrixInverse)
-      vec3.add(coords, coords, camera.position)
+      // vec3.add(coords, coords, camera.position)
+      vec3.transformMat4(coords, coords, camera.worldMatrix())
 
       const lineArrs = {
         position: {
           numComponents: 3,
           data: [
-            0, 0, 0,
-            ...coords
+            ...coords,
+            // coords[0], coords[1], -coords[2] * -100
+            0, 1, 0
           ]
         },
         indices: {
@@ -155,6 +157,9 @@ export default {
     function updateCamera () {
       camera.updatePosition()
     }
+    function onClick () {
+      genLine(mouseX, mouseY)
+    }
     /* ================= Mouse events ====================== */
     let startTime = 0
     let endTime = 0
@@ -178,6 +183,7 @@ export default {
       const mouseUp = function () {
         endTime = (new Date()).getTime()
         if (endTime - startTime < 150) {
+          onClick()
           havedClicked = true
         }
         drag = false
@@ -244,6 +250,7 @@ export default {
       const touchEnd = function () {
         endTime = (new Date()).getTime()
         if (endTime - startTime < 150) {
+          onClick()
           havedClicked = true
         }
         drag = false
@@ -279,7 +286,6 @@ export default {
       if (havedClicked) {
         setTimeout(() => {
           havedClicked = false
-          genLine(mouseX, mouseY)
         }, 50) // 确保选中失败的情况
       }
     }, false)
