@@ -373,6 +373,14 @@ const routes = [
     }
   },
   {
+    path: '/lines',
+    name: 'Lines',
+    component: () => import('@/views/demo-38/lines'),
+    meta: {
+      title: 'Webgl 实践 动态生成线'
+    }
+  },
+  {
     path: '/demo-39',
     name: 'Demo39',
     component: () => import('@/views/demo-39/index'),

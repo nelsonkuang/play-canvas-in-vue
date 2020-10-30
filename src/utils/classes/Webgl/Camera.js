@@ -49,6 +49,15 @@ class Camera {
     vec3.add(this.position, pos, this.target)
   }
 
+  worldMatrix () {
+    const world = mat4.create()
+    mat4.fromXRotation(world, -this.phi)
+    mat4.rotateY(world, world, -this.theta)
+    mat4.scale(world, world, [this.zoom, this.zoom, this.zoom])
+    mat4.translate(world, world, this.position)
+    return world
+  }
+
   rotate (dx, dy) {
     const phiMax = Math.PI / 2 - 0.01
     this.theta += dx
