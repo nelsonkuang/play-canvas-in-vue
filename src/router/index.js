@@ -381,6 +381,14 @@ const routes = [
     }
   },
   {
+    path: '/line-intersection',
+    name: 'LineIntersection',
+    component: () => import('@/views/demo-38/line-intersection'),
+    meta: {
+      title: 'Webgl 实战 线求交，使用 BoundingRect 实现点选'
+    }
+  },
+  {
     path: '/demo-39',
     name: 'Demo39',
     component: () => import('@/views/demo-39/index'),
