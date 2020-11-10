@@ -133,6 +133,14 @@ const routes = [
     }
   },
   {
+    path: '/instanced-drawing',
+    name: 'InstancedDrawing',
+    component: () => import('@/views/demo-8/instanced-drawing'),
+    meta: {
+      title: 'Webgl 教程 实例化绘图（一样的对象合并渲染）'
+    }
+  },
+  {
     path: '/demo-9',
     name: 'Demo9',
     component: () => import('@/views/demo-9/index'),
