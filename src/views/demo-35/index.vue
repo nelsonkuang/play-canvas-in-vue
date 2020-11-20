@@ -50,7 +50,7 @@ export default {
 
       varying vec4 v_position;
       void main() {
-        vec4 t = u_viewDirectionProjectionInverse * v_position;
+        vec4 t = u_viewDirectionProjectionInverse * v_position; // 反向操作求出 world direction
         gl_FragColor = textureCube(u_skybox, normalize(t.xyz / t.w));
       }
     `
