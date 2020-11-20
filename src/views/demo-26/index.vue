@@ -55,8 +55,8 @@ export default {
 
       void main() {
         vec4 color = texture2D(u_texture, v_texcoord);
-        float fogAmount = smoothstep(u_fogNear, u_fogFar, gl_FragCoord.z);
-        gl_FragColor = mix(color, u_fogColor, fogAmount);
+        float fogAmount = smoothstep(u_fogNear, u_fogFar, gl_FragCoord.z); // 0 - 深度 - 1
+        gl_FragColor = mix(color, u_fogColor, fogAmount); //mix 返回 x⋅(1−a) + y⋅a 按权重求和，fogAmout = 1 时, 全部是雾, 0 时最近看得最清
       }
     `
 
