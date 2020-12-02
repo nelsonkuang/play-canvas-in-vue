@@ -5,7 +5,7 @@
 <script>
 /* eslint-disable no-alert, no-console */
 // Reference from: 
-// https://webglfundamentals.org/webgl/lessons/webgl-ramp-textures.html
+// https://webglfundamentals.org/webgl/lessons/webgl-3d-camera.html
 import { mat4, vec3 } from 'gl-matrix'
 import { createProgramInfo, setBuffersAndAttributes, setUniforms, drawBufferInfo, createBufferInfoFromArrays } from '../../utils/tools/web-gl'
 import Camera from '../../utils/classes/Webgl/Camera'
@@ -28,19 +28,18 @@ export default {
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
     const vertexShaderCode = `
       attribute vec4 a_position;
-      attribute vec3 a_normal;
+      attribute vec4 a_color;
 
-      uniform mat4 u_worldViewProjection;
-      uniform mat4 u_worldInverseTranspose;
+      uniform mat4 u_matrix;
 
-      varying vec3 v_normal;
+      varying vec4 v_color;
 
       void main() {
         // Multiply the position by the matrix.
-        gl_Position = u_worldViewProjection * a_position;
+        gl_Position = u_matrix * a_position;
 
-        // orient the normals and pass to the fragment shader
-        v_normal = mat3(u_worldInverseTranspose) * a_normal;
+        // Pass the color to the fragment shader.
+        v_color = a_color;
       }
     `
 
@@ -48,38 +47,10 @@ export default {
       precision mediump float;
 
       // Passed in from the vertex shader.
-      varying vec3 v_normal;
-
-      uniform vec3 u_reverseLightDirection;
-      uniform vec4 u_color;
-      uniform sampler2D u_ramp;
-      uniform vec2 u_rampSize;
-      uniform float u_linearAdjust; // 1.0 if linear, 0.0 if nearest
+      varying vec4 v_color;
 
       void main() {
-        // because v_normal is a varying it's interpolated
-        // so it will not be a unit vector. Normalizing it
-        // will make it a unit vector again
-        vec3 normal = normalize(v_normal);
-
-        float cosAngle = dot(normal, u_reverseLightDirection);
-
-        // convert from -1 <-> 1 to 0 <-> 1
-        float u = cosAngle * 0.5 + 0.5;
-
-        // make a texture coordinate
-        vec2 uv = vec2(u, 0.5);
-
-        // scale to size of ramp
-        vec2 texelRange = uv * (u_rampSize - u_linearAdjust);
-
-        // offset by half a texel and convert to texture coordinate
-        vec2 rampUV = (texelRange + u_linearAdjust * 0.5) / u_rampSize;
-
-        // lookup a value from a 1d texture
-        vec4 rampColor = texture2D(u_ramp, rampUV);
-
-        gl_FragColor = u_color * rampColor;
+        gl_FragColor = v_color;
       }
     `
 
@@ -91,6 +62,20 @@ export default {
       normal: {
         numComponents: 3,
         data: headData.normals
+      },
+      color: {
+        numComponents: 3,
+        data: (function (normals) {
+          const colors = new Uint8Array(normals.length)
+          let offset = 0
+          for (let ii = 0; ii < colors.length; ii += 3) {
+            for (let jj = 0; jj < 3; ++jj) {
+              colors[offset] = (normals[offset] * 0.5 + 0.5) * 255
+              ++offset
+            }
+          }
+          return colors
+        })(headData.normals)
       }
     }
 
@@ -99,105 +84,15 @@ export default {
     // setup GLSL programs
     const programInfo = createProgramInfo(gl, [vertexShaderCode, fragmentShaderCode])
 
-    // make a 256 array where elements 0 to 127
-    // go from 64 to 191 and elements 128 to 255
-    // are all 255.
-    const smoothSolid = new Array(256).fill(255)
-    for (let i = 0; i < 128; ++i) {
-      smoothSolid[i] = 64 + i
-    }
-
-    const ramps = [
-      {
-        name: 'dark-white', color: [0.2, 1, 0.2, 1], format: gl.LUMINANCE, filter: false,
-        data: [80, 255]
-      },
-      {
-        name: 'dark-white-skewed', color: [0.2, 1, 0.2, 1], format: gl.LUMINANCE, filter: false,
-        data: [80, 80, 80, 255, 255]
-      },
-      {
-        name: 'normal', color: [0.2, 1, 0.2, 1], format: gl.LUMINANCE, filter: true,
-        data: [0, 255]
-      },
-      {
-        name: '3-step', color: [0.2, 1, 0.2, 1], format: gl.LUMINANCE, filter: false,
-        data: [80, 160, 255]
-      },
-      {
-        name: '4-step', color: [0.2, 1, 0.2, 1], format: gl.LUMINANCE, filter: false,
-        data: [80, 140, 200, 255]
-      },
-      {
-        name: '4-step skewed', color: [0.2, 1, 0.2, 1], format: gl.LUMINANCE, filter: false,
-        data: [80, 80, 80, 80, 140, 200, 255]
-      },
-      {
-        name: 'black-white-black', color: [0.2, 1, 0.2, 1], format: gl.LUMINANCE, filter: false,
-        data: [80, 255, 80]
-      },
-      {
-        name: 'stripes', color: [0.2, 1, 0.2, 1], format: gl.LUMINANCE, filter: false,
-        data: [80, 255, 80, 255, 80, 255, 80, 255, 80, 255, 80, 255, 80, 255, 80, 255, 80, 255, 80, 255, 80, 255, 80, 255, 80, 255, 80, 255, 80, 255, 80, 255]
-      },
-      {
-        name: 'stripe', color: [0.2, 1, 0.2, 1], format: gl.LUMINANCE, filter: false,
-        data: [80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]
-      },
-      {
-        name: 'smooth-solid', color: [0.2, 1, 0.2, 1], format: gl.LUMINANCE, filter: false,
-        data: smoothSolid
-      },
-      {
-        name: 'rgb', color: [1, 1, 1, 1], format: gl.RGB, filter: true,
-        data: [255, 0, 0, 0, 255, 0, 0, 0, 255]
-      },
-    ];
-
-    const elementsForFormat = {}
-    elementsForFormat[gl.LUMINANCE] = 1
-    elementsForFormat[gl.RGB] = 3
-
-    ramps.forEach((ramp) => {
-      const {/* name, */ format, filter, data } = ramp
-      const tex = gl.createTexture()
-      gl.bindTexture(gl.TEXTURE_2D, tex)
-      gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1)
-      const width = data.length / elementsForFormat[format]
-      gl.texImage2D(
-        gl.TEXTURE_2D,     // target
-        0,                 // mip level
-        format,            // internal format
-        width,             // width
-        1,                 // height
-        0,                 // border
-        format,            // format
-        gl.UNSIGNED_BYTE,  // type
-        new Uint8Array(data))
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter ? gl.LINEAR : gl.NEAREST)
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter ? gl.LINEAR : gl.NEAREST)
-      ramp.texture = tex
-      ramp.size = [width, 1]
-    })
-
     function degToRad (d) {
       return d * Math.PI / 180
     }
 
     const uniformsThatAreComputed = {
-      u_worldViewProjection: mat4.create(),
-      u_worldInverseTranspose: mat4.create(),
-      u_color: null,
-      u_ramp: null,
-      u_rampSize: null,
-      u_linearAdjust: null,
-      u_reverseLightDirection: null
+      u_matrix: mat4.create(),
     }
 
     let yRotation = degToRad(10)
-    const rampIndex = 2 // 有 10 种阴影模式，0 开始，第 2 种为正常阴影
 
     let dX = 0
     let dY = 0
@@ -237,23 +132,7 @@ export default {
       yRotation = time
       mat4.fromYRotation(world, yRotation)
 
-      mat4.multiply(uniformsThatAreComputed.u_worldViewProjection, viewProjection, world)
-
-      const worldInverse = mat4.create()
-      mat4.invert(worldInverse, world)
-
-      mat4.transpose(uniformsThatAreComputed.u_worldInverseTranspose, worldInverse)
-
-      {
-        const { texture, color, size, filter } = ramps[rampIndex]
-        uniformsThatAreComputed.u_color = color
-        let v3 = vec3.create()
-        vec3.normalize(v3, [-1.75, 0.7, 1])
-        uniformsThatAreComputed.u_reverseLightDirection = v3
-        uniformsThatAreComputed.u_ramp = texture
-        uniformsThatAreComputed.u_rampSize = size
-        uniformsThatAreComputed.u_linearAdjust = filter ? 1 : 0
-      }
+      mat4.multiply(uniformsThatAreComputed.u_matrix, viewProjection, world)
 
       gl.useProgram(programInfo.program)
       // Setup all the needed attributes.
