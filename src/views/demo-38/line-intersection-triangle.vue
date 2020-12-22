@@ -4,6 +4,10 @@
 
 <script>
 /* eslint-disable no-alert, no-console */
+// Reference from: 
+// https://www.cnblogs.com/dwdxdy/p/3230156.html
+// https://bbs.csdn.net/topics/10244353
+// https://blog.csdn.net/qq_41593380/article/details/79792643
 import {  mat4, vec3, vec2
   /* mat3 */} from 'gl-matrix'
 import { createBufferInfoFromArrays, createProgramInfo, setBuffersAndAttributes, setUniforms, drawBufferInfo, resizeCanvasToDisplaySize } from '../../utils/tools/web-gl'
@@ -128,11 +132,57 @@ export default {
           const cornerVerticeToCenterV2s = cornerVertices.map(_ => [_[0] - center[0], _[1] - center[1]])
           const cornerVerticeToCenterEdges = cornerVerticeToCenterV2s.map((_, index) => ({ vertex: cornerVertices[index], length: vec2.length(_) }))
           const cornerVerticeToCenterSortedEdges = cornerVerticeToCenterEdges.sort((a, b) => b.length - a.length)
-          const sixCornerVertices = cornerVerticeToCenterSortedEdges.slice(0, 6)
+          const len = 6
+          const sixCornerVertices = cornerVerticeToCenterSortedEdges.slice(0, len).map(_ => _.vertex)
+          function pointCompare (a, b, center) {
+            if (a[0] >= 0 && b[0] < 0)
+              return true
+            if (a[0] == 0 && b[0] == 0)
+              return a[1] > b[1]
+            // 向量 OA 和向量 OB 的叉积
+            const det = (a[0] - center[0]) * (b[1] - center[1]) - (b[0] - center[0]) * (a[1] - center[1]);
+            if (det < 0)
+              return true
+            if (det > 0)
+              return false
+            // 向量 OA 和向量 OB 共线，以距离判断大小
+            const d1 = (a[0] - center[0]) * (a[0] - center[0]) + (a[1] - center[1]) * (a[1] - center[1])
+            const d2 = (b[0] - center[0]) * (b[0] - center[1]) + (b[1] - center[1]) * (b[1] - center[1])
+            return d1 > d2
+          }
+          // 冒泡排序
+          for (let i = 0; i < len - 1; i++) {
+            for (let j = 0; j < len - i - 1; j++) {
+              if (pointCompare(sixCornerVertices[j], sixCornerVertices[j + 1], center)) {
+                const tmp = sixCornerVertices[j]
+                sixCornerVertices[j] = sixCornerVertices[j + 1]
+                sixCornerVertices[j + 1] = tmp
+              }
+            }
+          }
+          const trangles = []
+          sixCornerVertices.forEach((_, index) => {
+            trangles.push([_, sixCornerVertices[(index + 1) % len], center])
+          })
           return {
+            trangles,
             cornerVertices: sixCornerVertices,
             contain: function (x, y) {
               console.log('point', [x, y])
+              console.log('cornerVertices', this.cornerVertices)
+              console.log('trangles', this.trangles)
+              // 叉积
+              function mul (a, b, c) {
+                return (a[0] - c[0]) * (b[1] - c[1]) - (b[0] - c[0]) * (a[1] - c[1])
+              }
+              // 用叉乘来判断是否在三角形内
+              function inside (tr, p) {
+                for (let i = 0; i < 3; i++)
+                  if (mul(p, tr[i], tr[(i + 1) % 3]) * mul(p, tr[(i + 2) % 3], tr[(i + 1) % 3]) > 0) // 一个是顺时针，一个是逆时针
+                    return false
+                return true
+              }
+              return this.trangles.some(_ => inside(_, [x, y]))
             }
           }
         }
@@ -216,7 +266,9 @@ export default {
         item.isSelected = false
         const bRect = item.boundingRect()
         if (bRect.contain(currentPoint[0], currentPoint[1])) {
-          item.isSelected = true
+          const bHexagon = item.boundingHexagon(bRect.cornerVertices, bRect.center)
+          if (bHexagon.contain(currentPoint[0], currentPoint[1]))
+            item.isSelected = true
         }
         console.log('bRect', bRect)
       })

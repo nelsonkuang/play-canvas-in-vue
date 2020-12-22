@@ -397,6 +397,14 @@ const routes = [
     }
   },
   {
+    path: '/line-intersection-triangle',
+    name: 'LineIntersectionTriangle',
+    component: () => import('@/views/demo-38/line-intersection-triangle'),
+    meta: {
+      title: 'Webgl 实战 线求交，使用 BoundingRect + 三角 / 多边形包围盒 实现点选'
+    }
+  },
+  {
     path: '/demo-39',
     name: 'Demo39',
     component: () => import('@/views/demo-39/index'),
