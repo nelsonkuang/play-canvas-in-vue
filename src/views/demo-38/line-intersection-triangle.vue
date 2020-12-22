@@ -4,8 +4,8 @@
 
 <script>
 /* eslint-disable no-alert, no-console */
-import {  mat4, vec3/*, vec2  
-  mat3 */} from 'gl-matrix'
+import {  mat4, vec3, vec2
+  /* mat3 */} from 'gl-matrix'
 import { createBufferInfoFromArrays, createProgramInfo, setBuffersAndAttributes, setUniforms, drawBufferInfo, resizeCanvasToDisplaySize } from '../../utils/tools/web-gl'
 import { createBufferInfoFunc, createGridVertices, createCubeVertices } from '../../utils/tools/primitives'
 import Camera from '../../utils/classes/Webgl/Camera'
@@ -121,6 +121,18 @@ export default {
                 && x <= this.maxX
                 && y >= this.minY
                 && y <= this.maxY
+            }
+          }
+        },
+        boundingHexagon: function (cornerVertices, center) {
+          const cornerVerticeToCenterV2s = cornerVertices.map(_ => [_[0] - center[0], _[1] - center[1]])
+          const cornerVerticeToCenterEdges = cornerVerticeToCenterV2s.map((_, index) => ({ vertex: cornerVertices[index], length: vec2.length(_) }))
+          const cornerVerticeToCenterSortedEdges = cornerVerticeToCenterEdges.sort((a, b) => b.length - a.length)
+          const sixCornerVertices = cornerVerticeToCenterSortedEdges.slice(0, 6)
+          return {
+            cornerVertices: sixCornerVertices,
+            contain: function (x, y) {
+              console.log('point', [x, y])
             }
           }
         }
