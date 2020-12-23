@@ -3,7 +3,7 @@
 </template>
 
 <script>
-/* eslint-disable no-alert, no-console */
+/* eslint-disable no-alert, no-console, no-debugger */
 // Reference from: 
 // https://www.cnblogs.com/dwdxdy/p/3230156.html
 // https://bbs.csdn.net/topics/10244353
@@ -207,14 +207,17 @@ export default {
         },
         isSelected: false,
         boundingRect: function () {
-          let radius = 0.5
+          let radius
+          let point = [0.5, 0, 0]
           let center = [0, 0, 0]
           {
             const mvpMatrix = mat4.create()
             mat4.multiply(mvpMatrix, this.uniforms.u_projection, this.uniforms.u_view)
             mat4.multiply(mvpMatrix, mvpMatrix, this.uniforms.u_world)
             vec3.transformMat4(center, center, mvpMatrix)
-            radius *= mvpMatrix[14]
+            vec3.transformMat4(point, point, mvpMatrix)
+            radius = vec3.length([center[0] - point[0], center[1] - point[1], center[2] - point[2]])
+            debugger
           }
           return {
             topLeft: [center[0] - radius, center[1] + radius],
@@ -234,6 +237,7 @@ export default {
         boundingPolygon: function (center) {
           return {
             contain: function (x, y) {
+              console.log('vec2.length([center[0] - x, center[1] - y])', vec2.length([center[0] - x, center[1] - y]))
               return vec2.length([center[0] - x, center[1] - y]) <= center[2]
             }
           }
@@ -318,6 +322,7 @@ export default {
         item.isSelected = false
         const bRect = item.boundingRect()
         if (bRect.contain(currentPoint[0], currentPoint[1])) {
+          debugger
           const bPolygon = item.boundingPolygon(bRect.cornerVertices || bRect.center)
           if (bPolygon.contain(currentPoint[0], currentPoint[1]))
             item.isSelected = true
