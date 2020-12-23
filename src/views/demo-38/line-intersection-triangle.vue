@@ -8,8 +8,8 @@
 // https://www.cnblogs.com/dwdxdy/p/3230156.html
 // https://bbs.csdn.net/topics/10244353
 // https://blog.csdn.net/qq_41593380/article/details/79792643
-import {  mat4, vec3, vec2
-  /* mat3 */} from 'gl-matrix'
+import {  mat4, vec3, /*vec2
+   mat3 */} from 'gl-matrix'
 import { createBufferInfoFromArrays, createProgramInfo, setBuffersAndAttributes, setUniforms, drawBufferInfo, resizeCanvasToDisplaySize } from '../../utils/tools/web-gl'
 import { createBufferInfoFunc, createGridVertices, createCubeVertices } from '../../utils/tools/primitives'
 import Camera from '../../utils/classes/Webgl/Camera'
@@ -128,15 +128,17 @@ export default {
             }
           }
         },
-        boundingHexagon: function (cornerVertices, center) {
-          const cornerVerticeToCenterV2s = cornerVertices.map(_ => [_[0] - center[0], _[1] - center[1]])
-          const cornerVerticeToCenterEdges = cornerVerticeToCenterV2s.map((_, index) => ({ vertex: cornerVertices[index], length: vec2.length(_) }))
-          const cornerVerticeToCenterSortedEdges = cornerVerticeToCenterEdges.sort((a, b) => b.length - a.length)
-          const len = 6
-          const sixCornerVertices = cornerVerticeToCenterSortedEdges.slice(0, len).map(_ => _.vertex)
+        boundingPolygon: function (cornerVertices) {
+          const len = cornerVertices.length
+          const center = [0, 0]
+          for (let i = 0; i < len; ++i) {
+            center[0] += cornerVertices[i][0]
+            center[1] += cornerVertices[i][1]
+          }
+          center[0] = center[0] / len
+          center[1] = center[1] / len
+
           function pointCompare (a, b, center) {
-            if (a[0] >= 0 && b[0] < 0)
-              return true
             if (a[0] == 0 && b[0] == 0)
               return a[1] > b[1]
             // 向量 OA 和向量 OB 的叉积
@@ -153,20 +155,20 @@ export default {
           // 冒泡排序
           for (let i = 0; i < len - 1; i++) {
             for (let j = 0; j < len - i - 1; j++) {
-              if (pointCompare(sixCornerVertices[j], sixCornerVertices[j + 1], center)) {
-                const tmp = sixCornerVertices[j]
-                sixCornerVertices[j] = sixCornerVertices[j + 1]
-                sixCornerVertices[j + 1] = tmp
+              if (pointCompare(cornerVertices[j], cornerVertices[j + 1], center)) {
+                const tmp = cornerVertices[j]
+                cornerVertices[j] = cornerVertices[j + 1]
+                cornerVertices[j + 1] = tmp
               }
             }
           }
           const trangles = []
-          sixCornerVertices.forEach((_, index) => {
-            trangles.push([_, sixCornerVertices[(index + 1) % len], center])
+          cornerVertices.forEach((_, index) => {
+            trangles.push([_, cornerVertices[(index + 1) % len], center])
           })
           return {
             trangles,
-            cornerVertices: sixCornerVertices,
+            cornerVertices,
             contain: function (x, y) {
               console.log('point', [x, y])
               console.log('cornerVertices', this.cornerVertices)
@@ -266,8 +268,8 @@ export default {
         item.isSelected = false
         const bRect = item.boundingRect()
         if (bRect.contain(currentPoint[0], currentPoint[1])) {
-          const bHexagon = item.boundingHexagon(bRect.cornerVertices, bRect.center)
-          if (bHexagon.contain(currentPoint[0], currentPoint[1]))
+          const bPolygon = item.boundingPolygon(bRect.cornerVertices)
+          if (bPolygon.contain(currentPoint[0], currentPoint[1]))
             item.isSelected = true
         }
         console.log('bRect', bRect)
