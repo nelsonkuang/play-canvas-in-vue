@@ -8,10 +8,10 @@
 // https://www.cnblogs.com/dwdxdy/p/3230156.html
 // https://bbs.csdn.net/topics/10244353
 // https://blog.csdn.net/qq_41593380/article/details/79792643
-import {  mat4, vec3, /*vec2
-   mat3 */} from 'gl-matrix'
+import {  mat4, vec3, vec2
+  /*mat3 */} from 'gl-matrix'
 import { createBufferInfoFromArrays, createProgramInfo, setBuffersAndAttributes, setUniforms, drawBufferInfo, resizeCanvasToDisplaySize } from '../../utils/tools/web-gl'
-import { createBufferInfoFunc, createGridVertices, createCubeVertices } from '../../utils/tools/primitives'
+import { createBufferInfoFunc, createGridVertices, createCubeVertices, createSphereVertices } from '../../utils/tools/primitives'
 import Camera from '../../utils/classes/Webgl/Camera'
 
 let animationID = null
@@ -56,6 +56,7 @@ export default {
 
     const createPlaneBufferInfo = createBufferInfoFunc(createGridVertices)
     const createCubeBufferInfo = createBufferInfoFunc(createCubeVertices)
+    const createSphereBufferInfo = createBufferInfoFunc(createSphereVertices)
     const planeBufferInfo = createPlaneBufferInfo(
       gl,
       20,  // width
@@ -67,6 +68,8 @@ export default {
       gl,
       1,  // size
     )
+
+    const sphereBufferInfo = createSphereBufferInfo(gl, 0.5, 32, 24)
 
     const geometries = [
       {
@@ -188,6 +191,53 @@ export default {
             }
           }
         }
+      },
+      {
+        uid: ++uid,
+        bufferInfo: sphereBufferInfo,
+        uniforms: {
+          u_world: (function (mat4) {
+            let m4 = mat4.create()
+            mat4.translate(m4, m4, [0, 0, -5])
+            return m4
+          })(mat4),
+          u_color: [1, 0.5, 0.5, 1],
+          u_projection: mat4.create(),
+          u_view: mat4.create()
+        },
+        isSelected: false,
+        boundingRect: function () {
+          let radius = 0.5
+          let center = [0, 0, 0]
+          {
+            const mvpMatrix = mat4.create()
+            mat4.multiply(mvpMatrix, this.uniforms.u_projection, this.uniforms.u_view)
+            mat4.multiply(mvpMatrix, mvpMatrix, this.uniforms.u_world)
+            vec3.transformMat4(center, center, mvpMatrix)
+            radius *= mvpMatrix[14]
+          }
+          return {
+            topLeft: [center[0] - radius, center[1] + radius],
+            topRight: [center[0] + radius, center[1] + radius],
+            bottomLeft: [center[0] - radius, center[1] - radius],
+            bottomRight: [center[0] + radius, center[1] - radius],
+            center: [center[0], center[1], radius],
+            contain: function (x, y) {
+              console.log('point', [x, y])
+              return x >= this.topLeft[0]
+                && x <= this.topRight[0]
+                && y >= this.bottomRight[1]
+                && y <= this.topLeft[1]
+            }
+          }
+        },
+        boundingPolygon: function (center) {
+          return {
+            contain: function (x, y) {
+              return vec2.length([center[0] - x, center[1] - y]) <= center[2]
+            }
+          }
+        }
       }
     ]
     // console.log(geometries[0].computeBBox())
@@ -268,7 +318,7 @@ export default {
         item.isSelected = false
         const bRect = item.boundingRect()
         if (bRect.contain(currentPoint[0], currentPoint[1])) {
-          const bPolygon = item.boundingPolygon(bRect.cornerVertices)
+          const bPolygon = item.boundingPolygon(bRect.cornerVertices || bRect.center)
           if (bPolygon.contain(currentPoint[0], currentPoint[1]))
             item.isSelected = true
         }
