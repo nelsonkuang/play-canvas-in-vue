@@ -217,7 +217,7 @@ export default {
             vec3.transformMat4(center, center, mvpMatrix)
             vec3.transformMat4(point, point, mvpMatrix)
             radius = vec3.length([center[0] - point[0], center[1] - point[1], center[2] - point[2]])
-            debugger
+            // debugger
           }
           return {
             topLeft: [center[0] - radius, center[1] + radius],
@@ -322,7 +322,7 @@ export default {
         item.isSelected = false
         const bRect = item.boundingRect()
         if (bRect.contain(currentPoint[0], currentPoint[1])) {
-          debugger
+          // debugger
           const bPolygon = item.boundingPolygon(bRect.cornerVertices || bRect.center)
           if (bPolygon.contain(currentPoint[0], currentPoint[1]))
             item.isSelected = true
